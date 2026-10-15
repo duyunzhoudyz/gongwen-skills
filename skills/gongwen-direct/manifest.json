@@ -1,0 +1,32 @@
+{
+  "name": "gongwen-direct",
+  "version": "0.1.0",
+  "status": "beta",
+  "shared": [
+    {"src": "guardrails.md"},
+    {"src": "style/output-format.md"},
+    {"src": "style/ai-tone.md"},
+    {"src": "style/defensive.md"},
+    {"src": "rules/doc-types.md"},
+    {"src": "rules/tiaoli.md"},
+    {"src": "profiles/roles.md"},
+    {"src": "profiles/units/dangzheng.md"},
+    {"src": "profiles/units/jiceng.md"},
+    {"src": "profiles/units/shequ.md"},
+    {"src": "profiles/units/yiyuan.md"},
+    {"src": "profiles/units/gaoxiao.md"},
+    {"src": "profiles/units/zhongxiaoxue.md"},
+    {"src": "profiles/units/guoqi.md"},
+    {"src": "scripts/gongwen_lint.py", "dest": "scripts/gongwen_lint.py"},
+    {"src": "scripts/lint_rules.json", "dest": "scripts/lint_rules.json"},
+    {"src": "scripts/style_patterns.json", "dest": "scripts/style_patterns.json"},
+    {"src": "scripts/fact_diff.py", "dest": "scripts/fact_diff.py"}
+  ],
+  "prompt_bundle": [
+    "references/_shared/guardrails.md",
+    "references/_shared/style/defensive.md",
+    "references/_shared/style/output-format.md",
+    "references/rewrite-guide.md",
+    "references/certainty-by-doctype.md"
+  ]
+}

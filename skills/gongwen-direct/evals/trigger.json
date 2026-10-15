@@ -1,0 +1,22 @@
+[
+  {"query": "这份通知是 DeepSeek 写的，满篇'建议各单位''可以考虑'，帮我改成正经的要求口气", "should_trigger": true},
+  {"query": "AI 写的稿子结尾挂着'以上内容仅供参考，请结合实际情况调整'，帮我清掉", "should_trigger": true},
+  {"query": "这个批复写得模棱两可，看不出到底同不同意，帮我改明确", "should_trigger": true},
+  {"query": "稿子里'可能''在一定程度上''或许'太多了，说话不硬气，帮我改改", "should_trigger": true},
+  {"query": "方案里一堆'有关部门''相关方面''适时推进'，责任落不到人，帮我处理一下", "should_trigger": true},
+  {"query": "请示里只写了两个方案各有利弊，没写我们倾向哪个，帮我看看怎么改", "should_trigger": true},
+  {"query": "这篇讲话稿太软了，处处给自己留余地，帮我把语气提起来", "should_trigger": true},
+  {"query": "去掉这篇材料里的免责声明和对冲语气", "should_trigger": true},
+  {"query": "报告里夹着要钱的话，结尾还写了妥否请批示，帮我改对", "should_trigger": true},
+  {"query": "这份通知读着像在跟下级商量，帮我改成部署的口气", "should_trigger": true},
+  {"query": "帮我把这篇年终总结的 AI 味去掉", "should_trigger": false},
+  {"query": "这篇稿子'值得注意的是''不是……而是……'太多了，改一下", "should_trigger": false},
+  {"query": "通篇赋能、闭环、打造，帮我换成正常的公文用词", "should_trigger": false},
+  {"query": "帮我核一下这份请示的格式、标点和数字", "should_trigger": false},
+  {"query": "这份通知送签前帮我全面把把关，看有没有问题", "should_trigger": false},
+  {"query": "帮我写一份申请购置设备的请示", "should_trigger": false},
+  {"query": "下周要交科室年终总结，素材我发你", "should_trigger": false},
+  {"query": "给这篇汇报材料起个主标题和几个小标题", "should_trigger": false},
+  {"query": "把这篇通知排成国标格式的 Word", "should_trigger": false},
+  {"query": "这事我该用请示还是报告？", "should_trigger": false}
+]

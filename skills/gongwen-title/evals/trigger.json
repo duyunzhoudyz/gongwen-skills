@@ -1,0 +1,22 @@
+[
+  {"query": "帮我看看这个发文标题对不对：关于对2026年度先进集体进行表彰的决定", "should_trigger": true},
+  {"query": "市里转发了省厅的通知，我们区再转发，标题怎么写才不会出现好几个关于", "should_trigger": true},
+  {"query": "年终总结正文写好了，帮我提炼几个小标题，要对仗的", "should_trigger": true},
+  {"query": "能不能把这几个小标题弄成“三个坚持”那种数字概括的", "should_trigger": true},
+  {"query": "领导说我的小标题大而无当，帮我逐条对一下和正文对不对得上", "should_trigger": true},
+  {"query": "经验材料要个主副标题，主标题得把做法提炼出来", "should_trigger": true},
+  {"query": "素材都在这了，先帮我搭个汇报提纲，正文我自己写", "should_trigger": true},
+  {"query": "请示标题写成“关于申请购置设备的请示报告”行不行", "should_trigger": true},
+  {"query": "这个通知标题太长了一行放不下，怎么回行好看", "should_trigger": true},
+  {"query": "质控年报的小标题现在是一二三四平铺直叙，帮我换几种说法", "should_trigger": true},
+  {"query": "帮我写一篇科室年终总结，素材我发你", "should_trigger": false},
+  {"query": "把这三个科室报上来的总结汇总成一份全院的", "should_trigger": false},
+  {"query": "帮我起草一份关于开展冬季安全生产检查的通知", "should_trigger": false},
+  {"query": "领导下周在全市会议上讲话，帮我写个讲话稿", "should_trigger": false},
+  {"query": "这篇汇报材料 AI 味太重了，帮我改得像人写的", "should_trigger": false},
+  {"query": "请示里“建议考虑”“原则上可以”太多，改得态度明确一点", "should_trigger": false},
+  {"query": "通读一下这篇稿子，标点、数字、提法有没有问题", "should_trigger": false},
+  {"query": "按八关帮我核一下这份请示能不能送签", "should_trigger": false},
+  {"query": "把这个通知排成红头文件格式，标题用小标宋", "should_trigger": false},
+  {"query": "这份 Word 里的标题层级字体全乱了，帮我修成国标格式", "should_trigger": false}
+]

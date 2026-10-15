@@ -1,0 +1,22 @@
+[
+  {"query": "帮我把这个通知核一下，明天就要送签了", "should_trigger": true},
+  {"query": "下面科室报上来的总结，你帮我把把关，看看有什么问题", "should_trigger": true},
+  {"query": "这个请示格式和标点有没有毛病？", "should_trigger": true},
+  {"query": "送签前帮我过一遍这份报告", "should_trigger": true},
+  {"query": "这篇讲话稿提法多，你从严审一下", "should_trigger": true},
+  {"query": "这份公示里有没有泄露个人信息的地方，帮我查查", "should_trigger": true},
+  {"query": "帮我检查一下发文字号、成文日期这些写得对不对", "should_trigger": true},
+  {"query": "领导让我核稿，你按八关帮我出个问题清单", "should_trigger": true},
+  {"query": "看看这个报告是不是夹带了请示事项", "should_trigger": true},
+  {"query": "按你刚才的核稿意见直接改一版，事实别动", "should_trigger": true},
+  {"query": "帮我把这篇年终总结的 AI 味去掉", "should_trigger": false},
+  {"query": "这篇稿子“可能”“或许”太多，还有一堆免责声明，帮我删干净", "should_trigger": false},
+  {"query": "把这个通知排成国标格式的 Word 文件", "should_trigger": false},
+  {"query": "把核稿意见.json 写成 Word 里的批注", "should_trigger": false},
+  {"query": "帮我给这篇汇报材料起几个小标题", "should_trigger": false},
+  {"query": "检查一下这几个小标题和正文内容对不对得上", "should_trigger": false},
+  {"query": "下周要交科室年终总结，素材我发你，帮我写一份", "should_trigger": false},
+  {"query": "帮我写个关于申请防汛经费的请示", "should_trigger": false},
+  {"query": "这篇通知写得太平了，帮我整体重写一遍", "should_trigger": false},
+  {"query": "你能帮我做哪些公文方面的事？", "should_trigger": false}
+]

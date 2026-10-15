@@ -1,0 +1,22 @@
+[
+  {"query": "这篇总结是 DeepSeek 写的，一股 AI 味，帮我改改", "should_trigger": true},
+  {"query": "读着像机器写的，帮我把 AI 腔去掉，数字别动", "should_trigger": true},
+  {"query": "帮我看看这份汇报哪些地方 AI 味重，先别改，标出来就行", "should_trigger": true},
+  {"query": "稿子里全是“不是……而是……”和破折号，帮我顺一顺", "should_trigger": true},
+  {"query": "领导说“赋能”“闭环”太多，像网上抄的，帮我清理一下这些词", "should_trigger": true},
+  {"query": "豆包生成的讲话稿太像 AI 了，改得像人写的", "should_trigger": true},
+  {"query": "学校要查 AI 率，帮我把这篇教研总结的 AI 味降一降", "should_trigger": true},
+  {"query": "轻度去一下 AI 痕迹就行，结构别动", "should_trigger": true},
+  {"query": "这篇信息稿开头“随着……”、结尾“未来可期”，太 AI 了，帮我改", "should_trigger": true},
+  {"query": "实施方案里的 AI 套话帮我清一下，一是二是和小标题别动", "should_trigger": true},
+  {"query": "帮我把这个请示里“可能”“建议考虑”这些含糊的话改成明确表态", "should_trigger": false},
+  {"query": "通知里“仅供参考”“请结合实际”这种免责的话太多，帮我删掉，语气改坚决点", "should_trigger": false},
+  {"query": "这个批复写得模棱两可，帮我改成明确同意", "should_trigger": false},
+  {"query": "帮我核一下这篇稿子，标点、数字用法和格式有没有问题", "should_trigger": false},
+  {"query": "送签前帮我按八关把一下关，列个问题清单", "should_trigger": false},
+  {"query": "这篇材料里的提法是不是最新的，帮我查一下", "should_trigger": false},
+  {"query": "下周要交科室年终总结，素材我发你，帮我写一篇", "should_trigger": false},
+  {"query": "给这篇汇报材料提炼几个对仗的小标题", "should_trigger": false},
+  {"query": "把这篇稿子排成国标格式的 Word", "should_trigger": false},
+  {"query": "帮我起草一个开会通知，明天下午三点在三楼会议室", "should_trigger": false}
+]

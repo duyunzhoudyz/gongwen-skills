@@ -1,0 +1,26 @@
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# 虚拟环境
+.venv/
+venv/
+env/
+ENV/
+
+# 构建产物：离线包不入库（dist/prompts/ 需要入库）
+dist/offline/
+
+# 用户的单位画像，可能含内部信息，必须忽略
+.gongwen/
+
+# 用户产出目录
+公文/
+
+# 测试输出
+tests/**/_out/
+
+# 系统文件
+.DS_Store
+Thumbs.db

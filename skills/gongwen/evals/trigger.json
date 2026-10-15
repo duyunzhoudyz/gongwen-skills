@@ -1,0 +1,22 @@
+[
+  {"query": "领导让我给区财政局写个东西要一笔经费，我该写请示还是什么？", "should_trigger": true},
+  {"query": "我刚到医院院办上班，第一次用这个，你都能帮我做什么？", "should_trigger": true},
+  {"query": "这个月单位一般要准备哪些材料？我在县里一个乡镇", "should_trigger": true},
+  {"query": "帮我起草一个关于开展冬季消防安全检查的通知，发给局属各单位", "should_trigger": true},
+  {"query": "写一份请示，向县卫健局申请购置一辆负压救护车", "should_trigger": true},
+  {"query": "局长下周三在全市安全生产推进会上讲15分钟，帮我写讲话稿", "should_trigger": true},
+  {"query": "把这份院长办公会的会议记录整理成纪要发给各科室", "should_trigger": true},
+  {"query": "下周市里来督查，我要准备哪些材料，不知道从哪下手", "should_trigger": true},
+  {"query": "向上级说明情况顺便要经费，这事用请示还是报告？", "should_trigger": true},
+  {"query": "写条政务信息报区里，讲我们街道推行报表一表通的做法", "should_trigger": true},
+  {"query": "帮我把这篇年终总结的 AI 味去掉", "should_trigger": false},
+  {"query": "下周要交科室年终总结，素材我发你", "should_trigger": false},
+  {"query": "给这篇汇报材料提炼几个对仗的小标题", "should_trigger": false},
+  {"query": "帮我核一下这份通知有没有错别字、标点和数字问题", "should_trigger": false},
+  {"query": "把这篇稿子按国标排成 Word，红头和页码都要", "should_trigger": false},
+  {"query": "这篇批复写得太软了，帮我把态度改明确", "should_trigger": false},
+  {"query": "帮我写个人年度述职报告，素材在附件里", "should_trigger": false},
+  {"query": "把下面8个科室报上来的自查材料汇总成一份，标出数据打架的地方", "should_trigger": false},
+  {"query": "通知里“建议各单位可以考虑”太多了，全部改成要求式的说法", "should_trigger": false},
+  {"query": "帮我把局里2026年度工作报告写出来，全年的工作记录都在附件里", "should_trigger": false}
+]

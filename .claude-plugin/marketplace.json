@@ -1,0 +1,27 @@
+{
+  "name": "gongwen-skills",
+  "owner": {
+    "name": "OWNER"
+  },
+  "metadata": {
+    "description": "中文公文写作 Skills 集合：懂规矩、懂单位、懂角色，不编造、守保密、帮你做减法。",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "gongwen",
+      "description": "公文写作核心技能：总入口、综合文稿起草、标题提炼、去 AI 味、去防御性写作、核稿审校、GB/T 9704 国标排版。",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/gongwen",
+        "./skills/gongwen-report",
+        "./skills/gongwen-title",
+        "./skills/gongwen-humanize",
+        "./skills/gongwen-direct",
+        "./skills/gongwen-review",
+        "./skills/gongwen-format"
+      ]
+    }
+  ]
+}

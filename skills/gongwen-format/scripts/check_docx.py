@@ -1,0 +1,553 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""检查已有 docx 是否符合 GB/T 9704-2012。
+
+检查项：纸张、页边距、文档网格、正文和标题的字体字号、行距、首行缩进、层次标题字体、页码、
+发文字号、成文日期、主送机关、附件说明、抄送、印发日期、残留标记等。
+--json 输出与 docs/开发规范.md 第 8 节的机检 JSON 一致，级别 P0/P1/P2。
+
+退出码：默认 0；--strict 时存在 P0 返回 1；输入错误或缺少依赖返回 2。
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import re
+import sys
+from pathlib import Path
+from typing import Dict, List, Optional, Sequence
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import gw_fonts as F  # noqa: E402
+from gw_layout import (DATE_CN_RE, MARKERS_RE, SECRET_WORDS_RE, doc_kind, draft_note_index,  # noqa: E402
+                       parse_lines, text_width_chars)
+
+CJK_RE = re.compile(r"[一-鿿]")
+DOCNO_BRACKET_RE = re.compile(r"[一-鿿]{1,12}[\[［(（【﹝{｛]\s*(?:19|20)\d{2}\s*[\]］)）】﹞}｝]\s*第?\s*\d+\s*号")
+DOCNO_SHORT_YEAR_RE = re.compile(r"〔\d{2}〕")
+DOCNO_DI_RE = re.compile(r"〔\d{4}〕\s*第\s*\d+\s*号")
+DOCNO_ZERO_RE = re.compile(r"〔\d{4}〕\s*0\d*\s*号")
+DATE_ZERO_RE = re.compile(r"\d{4}年0[1-9]月|月0[1-9]日")
+PRINT_OK_RE = re.compile(r"\d{4}年[1-9]\d?月[1-9]\d?日印发$")
+PAGE_TEXT_RE = re.compile(r"^—\s?[1-9]\d*\s?—$")
+ORDINAL_HINT = "依次用 一、（一）1.（1）"
+# (写法, 问题说明, 修改建议)。“1、”不判断所在层级：序号后改用“.”，直接位于一级标题下的应改为“（一）”
+BAD_ORDINALS = [
+    (re.compile(r"^\d+、"), "阿拉伯数字序数后应用“.”，不用“、”",
+     "序号后应用“.”，如“1.”；如属第二层（直接位于“一、”下），应为“（一）”"),
+    (re.compile(r"^（[一二三四五六七八九十]+）[、，.．]"), "“（一）”后不加标点", ORDINAL_HINT),
+    (re.compile(r"^[一二三四五六七八九十]+[.．，]"), "一级序数后用顿号“一、”", ORDINAL_HINT),
+    (re.compile(r"^\((\d+|[一二三四五六七八九十]+)\)"), "序数括号应为全角“（）”", ORDINAL_HINT),
+]
+LAYOUT_NAMES = ("红头", "信函", "纪要", "白头", "材料")  # --layout 可选值
+LEVEL_FONT = {"h1": "黑体", "h2": "楷体", "h3": "仿宋", "h4": "仿宋", "body": "仿宋", "attendance": "仿宋"}
+LEVEL_NAME = {"h1": "一级标题", "h2": "二级标题", "h3": "三级标题", "h4": "四级标题", "body": "正文"}
+
+
+class Collector:
+    def __init__(self) -> None:
+        self.issues: List[dict] = []
+        self._agg: Dict[str, dict] = {}
+
+    def add(self, iid: str, level: str, category: str, message: str, *, line: Optional[int] = None,
+            excerpt: str = "", suggestion: str = "", basis: str = "") -> None:
+        self.issues.append({"id": iid, "level": level, "category": category, "line": line,
+                            "excerpt": excerpt[:40], "message": message, "suggestion": suggestion, "basis": basis})
+
+    def agg(self, key: str, iid: str, level: str, category: str, message: str, *, line: Optional[int],
+            excerpt: str, suggestion: str, basis: str) -> None:
+        """同类问题合并为一条，记录段数和第一处位置。"""
+        if key in self._agg:
+            self._agg[key]["count"] += 1
+            return
+        item = {"id": iid, "level": level, "category": category, "line": line, "excerpt": excerpt[:40],
+                "message": message, "suggestion": suggestion, "basis": basis, "count": 1}
+        self._agg[key] = item
+        self.issues.append(item)
+
+    def finish(self) -> List[dict]:
+        order = {"P0": 0, "P1": 1, "P2": 2}
+        for item in self.issues:
+            count = item.pop("count", None)
+            if count and count > 1:
+                item["message"] += f"（共 {count} 段，此处为第一处）"
+        return sorted(self.issues, key=lambda x: (order[x["level"]], x["line"] or 0))
+
+
+def _cls_ok(cls: str, expected: str) -> bool:
+    return cls == expected
+
+
+def _footer_info(footer_el) -> dict:
+    """页脚中的页码域、文本、对齐方式和字体。"""
+    from docx.oxml.ns import qn
+    info = {"has_page": False, "text": "", "align": None, "fonts": set(), "sizes": set()}
+    for p in footer_el.iter(qn("w:p")):
+        instr = "".join(t.text or "" for t in p.iter(qn("w:instrText")))
+        simple = [f.get(qn("w:instr")) or "" for f in p.iter(qn("w:fldSimple"))]
+        if "PAGE" in instr.upper() or any("PAGE" in s.upper() for s in simple):
+            info["has_page"] = True
+            info["text"] = "".join(t.text or "" for t in p.iter(qn("w:t"))).strip()
+            jc = p.find(qn("w:pPr") + "/" + qn("w:jc"))
+            info["align"] = jc.get(qn("w:val")) if jc is not None else "left"
+            for r in p.iter(qn("w:r")):
+                rf = r.find(qn("w:rPr") + "/" + qn("w:rFonts"))
+                if rf is not None and (rf.get(qn("w:eastAsia")) or rf.get(qn("w:ascii"))):
+                    info["fonts"].add(rf.get(qn("w:eastAsia")) or rf.get(qn("w:ascii")))
+                sz = r.find(qn("w:rPr") + "/" + qn("w:sz"))
+                if sz is not None:
+                    info["sizes"].add(int(sz.get(qn("w:val"))) / 2)
+            break
+    return info
+
+
+def _part_text(part_el) -> str:
+    from docx.oxml.ns import qn
+    return "".join(t.text or "" for t in part_el.iter(qn("w:t")))
+
+
+def check_document(path: Path, layout: Optional[str] = None, params: Optional[dict] = None) -> dict:
+    """检查 docx，返回机检 JSON 结构。"""
+    import gw_docx as D
+    from docx import Document
+    from docx.oxml.ns import qn
+
+    params = params or D.load_params()
+    doc = Document(str(path))
+    col = Collector()
+    tol = float(D.pv(params, "page.margin_tolerance_mm"))
+    line_pt = float(D.pv(params, "grid.line_spacing_pt"))
+    body_pt = float(D.pv(params, "page.body_height_mm")) * 72 / 25.4
+    lines_req = int(D.pv(params, "grid.lines_per_page"))
+    chars_req = int(D.pv(params, "grid.chars_per_line"))
+    std = params["fonts"]["standard"]
+
+    # ---- 页面 ----
+    for s_idx, section in enumerate(doc.sections, start=1):
+        sect = section._sectPr
+        pgsz = sect.find(qn("w:pgSz"))
+        w = int(pgsz.get(qn("w:w"))) if pgsz is not None else 12240
+        h = int(pgsz.get(qn("w:h"))) if pgsz is not None else 15840
+        w_mm, h_mm = D.twips_to_mm(w), D.twips_to_mm(h)
+        if abs(w_mm - 210) > tol or abs(h_mm - 297) > tol:
+            col.add("DOCX-001", "P0", "页面", f"第 {s_idx} 节纸张为 {w_mm:.0f}×{h_mm:.0f} mm，不是 A4",
+                    excerpt=f"{w_mm:.0f}×{h_mm:.0f} mm", suggestion="纸张设为 A4（210 mm×297 mm）", basis="GB/T 9704-2012 5.1")
+        pgmar = sect.find(qn("w:pgMar"))
+        if pgmar is not None:
+            for attr, label, key, lvl, basis in (
+                    ("top", "上边距（天头）", "margin_top_mm", "P0", "GB/T 9704-2012 5.2.1"),
+                    ("left", "左边距（订口）", "margin_left_mm", "P0", "GB/T 9704-2012 5.2.1"),
+                    ("bottom", "下边距", "margin_bottom_mm", "P1", "GB/T 9704-2012 5.2.1（由版心推算）"),
+                    ("right", "右边距", "margin_right_mm", "P1", "GB/T 9704-2012 5.2.1（由版心推算）")):
+                val = pgmar.get(qn(f"w:{attr}")) or pgmar.get(qn("w:start" if attr == "left" else "w:end"))
+                if val is None:
+                    continue
+                mm = D.twips_to_mm(abs(int(val)))
+                want = float(D.pv(params, f"page.{key}"))
+                if abs(mm - want) > tol:
+                    col.add("DOCX-002" if lvl == "P0" else "DOCX-003", lvl, "页面",
+                            f"{label}为 {mm:.1f} mm，应为 {want:g} mm", excerpt=f"{label} {mm:.1f} mm",
+                            suggestion=f"{label}设为 {want / 10:g} 厘米", basis=basis)
+        grid = sect.find(qn("w:docGrid"))
+        gtype = grid.get(qn("w:type")) if grid is not None else None
+        if gtype == "linesAndChars":
+            pgmar_l = int(pgmar.get(qn("w:left")) or 0) if pgmar is not None else 0
+            pgmar_r = int(pgmar.get(qn("w:right")) or 0) if pgmar is not None else 0
+            width_pt = (w - pgmar_l - pgmar_r) / 20
+            pitch = 16 + int(grid.get(qn("w:charSpace")) or 0) / 4096
+            chars = math.floor(width_pt / pitch + 1e-6) if pitch > 0 else 0
+            if chars != chars_req:
+                col.add("DOCX-004", "P2", "页面", f"文档网格每行约 {chars} 字，标准为每行 {chars_req} 字",
+                        excerpt=f"每行 {chars} 字", suggestion="页面设置→文档网格→指定行和字符网格，每行 28 字",
+                        basis="GB/T 9704-2012 5.2.3")
+        elif s_idx == 1:
+            col.add("DOCX-004", "P2", "页面", "未设置字符网格，每行字数取决于字体，可能不是 28 字",
+                    excerpt="无字符网格", suggestion="页面设置→文档网格→指定行和字符网格，每行 28 字、每页 22 行",
+                    basis="GB/T 9704-2012 5.2.3")
+    first_grid = doc.sections[0]._sectPr.find(qn("w:docGrid"))
+    grid_pitch = None
+    if first_grid is not None and first_grid.get(qn("w:type")) in ("lines", "linesAndChars"):
+        grid_pitch = int(first_grid.get(qn("w:linePitch")) or 0) / 20
+
+    # ---- 段落角色 ----
+    paras = list(doc.paragraphs)
+    texts = [D.direct_text(p) or p.text for p in paras]
+    # 【起草说明】之后不是正文，不参与识别和检查（output-format.md 第二部分）
+    cut = draft_note_index(texts)
+    cut_el = paras[cut]._p if cut is not None else None
+    if cut is not None:
+        col.add("DOCX-082", "P1", "残留", "文档中有【起草说明】，其后内容不是正文，未检查；成稿中应删除", line=cut + 1,
+                excerpt=texts[cut], suggestion="删除【起草说明】及其后的全部内容",
+                basis="references/_shared/style/output-format.md 第二部分")
+        paras, texts = paras[:cut], texts[:cut]
+    parsed = parse_lines(texts, red=[D.para_is_red(p, doc) for p in paras])
+    kind, doc_type = doc_kind(str(parsed.fields.get("标题") or ""))
+    letter_issuer = None
+    sec0 = doc.sections[0]
+    if sec0.different_first_page_header_footer:
+        htxt = _part_text(sec0.first_page_header._element).strip()
+        if htxt:
+            letter_issuer = sec0.first_page_header
+    if layout is None:
+        roles = parsed.roles()
+        if letter_issuer is not None:
+            layout = "信函"
+        elif "issuer" in roles:
+            issuer = parsed.find("issuer")[0].text
+            layout = "纪要" if issuer.endswith("纪要") else "红头"
+        elif kind == "法定":
+            layout = "白头"
+        else:
+            layout = "材料"
+    if not parsed.find("title") and layout != "纪要":
+        col.add("DOCX-023", "P2", "结构", "未识别到标题，标题相关检查已跳过", excerpt=texts[0] if texts else "",
+                suggestion="标题一般以“关于”开头或以文种结尾", basis="GB/T 9704-2012 7.3.1")
+
+    for it in parsed.items:
+        p = paras[it.src]
+        line = it.src + 1
+        text = texts[it.src]
+        role = it.role
+        raw_text = p.text
+        if role in ("body", "h1", "h2", "h3", "h4"):
+            _check_body_para(col, doc, p, role, it.split if role != "body" else -1, line, text, std,
+                             line_pt, body_pt, lines_req, grid_pitch)
+            for rx, msg, hint in BAD_ORDINALS:
+                if rx.match(text):
+                    col.add("DOCX-033", "P1", "格式要素", f"层次序数写法不规范：{msg}", line=line, excerpt=text,
+                            suggestion=hint, basis="GB/T 9704-2012 7.3.3；GB/T 15834-2011 附录 B.3")
+                    break
+        elif role == "title":
+            _check_title(col, doc, p, line, text, std)
+        elif role == "recipient":
+            fl = D.para_first_line_chars(p, doc)
+            left = D.para_left_chars(p, doc)
+            if abs(fl) > 0.3 or abs(left) > 0.3 or raw_text[:1] in (" ", "　"):
+                col.add("DOCX-040", "P1", "段落", "主送机关应居左顶格", line=line, excerpt=text,
+                        suggestion="首行缩进和左缩进设为 0", basis="GB/T 9704-2012 7.3.2")
+            if text.rstrip().endswith(":"):
+                col.add("DOCX-041", "P1", "标点", "主送机关后应用全角冒号", line=line, excerpt=text,
+                        suggestion=text.rstrip()[:-1] + "：", basis="GB/T 9704-2012 7.3.2")
+        elif role == "attachment":
+            if re.match(r"^附\s*件\s*:", text):
+                col.add("DOCX-042", "P1", "标点", "“附件”后应用全角冒号", line=line, excerpt=text,
+                        suggestion="附件：", basis="GB/T 9704-2012 7.3.4")
+            if text and text[-1] in "。；，、.;,":
+                col.add("DOCX-042", "P1", "标点", "附件名称后不加标点", line=line, excerpt=text,
+                        suggestion=text[:-1], basis="GB/T 9704-2012 7.3.4")
+        elif role == "date":
+            compact = text.replace(" ", "").replace("　", "")
+            if DATE_ZERO_RE.search(compact):
+                col.add("DOCX-043", "P0", "数字", "成文日期月、日不编虚位", line=line, excerpt=text,
+                        suggestion=re.sub(r"(?<=年)0|(?<=月)0", "", compact), basis="GB/T 9704-2012 7.3.5.4")
+            if DATE_CN_RE.match(compact):
+                col.add("DOCX-044", "P1", "数字", "成文日期应使用阿拉伯数字", line=line, excerpt=text,
+                        suggestion="如“2026年10月16日”", basis="GB/T 9704-2012 7.3.5.4")
+            if D.para_align(p, doc) != "right" and D.para_left_chars(p, doc) < 8:
+                col.add("DOCX-046", "P2", "段落", "成文日期应排在右侧，按是否盖章右空四字或二字", line=line,
+                        excerpt=text, suggestion="运行 fix_docx.py 统一排署名和日期", basis="GB/T 9704-2012 7.3.5")
+        elif role == "note":
+            if not (text.startswith(("（", "(")) and text.endswith(("）", ")"))):
+                col.add("DOCX-045", "P2", "格式要素", "附注应加圆括号", line=line, excerpt=text,
+                        suggestion=f"（{text}）", basis="GB/T 9704-2012 7.3.6")
+        elif role in ("docno", "signer"):
+            if re.search(r"签发人\s*:", text):
+                col.add("DOCX-054", "P1", "标点", "“签发人”后应用全角冒号", line=line, excerpt=text,
+                        suggestion="签发人：", basis="GB/T 9704-2012 7.2.6")
+        elif role == "issuer":
+            if not D.para_is_red(p, doc):
+                col.add("DOCX-055", "P1", "格式要素", "发文机关标志应为红色", line=line, excerpt=text,
+                        suggestion="字体颜色设为红色", basis="GB/T 9704-2012 7.2.4")
+
+    # ---- 全文文本类检查（正文、表格、页眉） ----
+    all_paras = list(D.iter_all_paragraphs(doc))
+    date_lines = {it.src for it in parsed.items if it.role in ("date", "print")}
+    body_index = {p._p: i for i, p in enumerate(paras)}
+    header_texts = []
+    for section in doc.sections:
+        for hdr in (section.header, section.first_page_header, section.even_page_header):
+            if not hdr.is_linked_to_previous:
+                header_texts.append(_part_text(hdr._element))
+    for p in all_paras:
+        if p._p is cut_el:
+            break  # 【起草说明】及其后的段落、表格不检查
+        text = p.text
+        if not text.strip():
+            continue
+        line = body_index.get(p._p)
+        ln = line + 1 if line is not None else None
+        _check_text(col, text, ln, in_signoff=(line in date_lines) if line is not None else False)
+        stripped = text.strip()
+        if re.match(r"^抄\s*送", stripped):
+            if re.match(r"^抄\s*送\s*:", stripped):
+                col.add("DOCX-060", "P1", "标点", "“抄送”后应用全角冒号", line=ln, excerpt=stripped,
+                        suggestion="抄送：", basis="GB/T 9704-2012 7.4.2")
+            if not stripped.endswith("。"):
+                col.add("DOCX-060", "P1", "标点", "抄送最后一个机关名称后标句号", line=ln, excerpt=stripped,
+                        suggestion=stripped + "。", basis="GB/T 9704-2012 7.4.2")
+        if stripped.endswith("印发") and not MARKERS_RE.search(stripped):
+            if not PRINT_OK_RE.search(stripped.replace(" ", "").replace("\t", "").replace("　", "")):
+                col.add("DOCX-061", "P1", "数字", "印发日期应写作“××××年×月×日印发”，月日不编虚位", line=ln,
+                        excerpt=stripped, suggestion="如“2026年10月16日印发”", basis="GB/T 9704-2012 7.4.3")
+    for text in header_texts:
+        if text.strip():
+            _check_text(col, text, None, in_signoff=False)
+    first_texts = "".join(texts[:6]) + "".join(header_texts)
+    if SECRET_WORDS_RE.search(first_texts) or parsed.find("secret"):
+        col.add("DOCX-081", "P2", "保密", "文档含密级或“内部资料”等标识，只能在涉密或内网环境处理，不得上传联网 AI 工具",
+                excerpt=(parsed.find("secret")[0].text if parsed.find("secret") else ""),
+                suggestion="确认处理环境符合保密规定", basis="references/_shared/guardrails.md 第一条")
+
+    # ---- 页码 ----
+    _check_page_numbers(col, doc, layout)
+
+    total = sum(len(re.sub(r"\s", "", t)) for t in texts)
+    issues = col.finish()
+    summary = {"P0": 0, "P1": 0, "P2": 0}
+    for item in issues:
+        summary[item["level"]] += 1
+    # 待补、待核实标记单独计数，与 gongwen_lint.py 的 summary.markers 一致
+    markers = {"待补": 0, "待核实": 0}
+    for t in texts:
+        for m in MARKERS_RE.finditer(t):
+            markers["待核实" if m.group(0).startswith("【待核实") else "待补"] += 1
+    summary["markers"] = markers
+    return {"file": Path(path).name, "doc_type": doc_type or "其他", "layout": layout, "char_count": total,
+            "summary": summary, "issues": issues}
+
+
+def _majority(values: List[tuple]) -> Optional[object]:
+    """values: (值, 字数)。返回字数最多的值。"""
+    weight: Dict[object, int] = {}
+    for v, n in values:
+        weight[v] = weight.get(v, 0) + n
+    if not weight:
+        return None
+    return max(weight.items(), key=lambda kv: kv[1])[0]
+
+
+def _check_body_para(col: Collector, doc, p, role: str, split: int, line: int, text: str, std: dict,
+                     line_pt: float, body_pt: float, lines_req: int, grid_pitch: Optional[float]) -> None:
+    import gw_docx as D
+    expected = LEVEL_FONT[role]
+    end = len(text) if split is None or split < 0 else split
+    fonts: List[tuple] = []
+    sizes: List[tuple] = []
+    colors: List[tuple] = []
+    pos = 0
+    for run in p.runs:
+        rt = run.text
+        n = len(CJK_RE.findall(rt))
+        in_head = pos < end
+        pos += len(rt)
+        if not n:
+            continue
+        if role != "body" and not in_head:
+            continue  # 标题与正文同段时，只按标题部分判断层次标题字体
+        fonts.append((D.run_font(run, p, doc), n))
+        sizes.append((D.run_size(run, p, doc), n))
+        colors.append((D.run_color(run, p, doc), n))
+    name = LEVEL_NAME.get(role, "正文")
+    main_font = _majority(fonts)
+    if main_font is not None:
+        cls = F.font_class(main_font)
+        if role == "body" and cls != "仿宋":
+            col.agg("font-body", "DOCX-010", "P0", "字体", f"正文字体为“{main_font}”，应为仿宋体（仿宋_GB2312）",
+                    line=line, excerpt=text, suggestion="正文设为 3 号仿宋_GB2312（缺字体时用仿宋）",
+                    basis="GB/T 9704-2012 7.3.3")
+        elif role != "body" and cls != expected:
+            iid = {"h1": "DOCX-030", "h2": "DOCX-031"}.get(role, "DOCX-032")
+            col.agg(f"font-{role}", iid, "P1", "字体", f"{name}字体为“{main_font}”，应为{expected}", line=line,
+                    excerpt=text, suggestion=f"{name}设为{std.get(expected, expected)}", basis="GB/T 9704-2012 7.3.3")
+        elif main_font != std.get(expected) and cls == expected:
+            col.agg(f"alt-{role}-{main_font}", "DOCX-016", "P2", "字体",
+                    f"{name}使用“{main_font}”，标准字体名为“{std.get(expected)}”", line=line, excerpt=text,
+                    suggestion="本单位要求 GB2312 字体的，正式印发前替换", basis="gbt9704.md 第九部分（实践）")
+        if role == "body" and len({F.font_class(f) for f, _ in fonts}) > 1:
+            col.agg("font-mixed", "DOCX-010", "P2", "字体", "正文段落中夹有非仿宋字体的文字", line=line, excerpt=text,
+                    suggestion="核对是否有意强调；一般正文统一用仿宋", basis="GB/T 9704-2012 7.3.3")
+    main_size = _majority(sizes)
+    if main_size is not None and abs((main_size or 0) - 16) > 0.25:
+        lvl = "P0" if role == "body" else "P1"
+        col.agg(f"size-{role}", "DOCX-011", lvl, "字号", f"{name}字号为 {main_size} 磅，应为三号（16 磅）", line=line,
+                excerpt=text, suggestion="字号设为三号", basis="GB/T 9704-2012 7.3.3")
+    main_color = _majority(colors)
+    if main_color not in (None, "AUTO", "000000"):
+        col.agg("color", "DOCX-015", "P1", "字体", f"{name}文字颜色为 {main_color}，应为黑色", line=line, excerpt=text,
+                suggestion="字体颜色设为黑色或自动", basis="GB/T 9704-2012 5.2.4")
+    # 行距
+    rule, val = D.para_line_spacing(p, doc)
+    ok = True
+    per_page = None
+    if rule in ("exact", "atLeast"):
+        per_page = math.floor(body_pt / val + 1e-6) if val else 0
+        ok = per_page == lines_req
+    else:
+        if grid_pitch and D.para_snap(p, doc) and val <= 1.0:
+            per_page = math.floor(body_pt / grid_pitch + 1e-6)
+            ok = per_page == lines_req
+        else:
+            ok = False
+    if not ok:
+        desc = f"固定值 {val:g} 磅，每页约 {per_page} 行" if rule in ("exact", "atLeast") else f"{val:g} 倍行距"
+        col.agg("spacing", "DOCX-012", "P1", "段落", f"正文行距为{desc}，每页应为 {lines_req} 行", line=line,
+                excerpt=text, suggestion=f"行距设为固定值 {line_pt:g} 磅，或用文档网格每页 {lines_req} 行",
+                basis="GB/T 9704-2012 5.2.3")
+    # 首行缩进
+    if p.text[:1] in (" ", "　", "\t"):
+        col.agg("space-indent", "DOCX-014", "P1", "段落", "段首用空格缩进", line=line, excerpt=p.text,
+                suggestion="删除段首空格，改为首行缩进 2 字符", basis="GB/T 9704-2012 7.3.3")
+    else:
+        fl = D.para_first_line_chars(p, doc)
+        if abs(fl - 2) > 0.25:
+            col.agg("indent", "DOCX-013", "P1", "段落", f"{name}首行缩进为 {fl:g} 字，应为 2 字", line=line,
+                    excerpt=text, suggestion="首行缩进设为 2 字符", basis="GB/T 9704-2012 7.3.3")
+
+
+def _check_title(col: Collector, doc, p, line: int, text: str, std: dict) -> None:
+    import gw_docx as D
+    fonts = [(D.run_font(r, p, doc), len(r.text)) for r in p.runs if r.text.strip()]
+    sizes = [(D.run_size(r, p, doc), len(r.text)) for r in p.runs if r.text.strip()]
+    main_font = _majority(fonts)
+    cls = F.font_class(main_font)
+    if cls == "宋体":
+        col.add("DOCX-016", "P2", "字体", f"标题使用替代字体“{main_font}”，标准为小标宋体", line=line, excerpt=text,
+                suggestion="正式印发前换成方正小标宋简体（需单位授权）", basis="gbt9704.md 第九部分（实践）")
+    elif cls != "小标宋":
+        col.add("DOCX-020", "P1", "字体", f"标题字体为“{main_font}”，应为小标宋体", line=line, excerpt=text,
+                suggestion=f"标题设为 2 号{std.get('小标宋')}", basis="GB/T 9704-2012 7.3.1")
+    main_size = _majority(sizes)
+    if main_size is None or abs(main_size - 22) > 0.25:
+        col.add("DOCX-021", "P1", "字号", f"标题字号为 {main_size} 磅，应为二号（22 磅）", line=line, excerpt=text,
+                suggestion="标题字号设为二号", basis="GB/T 9704-2012 7.3.1")
+    if D.para_align(p, doc) != "center":
+        col.add("DOCX-022", "P1", "段落", "标题应居中", line=line, excerpt=text, suggestion="标题居中排列",
+                basis="GB/T 9704-2012 7.3.1")
+    # 回行后某一行过短（如只剩“总结”二字）：按二号字估算每行字数，模拟自动折行
+    size = main_size or 22
+    max_chars = max(1, int(D.ctx_text_width_pt(doc) // size))
+    for seg in text.split("\n"):
+        width = text_width_chars(seg.strip())
+        if width <= 0:
+            continue
+        tail = width % max_chars if width > max_chars else width
+        if 0 < tail < 3 and text_width_chars(text.replace("\n", "")) >= 3:
+            col.add("DOCX-024", "P2", "段落", "标题回行后有一行少于 3 字，排列不匀", line=line, excerpt=text,
+                    suggestion="在词意完整处手动换行，上行不短于下行，排成梯形或菱形", basis="GB/T 9704-2012 7.3.1")
+            break
+
+
+def _check_text(col: Collector, text: str, line: Optional[int], *, in_signoff: bool) -> None:
+    compact = text.strip()
+    for m in DOCNO_BRACKET_RE.finditer(compact):
+        col.add("DOCX-050", "P0", "格式要素", "发文字号年份应用六角括号“〔〕”", line=line, excerpt=m.group(0),
+                suggestion=re.sub(r"[\[［(（【﹝{｛](\s*\d{4}\s*)[\]］)）】﹞}｝]", r"〔\1〕", m.group(0)),
+                basis="GB/T 9704-2012 7.2.5")
+    for m in DOCNO_SHORT_YEAR_RE.finditer(compact):
+        col.add("DOCX-051", "P0", "格式要素", "发文字号年份应标全称", line=line, excerpt=m.group(0),
+                suggestion="如“〔2026〕”", basis="GB/T 9704-2012 7.2.5")
+    for m in DOCNO_DI_RE.finditer(compact):
+        col.add("DOCX-052", "P0", "格式要素", "发文字号顺序号不加“第”字", line=line, excerpt=m.group(0),
+                suggestion=re.sub(r"第\s*", "", m.group(0)), basis="GB/T 9704-2012 7.2.5")
+    for m in DOCNO_ZERO_RE.finditer(compact):
+        col.add("DOCX-053", "P0", "格式要素", "发文字号顺序号不编虚位", line=line, excerpt=m.group(0),
+                suggestion=re.sub(r"〕\s*0+", "〕", m.group(0)), basis="GB/T 9704-2012 7.2.5")
+    if not in_signoff:
+        for m in DATE_ZERO_RE.finditer(compact.replace(" ", "")):
+            col.add("DOCX-090", "P1", "数字", "日期月、日一般不编虚位", line=line, excerpt=compact,
+                    suggestion="如“2026年1月5日”", basis="GB/T 9704-2012 7.3.5.4；GB/T 15835-2011")
+            break
+    for m in MARKERS_RE.finditer(compact):
+        col.add("DOCX-080", "P2", "残留", "文中仍有待补或待核实标记，补齐后再定稿", line=line, excerpt=m.group(0),
+                suggestion="补齐信息并删除标记", basis="references/_shared/guardrails.md 第二条")
+
+
+def _check_page_numbers(col: Collector, doc, layout: str) -> None:
+    from docx.oxml.ns import qn
+    section = doc.sections[0]
+    settings = doc.settings.element
+    even_odd = settings.find(qn("w:evenAndOddHeaders")) is not None and \
+        settings.find(qn("w:evenAndOddHeaders")).get(qn("w:val")) not in ("0", "false")
+    odd = _footer_info(section.footer._element) if not section.footer.is_linked_to_previous else {"has_page": False}
+    if not odd.get("has_page"):
+        col.add("DOCX-070", "P1", "页码", "页脚中没有页码", excerpt="无页码", suggestion="插入“— 1 —”格式页码",
+                basis="GB/T 9704-2012 7.5")
+        return
+    if not PAGE_TEXT_RE.match(odd["text"]):
+        col.add("DOCX-071", "P1", "页码", "页码格式应为“— 1 —”（数字两侧各一条一字线）", excerpt=odd["text"],
+                suggestion="— 1 —", basis="GB/T 9704-2012 7.5")
+    fonts = {F.font_class(f) for f in odd["fonts"]}
+    if (fonts and fonts != {"宋体"}) or (odd["sizes"] and odd["sizes"] != {14.0}):
+        col.add("DOCX-072", "P2", "页码", "页码一般用 4 号半角宋体", excerpt=odd["text"],
+                suggestion="页码设为宋体四号", basis="GB/T 9704-2012 7.5")
+    if not even_odd:
+        col.add("DOCX-073", "P2", "页码", "未设置奇偶页不同，双页页码无法居左", excerpt=odd["text"],
+                suggestion="页面设置→版式→奇偶页不同；单页居右空一字，双页居左空一字", basis="GB/T 9704-2012 7.5")
+    else:
+        even = _footer_info(section.even_page_footer._element) if not section.even_page_footer.is_linked_to_previous \
+            else {"has_page": False}
+        if odd.get("align") != "right" or not even.get("has_page") or even.get("align") not in ("left", None):
+            col.add("DOCX-073", "P2", "页码", "单页页码应居右空一字，双页页码居左空一字", excerpt=odd["text"],
+                    suggestion="运行 fix_docx.py 重设页码", basis="GB/T 9704-2012 7.5")
+    if layout == "信函":
+        first = section.first_page_footer
+        has_first = section.different_first_page_header_footer and not first.is_linked_to_previous
+        if not has_first or _footer_info(first._element).get("has_page"):
+            col.add("DOCX-074", "P1", "页码", "信函格式首页不显示页码", excerpt="首页页码",
+                    suggestion="设置首页不同，首页页脚不放页码", basis="GB/T 9704-2012 10.1")
+
+
+def render_text(result: dict) -> str:
+    s = result["summary"]
+    out = [f"文件：{result['file']}（版式：{result.get('layout')}，文种：{result['doc_type']}）",
+           f"结论：P0 {s['P0']} 项，P1 {s['P1']} 项，P2 {s['P2']} 项。" + ("可以交付。" if s["P0"] == 0 else "存在 P0，修改后再交付。")]
+    for i, it in enumerate(result["issues"], start=1):
+        loc = f"第 {it['line']} 段" if it.get("line") else "全文"
+        out.append(f"{i}. [{it['level']}] {it['message']}（{loc}：{it['excerpt']}）")
+        if it.get("suggestion"):
+            out.append(f"   建议：{it['suggestion']}；依据：{it['basis']}")
+    return "\n".join(out)
+
+
+def main(argv: Optional[Sequence[str]] = None) -> int:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+    parser = argparse.ArgumentParser(description="检查 docx 是否符合 GB/T 9704-2012《党政机关公文格式》。",
+                                     epilog="退出码：默认 0；--strict 时存在 P0 返回 1；输入错误返回 2。")
+    parser.add_argument("file", help="待检查的 .docx 文件")
+    parser.add_argument("--layout", help="版式：红头、信函、纪要、白头、材料；不写时自动判断")
+    parser.add_argument("--json", action="store_true", help="以机检 JSON 输出（开发规范第 8 节）")
+    parser.add_argument("--strict", action="store_true", help="存在 P0 时返回 1")
+    args = parser.parse_args(argv)
+    try:
+        import docx  # noqa: F401
+    except ImportError:
+        print("缺少 python-docx。请先安装：pip install -U python-docx（需要 1.2.0 及以上版本）")
+        return 2
+    path = Path(args.file)
+    if not path.is_file() or path.suffix.lower() != ".docx":
+        print(f"错误：找不到 docx 文件 {path}")
+        return 2
+    if args.layout and args.layout not in LAYOUT_NAMES:
+        print(f"错误：无法识别的版式：{args.layout}。可选：{'、'.join(LAYOUT_NAMES)}")
+        return 2
+    try:
+        result = check_document(path, layout=args.layout)
+    except Exception as exc:  # 文件损坏、不是 docx 等
+        print(f"错误：无法读取 {path}：{exc}")
+        return 2
+    if args.json:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        print(render_text(result))
+    if args.strict and result["summary"]["P0"]:
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

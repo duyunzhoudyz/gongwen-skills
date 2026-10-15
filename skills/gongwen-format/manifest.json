@@ -1,0 +1,27 @@
+{
+  "name": "gongwen-format",
+  "version": "0.1.0",
+  "status": "beta",
+  "shared": [
+    {"src": "guardrails.md"},
+    {"src": "style/output-format.md"},
+    {"src": "style/ai-tone.md"},
+    {"src": "style/defensive.md"},
+    {"src": "rules/gbt9704.md"},
+    {"src": "rules/gbt15834.md"},
+    {"src": "rules/gbt15835.md"},
+    {"src": "profiles/roles.md"},
+    {"src": "profiles/units/dangzheng.md"},
+    {"src": "profiles/units/jiceng.md"},
+    {"src": "profiles/units/shequ.md"},
+    {"src": "profiles/units/yiyuan.md"},
+    {"src": "profiles/units/gaoxiao.md"},
+    {"src": "profiles/units/zhongxiaoxue.md"},
+    {"src": "profiles/units/guoqi.md"}
+  ],
+  "prompt_bundle": [
+    "references/_shared/guardrails.md",
+    "references/manual-setup.md",
+    "references/_shared/rules/gbt9704.md"
+  ]
+}

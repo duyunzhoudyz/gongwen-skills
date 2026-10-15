@@ -1,0 +1,22 @@
+[
+  {"query": "这个通知帮我套个红头，发文字号某发〔2026〕21号", "should_trigger": true},
+  {"query": "把这篇年终总结转成 Word，按公文格式排好", "should_trigger": true},
+  {"query": "领导说这个 docx 格式不对，帮我按国标调一下", "should_trigger": true},
+  {"query": "核稿意见出来了，帮我批注到 Word 文档里", "should_trigger": true},
+  {"query": "WPS 里页码怎么设成一字线那种，单页在右双页在左", "should_trigger": true},
+  {"query": "给医保局的函要用信函格式出 docx", "should_trigger": true},
+  {"query": "这份文档字体乱七八糟，统一成三号仿宋，行距也调一下", "should_trigger": true},
+  {"query": "电脑没有方正小标宋，排版时标题用什么字体代替", "should_trigger": true},
+  {"query": "帮我检查一下这个 Word 的页边距和字号是不是符合 9704", "should_trigger": true},
+  {"query": "每页22行每行28字在 Word 里怎么设置", "should_trigger": true},
+  {"query": "帮我把这篇年终总结的 AI 味去掉", "should_trigger": false},
+  {"query": "这份请示写得太软了，改得态度明确一点", "should_trigger": false},
+  {"query": "帮我核一下这个通知有没有错别字和提法问题", "should_trigger": false},
+  {"query": "起草一份关于开展安全生产大检查的通知", "should_trigger": false},
+  {"query": "给这份汇报材料起几个小标题", "should_trigger": false},
+  {"query": "下周要交科室年终总结，素材我发你", "should_trigger": false},
+  {"query": "这篇通知的标点和数字用法帮我查一下", "should_trigger": false},
+  {"query": "帮我把这段话改得更像公文，顺便压缩一下篇幅", "should_trigger": false},
+  {"query": "这个事情用请示还是报告？", "should_trigger": false},
+  {"query": "把这份方案的提纲先搭出来", "should_trigger": false}
+]
