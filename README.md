@@ -75,20 +75,20 @@
 **方式一：Claude Code 插件市场**
 
 ```bash
-/plugin marketplace add OWNER/gongwen-skills
+/plugin marketplace add duyunzhoudyz/gongwen-skills
 /plugin install gongwen@gongwen-skills
 ```
 
 **方式二：通用安装（Codex、Cursor、Gemini CLI、GitHub Copilot 等）**
 
 ```bash
-npx skills add OWNER/gongwen-skills
+npx skills add duyunzhoudyz/gongwen-skills
 ```
 
 **方式三：国产 Agent 工具（Qwen Code、Kimi CLI、Trae、CodeBuddy 等）**
 
 ```bash
-git clone https://github.com/OWNER/gongwen-skills.git
+git clone https://github.com/duyunzhoudyz/gongwen-skills.git
 cd gongwen-skills
 python tools/install.py --list-targets
 python tools/install.py --target qwen
@@ -103,7 +103,7 @@ python tools/install.py --target qwen
 把这句话发给你的 Agent：
 
 ```text
-请把 https://github.com/OWNER/gongwen-skills 中 skills/ 目录下的所有 skill 安装到你的 skills 目录，装好后告诉我有哪些可用。
+请把 https://github.com/duyunzhoudyz/gongwen-skills 中 skills/ 目录下的所有 skill 安装到你的 skills 目录，装好后告诉我有哪些可用。
 ```
 
 > 排版功能需要 Python 3.9+ 和 `python-docx`：`pip install python-docx openpyxl`。没有 Python 也能用，排版会改为输出 WPS/Word 手动设置清单。
