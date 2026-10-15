@@ -5,23 +5,68 @@
   },
   "metadata": {
     "description": "中文公文写作 Skills 集合：懂规矩、懂单位、懂角色，不编造、守保密、帮你做减法。",
-    "version": "0.1.0"
+    "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "gongwen",
-      "description": "公文写作核心技能：总入口、综合文稿起草、标题提炼、去 AI 味、去防御性写作、核稿审校、GB/T 9704 国标排版。",
+      "description": "公文写作核心技能：总入口、单位画像、法定公文、综合文稿、讲话、党建材料、信息简报、会议纪要、上级文件转化、整改材料、标题、改稿、去 AI 味、去防御性写作、核稿、国标排版、数据与图表。",
       "source": "./",
       "strict": false,
       "skills": [
         "./skills/gongwen",
+        "./skills/gongwen-profile",
+        "./skills/gongwen-draft",
         "./skills/gongwen-report",
+        "./skills/gongwen-speech",
+        "./skills/gongwen-party",
+        "./skills/gongwen-brief",
+        "./skills/gongwen-minutes",
+        "./skills/gongwen-implement",
+        "./skills/gongwen-rectify",
         "./skills/gongwen-title",
+        "./skills/gongwen-polish",
         "./skills/gongwen-humanize",
         "./skills/gongwen-direct",
         "./skills/gongwen-review",
-        "./skills/gongwen-format"
+        "./skills/gongwen-format",
+        "./skills/gongwen-data"
       ]
+    },
+    {
+      "name": "gongwen-grassroots",
+      "description": "行业包·基层（乡镇、街道、社区）：政务信息、迎检汇报、居民通知、工作台账等专用文书。需先安装 gongwen。",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/gongwen-grassroots"]
+    },
+    {
+      "name": "gongwen-hospital",
+      "description": "行业包·公立医院：等级评审与绩效考核自评、医疗质量分析、不良事件根因分析、科室述职等专用文书。需先安装 gongwen。",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/gongwen-hospital"]
+    },
+    {
+      "name": "gongwen-university",
+      "description": "行业包·高校：审核评估自评、学科评估材料、项目申报形式审查、学院总结、辅导员工作材料等专用文书。需先安装 gongwen。",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/gongwen-university"]
+    },
+    {
+      "name": "gongwen-k12",
+      "description": "行业包·中小学：学期计划总结、督导自评、班主任工作、家长会讲话、学生评语等专用文书。需先安装 gongwen。",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/gongwen-k12"]
+    },
+    {
+      "name": "gongwen-soe",
+      "description": "行业包·国有企业：三重一大议题、董事会议案决议、经营分析、改革台账、ESG 报告等专用文书。需先安装 gongwen。",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/gongwen-soe"]
     }
   ]
 }
