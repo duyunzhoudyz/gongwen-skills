@@ -1,0 +1,81 @@
+name: 规则纠错
+description: 某条格式、标点、数字、文种或文风规则与文件原文不符，或与本行业惯例不符
+title: "[规则纠错] "
+labels: ["规则纠错"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢帮忙纠错。规则有争议时以文件原文为准，所以**必须写明依据的文件名称和条款号**。
+        请勿粘贴涉密信息、单位内部文件原文和个人信息；需要举例时，请用虚构的单位和数据（如"某市某局"）。
+
+  - type: input
+    id: location
+    attributes:
+      label: 问题所在位置
+      description: 规则所在的文件或 skill，能写到小节更好。
+      placeholder: 例如 shared/rules/gbt9704.md 的"版心尺寸"一节，或 gongwen-format 的页边距设置
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: 现有规则怎么写的
+      description: 摘录本项目中的现有写法，或者描述 skill 实际输出的内容。
+    validations:
+      required: true
+
+  - type: input
+    id: basis_document
+    attributes:
+      label: 规则依据：文件名称
+      description: 只接受公开发布的法规、标准或文件，请写全称和文号（标准号）。
+      placeholder: 例如 GB/T 9704-2012《党政机关公文格式》，或《党政机关公文处理工作条例》（中办发〔2012〕14号）
+    validations:
+      required: true
+
+  - type: input
+    id: basis_clause
+    attributes:
+      label: 规则依据：条款号
+      placeholder: 例如 第 7.3.1 条，或 第三章第十五条
+    validations:
+      required: true
+
+  - type: textarea
+    id: basis_text
+    attributes:
+      label: 依据原文摘录
+      description: 摘录相关条款的原文，方便核对（选填）。
+    validations:
+      required: false
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: 建议改成
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: 适用范围
+      options:
+        - 所有单位通用
+        - 仅党政机关
+        - 仅某一行业或某类单位（请在"建议改成"中说明）
+        - 不确定
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 依据是公开发布的文件，我已写明文件名称和条款号
+          required: true
+        - label: 本 issue 不含涉密信息、内部文件原文和个人信息
+          required: true

@@ -1,0 +1,87 @@
+name: 新场景需求
+description: 现有 skill 覆盖不到的写作场景或文书类型
+title: "[新场景] "
+labels: ["新场景"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        欢迎告诉我们你在工作中遇到、但现有 skill 写不好的材料。
+        描述场景即可，**不要粘贴真实的内部文件**；需要示例时，请用虚构的单位、人名和数据。
+
+  - type: dropdown
+    id: unit_type
+    attributes:
+      label: 单位类型
+      options:
+        - 党政机关
+        - 基层（乡镇、街道、社区）
+        - 公立医院
+        - 高校
+        - 中小学
+        - 国有企业
+        - 其他事业单位
+        - 其他
+    validations:
+      required: true
+
+  - type: input
+    id: doc_type
+    attributes:
+      label: 文书类型
+      placeholder: 例如 防汛工作情况报告、党支部书记抓党建述职报告、科室季度质量分析
+    validations:
+      required: true
+
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 使用场景
+      description: 谁来写、写给谁看、什么时候写、多久写一次、通常多长。
+    validations:
+      required: true
+
+  - type: textarea
+    id: gap
+    attributes:
+      label: 现有 skill 哪里不够用
+      description: 试过哪个 skill、怎么说的、输出哪里不符合要求。没试过可以不填。
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望的效果
+      description: 例如需要哪些固定结构、必须包含哪些要素、有哪些行业惯例或忌讳。
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: 写作频次
+      options:
+        - 每周
+        - 每月
+        - 每季度
+        - 每年
+        - 不定期
+    validations:
+      required: false
+
+  - type: textarea
+    id: sample
+    attributes:
+      label: 虚构示例（选填）
+      description: 可以给一份虚构化的样稿或提纲，单位写作"某市某局""某医院"。
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 本 issue 不含涉密信息、真实内部文件和个人信息，示例均已虚构化
+          required: true

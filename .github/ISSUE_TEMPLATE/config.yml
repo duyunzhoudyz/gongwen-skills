@@ -1,0 +1,9 @@
+# issue 选择页的配置：关闭空白 issue，引导到 Discussions 和使用须知
+blank_issues_enabled: false
+contact_links:
+  - name: 使用交流与素材讨论（Discussions）
+    url: https://github.com/duyunzhoudyz/gongwen-skills/discussions
+    about: 使用心得、写作经验、行业包素材的讨论，请到 Discussions。
+  - name: 使用须知（保密与合规底线）
+    url: https://github.com/duyunzhoudyz/gongwen-skills/blob/main/%E4%BD%BF%E7%94%A8%E9%A1%BB%E7%9F%A5.md
+    about: 提 issue 前请先读：涉密信息严禁输入联网 AI 工具，示例和素材一律虚构。

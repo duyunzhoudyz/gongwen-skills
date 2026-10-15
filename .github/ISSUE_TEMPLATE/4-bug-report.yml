@@ -1,0 +1,126 @@
+name: Bug 报告
+description: 安装失败、脚本报错、skill 没有触发，或者输出明显不对
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提交前请先确认已更新到最新版本。
+        贴日志和输出前，请删去单位名称、人名等内部信息；**涉密材料不要贴到任何地方**。
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: 运行环境（操作系统）
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS
+        - Linux（Ubuntu、Debian、CentOS 等）
+        - 国产操作系统（统信 UOS、银河麒麟等）
+        - 其他（请在复现步骤中说明）
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tool
+    attributes:
+      label: 使用的工具
+      options:
+        - Claude Code
+        - OpenAI Codex
+        - Cursor
+        - Gemini CLI
+        - GitHub Copilot
+        - Qwen Code
+        - Kimi Code CLI
+        - CodeBuddy
+        - Trae
+        - 网页大模型（提示词版）
+        - 内网模型（离线包）
+        - 其他（请在复现步骤中说明）
+    validations:
+      required: true
+
+  - type: input
+    id: tool_version
+    attributes:
+      label: 工具版本和所用模型
+      placeholder: 例如 Claude Code 2.1.0，模型 Claude Sonnet；或 Qwen Code 0.5，模型 Qwen3-Coder
+    validations:
+      required: true
+
+  - type: input
+    id: python_version
+    attributes:
+      label: Python 版本（涉及安装或脚本时填写）
+      description: 运行 python --version 的输出；Windows 上也可以试 py --version。
+      placeholder: 例如 Python 3.12.4
+    validations:
+      required: false
+
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: 安装方式
+      options:
+        - Claude Code 插件市场
+        - npx skills add
+        - install.ps1 或 install.sh 一键脚本
+        - python tools/install.py
+        - 手动复制
+        - 提示词版（不需要安装）
+    validations:
+      required: false
+
+  - type: input
+    id: skill
+    attributes:
+      label: 涉及的 skill
+      placeholder: 例如 gongwen-format
+    validations:
+      required: false
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 你说了什么、运行了什么命令。
+      placeholder: |
+        1. 运行 powershell -ExecutionPolicy Bypass -File .\install.ps1
+        2. 在 Claude Code 中说"用公文 skill 帮我写个通知"
+        3. ……
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 报错信息或日志
+      description: 原样粘贴即可，会自动按代码格式显示。
+      render: text
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 已删去日志和输出中的单位名称、人名等内部信息，不含涉密内容
+          required: true

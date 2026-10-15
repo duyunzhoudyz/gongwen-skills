@@ -1,0 +1,80 @@
+name: 行业包投稿
+description: 为医院、高校、中小学、国企、基层等行业包提供模板、术语、红线或评测用例
+title: "[行业包投稿] "
+labels: ["行业包"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢投稿。行业包的价值在于一线经验，但**只收虚构化的材料**：
+        - 单位名称、人名、数据一律虚构，单位写作"某医院""某高校""某集团"等；
+        - 不提交任何真实的内部文件或其片段，哪怕已经公开；
+        - 不含涉密信息和个人信息（身份证号、手机号、病案号、学号、家庭住址等）。
+        投稿内容会以本项目的 MIT 许可证发布。
+
+  - type: dropdown
+    id: pack
+    attributes:
+      label: 行业包
+      options:
+        - hospital（公立医院）
+        - university（高校）
+        - k12（中小学）
+        - soe（国有企业）
+        - grassroots（基层：乡镇、街道、社区）
+        - 新行业（请在"投稿内容"中写明）
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 投稿内容类型
+      multiple: true
+      options:
+        - 文书模板或结构
+        - 行业术语
+        - 行业红线（禁用表述、合规要求）
+        - 评测用例
+        - 写作日历（什么时候写什么）
+        - 其他
+    validations:
+      required: true
+
+  - type: input
+    id: doc_type
+    attributes:
+      label: 涉及的文书类型
+      placeholder: 例如 不良事件根因分析报告、学期工作总结、三重一大议题材料
+    validations:
+      required: true
+
+  - type: textarea
+    id: content
+    attributes:
+      label: 投稿内容
+      description: 直接粘贴虚构化后的内容；较长的内容可以附 .md 或 .txt 文件。
+    validations:
+      required: true
+
+  - type: textarea
+    id: basis
+    attributes:
+      label: 行业依据（选填）
+      description: 相关的公开行业规范、评审标准，请写文件名称和条款号。
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: declaration
+    attributes:
+      label: 投稿声明
+      options:
+        - label: 材料已虚构化：单位名称、人名、数据均为虚构
+          required: true
+        - label: 不含任何真实的内部文件或其片段（哪怕已经公开）
+          required: true
+        - label: 不含涉密信息和个人信息
+          required: true
+        - label: 同意投稿内容以本项目的 MIT 许可证发布
+          required: true

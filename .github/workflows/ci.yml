@@ -1,4 +1,5 @@
 # 持续集成：共享资料同步检查、skill 校验、单元测试、提示词版一致性检查
+# Linux 上跑全部检查；macOS 和 Windows 上跑单元测试，覆盖跨平台换行、路径和字体检测，并演练一键安装脚本
 name: CI
 
 on:
@@ -38,3 +39,46 @@ jobs:
 
       - name: 提示词版一致性检查
         run: python tools/build_prompts.py --check
+
+      - name: 一键安装脚本语法检查
+        run: bash -n install.sh
+
+  cross-platform:
+    name: 单元测试（${{ matrix.os }}）
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHONIOENCODING: utf-8
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install python-docx openpyxl
+
+      - name: 单元测试
+        run: python -m unittest discover -s tests -t .
+
+      - name: 共享资料同步检查（换行一致性）
+        run: python tools/sync_shared.py --check
+
+      - name: 演练一键安装脚本（macOS，不写入）
+        if: runner.os == 'macOS'
+        run: bash install.sh --dry-run --target claude
+
+      - name: 演练一键安装脚本（Windows PowerShell 5.1，不写入）
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File .\install.ps1 -WhatIf --target claude
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
