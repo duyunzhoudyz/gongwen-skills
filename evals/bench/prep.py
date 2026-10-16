@@ -1,7 +1,7 @@
 """评测准备：为每条用例的 A 组（装 skill）和 B 组（不装 skill）建立独立工作目录，生成子智能体任务说明。
 
 用法：
-    python evals/bench/prep.py --out <评测目录> [--chunk 4] [--skills 名称或预设 ...] [--tag v1.0]
+    python evals/bench/prep.py --out <评测目录> [--chunk 4] [--skills 名称或预设 ...] [--tag v1.0] [--groups AB|A|B]
 
     --skills 默认取插件市场清单中的全部 skill；写 v0.1 复现 v0.1 的 7 个 skill。
     用例可以用 file_dest 字段指定材料放在工作目录中的位置，如 {"evals/files/已有画像.md": ".gongwen/单位画像.md"}。
@@ -70,6 +70,17 @@ def file_text(path):
     return path.read_text(encoding="utf-8", errors="replace")
 
 
+def stale_group(wdir, dests, old_hashes):
+    """未选中重建的组能否沿用上一轮：目录要在，每份输入材料都要有上一轮哈希且与当前材料一致。"""
+    if not wdir.exists():
+        return True
+    for src, dest, _ in dests:
+        old = old_hashes.get(str(dest))
+        if old is None or old != sha256(src):
+            return True
+    return False
+
+
 def load_cases(skills):
     cases = []
     for skill in skills:
@@ -85,6 +96,8 @@ def main():
     ap.add_argument("--chunk", type=int, default=4, help="每个子智能体处理的用例数，默认 4")
     ap.add_argument("--skills", nargs="*", help="只评这些 skill（名称或预设 v0.1），默认全部")
     ap.add_argument("--tag", default="v1.0", help="评测版本标签，用于生成工作目录编号和汇总，默认 v1.0")
+    ap.add_argument("--groups", default="AB", choices=["AB", "A", "B"],
+                    help="只重建这些组的工作目录和任务说明，默认 AB；修改 skill 后复测写 A，B 组的目录和输出保持不动")
     args = ap.parse_args()
     skills = select_skills(REPO, args.skills)
 
@@ -100,9 +113,17 @@ def main():
 
     cases = load_cases(skills)
     index, hashes = [], {}
+    old_hashes = {}
+    if args.groups != "AB":
+        hpath = out / "hashes.json"
+        if not hpath.exists():
+            print("只重建部分组时，评测目录中必须已有完整的 hashes.json", file=sys.stderr)
+            return 2
+        old_hashes = json.loads(hpath.read_text(encoding="utf-8"))
     by_skill = {}
     for c in cases:
         by_skill.setdefault(c["skill"], []).append(c)
+    written, rebuilt_extra = [], []
 
     for skill, items in by_skill.items():
         chunks = [items[i:i + args.chunk] for i in range(0, len(items), args.chunk)]
@@ -120,38 +141,54 @@ def main():
 
                 for g in "AB":
                     wdir = out / "w" / token(skill, eid, g, args.tag)
-                    if wdir.exists():
-                        shutil.rmtree(wdir)
-                    wdir.mkdir(parents=True)
-                    shown = []
+                    dests = []
                     for rel in c["files"]:
-                        src = REPO / "skills" / skill / rel
                         dest_rel = (c.get("file_dest") or {}).get(rel) or Path(rel).name
-                        dest = wdir / dest_rel
-                        dest.parent.mkdir(parents=True, exist_ok=True)
-                        shutil.copy2(src, dest)
-                        hashes[str(dest)] = sha256(dest)
-                        shown.append(dest_rel)
-                    files_line = "、".join(shown) if shown else "无"
-                    blocks[g].append(
-                        f"---\n\n## 请求 {k}\n\n工作目录：{wdir}\n\n用户消息：\n\n<<<\n{c['prompt']}\n>>>\n\n"
-                        f"用户提供的文件（都在工作目录中）：{files_line}\n"
-                    )
+                        dests.append((REPO / "skills" / skill / rel, wdir / dest_rel, dest_rel))
+                    rebuild = g in args.groups
+                    if not rebuild and not stale_group(wdir, dests, old_hashes):
+                        # 保留上一轮的目录和输出，输入哈希沿用上一轮记录
+                        for _, dest, _ in dests:
+                            hashes[str(dest)] = old_hashes[str(dest)]
+                    else:
+                        if not rebuild:
+                            # 新增用例，或输入材料已改：这一组也要重跑，否则两组的输入不一致
+                            rebuilt_extra.append(f"{skill}-{eid}-{g}")
+                        if wdir.exists():
+                            shutil.rmtree(wdir)
+                        wdir.mkdir(parents=True)
+                        for src, dest, _ in dests:
+                            dest.parent.mkdir(parents=True, exist_ok=True)
+                            shutil.copy2(src, dest)
+                            hashes[str(dest)] = sha256(dest)
+                        files_line = "、".join(d for _, _, d in dests) or "无"
+                        blocks[g].append(
+                            f"---\n\n## 请求 {len(blocks[g]) + 1}\n\n工作目录：{wdir}\n\n用户消息：\n\n<<<\n{c['prompt']}\n>>>\n\n"
+                            f"用户提供的文件（都在工作目录中）：{files_line}\n"
+                        )
                     index.append({"skill": skill, "id": eid, "group": g, "chunk": chunk_id,
-                                  "order": k, "dir": str(wdir), "files": shown})
+                                  "order": k, "dir": str(wdir), "files": [d for _, _, d in dests]})
 
             for g in "AB":
-                body = common.replace("{cases}", "\n".join(blocks[g])).replace("{n}", str(len(chunk)))
-                text = tpl[g].replace("{common}", body).replace("{n}", str(len(chunk)))
+                if not blocks[g]:
+                    continue
+                n = str(len(blocks[g]))
+                body = common.replace("{cases}", "\n".join(blocks[g])).replace("{n}", n)
+                text = tpl[g].replace("{common}", body).replace("{n}", n)
                 text = text.replace("{skill}", skill).replace("{skill_dir}", str(REPO / "skills" / skill))
                 (out / "tasks" / f"{chunk_id}-{g}.md").write_text(text, encoding="utf-8")
+                written.append(f"{chunk_id}-{g}")
 
     (out / "index.json").write_text(json.dumps(index, ensure_ascii=False, indent=1), encoding="utf-8")
     (out / "hashes.json").write_text(json.dumps(hashes, ensure_ascii=False, indent=1), encoding="utf-8")
     (out / "meta.json").write_text(json.dumps({"tag": args.tag, "skills": skills}, ensure_ascii=False, indent=1),
                                    encoding="utf-8")
+    (out / "tasks_written.json").write_text(json.dumps(written, ensure_ascii=False, indent=1), encoding="utf-8")
     chunks = sorted({r["chunk"] for r in index})
-    print(f"用例 {len(cases)} 条，运行 {len(index)} 次，批次 {len(chunks)} 个（每批 A、B 各一个子智能体）")
+    print(f"用例 {len(cases)} 条，批次 {len(chunks)} 个；本次重建 {'、'.join(args.groups)} 组，"
+          f"任务说明 {len(written)} 份（每份一个子智能体，清单见 tasks_written.json）")
+    if rebuilt_extra:
+        print(f"另有 {len(rebuilt_extra)} 个未选中的组因新增用例或输入材料改动一并重建：{'、'.join(rebuilt_extra)}")
     return 0
 
 

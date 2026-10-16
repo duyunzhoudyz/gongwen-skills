@@ -34,6 +34,7 @@ python evals/bench/archive.py --bench <评测目录> --out evals/results/v0.1-ru
 
 - `prep.py --skills`：默认评测插件市场清单（`.claude-plugin/marketplace.json`）中的全部 skill；写 `--skills v0.1` 复现 v0.1 的 7 个 skill，也可以列出具体名称。
 - `prep.py --tag`：评测版本标签（默认 `v1.0`），用于生成工作目录编号，并写入 `meta.json`；`aggregate.py` 据此填写原始结果中的版本。
+- `prep.py --groups A`：修改 skill 后复测，只重建 A 组（装 skill）的工作目录和任务说明，B 组的目录、输出和输入哈希保持不动；之后照常运行机检、评分准备、盲评和汇总。新增的用例、输入材料改过的用例，B 组也一并重建，B 组任务说明里只列这些用例，保证两组输入一致。本次要运行的任务说明清单写在 `tasks_written.json`。评测目录中必须已有上一轮完整的 `hashes.json`。复测前建议把整个评测目录另存一份，保留上一轮的评分。
 - 用例的 `file_dest` 字段指定材料放在工作目录中的位置，例如 `{"evals/files/已有单位画像.md": ".gongwen/单位画像.md"}`。
 - 输入材料为 docx 时按"接受全部修订"读取（与 fact_diff 一致）；为 xlsx 时逐表逐行转为文本，供 fact_diff 比对。
 

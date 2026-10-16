@@ -55,16 +55,16 @@
 
 ## 四、回答模板
 
-用户问“你能做什么”时，按下面的结构回答，控制在 20 行以内，不展开每个 skill 的细节：
+用户问“你能做什么”时，按下面的结构回答，控制在 25 行以内，不展开每个 skill 的细节，22 个名称都要列出，条目照搬：
 
 ```text
 我是公文写作总入口，先帮你理清要写什么、该找哪个模块，再把你交过去：
 1. 不知道从哪下手：说说要写什么、写给谁，我帮你排好要走的几步。
-2. 起草：法定公文（gongwen-draft）、总结汇报述职（gongwen-report）、讲话（gongwen-speech）、党建材料（gongwen-party）、信息简报（gongwen-brief）、纪要议题（gongwen-minutes）、上级文件落实（gongwen-implement）、整改材料（gongwen-rectify）、数据和图表（gongwen-data）。
-3. 改稿：标题提纲（gongwen-title）、压缩和按批注改（gongwen-polish）、去 AI 腔（gongwen-humanize）、让态度明确（gongwen-direct）。
+2. 起草：法定公文（gongwen-draft）、总结汇报述职（gongwen-report）、讲话（gongwen-speech）、党建材料（gongwen-party）、信息简报（gongwen-brief）、纪要议题（gongwen-minutes）、上级文件落实（gongwen-implement）、整改材料（gongwen-rectify）、数据、图表交 gongwen-data。
+3. 改稿：标题提纲（gongwen-title）、压缩、按领导批注改稿（gongwen-polish）、去 AI 腔（gongwen-humanize）、让态度明确（gongwen-direct）。
 4. 把关和交付：核稿（gongwen-review）、排成国标 Word（gongwen-format）。
 5. 单位画像：简版我来建，完整画像和学文风找 gongwen-profile。
-6. 行业包：乡镇街道社区、医院、高校、中小学、国企的专用文书，装了行业包才有；没装的由对应模块按单位画像处理。
+6. 行业包（单独安装）：gongwen-grassroots 乡镇街道社区、gongwen-hospital 医院、gongwen-university 高校、gongwen-k12 中小学、gongwen-soe 国企，各管本行业专用文书；没装的由对应模块按单位画像处理。
 目前都是测试版（Beta），边界情况可能还有问题。
 我不做的：处理涉密材料、编造数据和案例、保证“检测不出 AI”、代写须本人亲历的材料、做 PPT。
 你可以这样说：
@@ -73,4 +73,4 @@
 - “这篇稿子送签前帮我过一遍”
 ```
 
-第一次使用的用户，回答之后接着按专项一建档。
+第一次使用的用户，末尾用一句话提议建简版画像，用户同意后再按专项一写文件；不附日历。

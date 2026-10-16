@@ -6,6 +6,8 @@
   dist/prompts/<skill>.md   信息块 + SKILL.md 正文（去掉 frontmatter）+ 按 prompt_bundle 顺序的附录
   dist/prompts/README.md    索引表
   dist/offline/gongwen-skills-offline-<版本>.zip（--offline 时生成）
+    内含 skills/、dist/prompts/、一键安装脚本（install.ps1、install.sh、tools/install.py、
+    .claude-plugin/marketplace.json）、根目录文档，以及由 tools/offline_readme.md 生成的"离线使用说明.md"
 
 输出是确定性的：同样的输入，生成的文件逐字节相同（统一 LF 换行，不含时间戳）。
 退出码：0 成功；1 存在错误，或 --check 发现不一致。
@@ -58,6 +60,20 @@ JUNK_DIRS = {
 JUNK_FILES = {".DS_Store", "Thumbs.db"}
 JUNK_SUFFIXES = {".pyc", ".pyo"}
 ZIP_DATE = (1980, 1, 1, 0, 0, 0)
+
+# 离线包根目录的文档（存在才打包）
+OFFLINE_ROOT_DOCS = ("README.md", "LICENSE", "使用须知.md", "THIRD_PARTY_NOTICES.md", "CHANGELOG.md")
+# 离线包里的安装脚本：包内 README.md 的安装步骤指向它们，必须一起打包。路径相对仓库根，包内路径相同。
+# .claude-plugin/marketplace.json 是安装器区分核心 skill 与行业包（--pack）的依据，没有它安装器会把全部 skill 都装上。
+OFFLINE_INSTALL_FILES = (
+    "install.ps1",
+    "install.sh",
+    "tools/install.py",
+    ".claude-plugin/marketplace.json",
+)
+# 离线使用说明：源文件在 tools/ 下，打包时放在 zip 根目录并改名
+OFFLINE_GUIDE_SRC = "tools/offline_readme.md"
+OFFLINE_GUIDE_NAME = "离线使用说明.md"
 
 
 # ---------------------------------------------------------------------------
@@ -453,11 +469,20 @@ def collect_offline_files(repo_root: Path) -> List[Tuple[str, Path]]:
                     continue
                 path = current / name
                 files.append((f"{top}/{path.relative_to(base).as_posix()}", path))
-    for name in ("README.md", "LICENSE", "使用须知.md", "THIRD_PARTY_NOTICES.md", "CHANGELOG.md"):
+    for name in OFFLINE_ROOT_DOCS + OFFLINE_INSTALL_FILES:
         path = repo_root / name
         if path.is_file():
             files.append((name, path))
+    guide = repo_root / OFFLINE_GUIDE_SRC
+    if guide.is_file():
+        files.append((OFFLINE_GUIDE_NAME, guide))
     return sorted(files, key=lambda item: item[0])
+
+
+def offline_missing(repo_root: Path) -> List[str]:
+    """离线包应带而仓库里找不到的文件（安装脚本和离线使用说明）。根目录文档缺失不提示，沿用旧行为。"""
+    wanted = list(OFFLINE_INSTALL_FILES) + [OFFLINE_GUIDE_SRC]
+    return [rel for rel in wanted if not (repo_root / rel).is_file()]
 
 
 def write_offline_zip(repo_root: Path, version: str) -> Tuple[Path, int]:
@@ -493,7 +518,10 @@ def main(argv: Optional[Sequence[str]] = None, repo_root: Optional[Path] = None)
     parser.add_argument(
         "--offline",
         action="store_true",
-        help="额外生成 dist/offline/gongwen-skills-offline-<版本>.zip（含 skills/、dist/prompts/、README.md、LICENSE、使用须知.md、THIRD_PARTY_NOTICES.md、CHANGELOG.md）",
+        help="额外生成 dist/offline/gongwen-skills-offline-<版本>.zip（含 skills/、dist/prompts/、"
+             "install.ps1、install.sh、tools/install.py、.claude-plugin/marketplace.json、"
+             "README.md、LICENSE、使用须知.md、THIRD_PARTY_NOTICES.md、CHANGELOG.md，"
+             "以及由 tools/offline_readme.md 生成的根目录\"离线使用说明.md\"）",
     )
     add_root_argument(parser)
     args = parser.parse_args(argv)
@@ -541,6 +569,8 @@ def main(argv: Optional[Sequence[str]] = None, repo_root: Optional[Path] = None)
             version, warning = offline_version(root)
             if warning:
                 print(f"警告：{warning}")
+            for rel in offline_missing(root):
+                print(f"警告：找不到 {rel}，离线包里不会有它")
             try:
                 target, count = write_offline_zip(root, version)
             except OSError as exc:

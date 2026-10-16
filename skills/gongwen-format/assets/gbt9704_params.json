@@ -183,10 +183,25 @@
       "top_from_body_mm": 35, "blank_lines_before_number": 1,
       "basis": {"top_from_body_mm": "10.3（上边缘距版心上边缘 35 mm）",
                 "blank_lines_before_number": "实践值：纪要期号排在标志下一行，标准未规定"}
+    },
+    "brief": {
+      "name_font": "小标宋", "name_color": "red", "name_size_max_pt": 36, "name_size_min_pt": 22,
+      "name_fill_ratio": 0.9, "name_line_ratio": 1.2,
+      "issue_font": "仿宋", "issue_size": "三号", "issue_before_pt": 6,
+      "editor_font": "仿宋", "editor_size": "三号", "editor_before_pt": 4,
+      "rule_color": "red", "rule_width_pt": 1.5, "rule_gap_mm": 2, "blank_lines_after_rule": 1,
+      "basis": {"name_font": "实践值：简报无国家标准格式，按机关常见做法，各单位以往期样式为准",
+                "name_color": "实践值：红色居中", "name_size_max_pt": "实践值：小初", "name_size_min_pt": "实践值",
+                "name_fill_ratio": "实践值：名称宽度不超过版心宽的 90%", "name_line_ratio": "实践值",
+                "issue_font": "实践值：期号行居中，三号仿宋", "issue_size": "实践值", "issue_before_pt": "实践值",
+                "editor_font": "实践值：编印单位居左、日期居右同一行，三号仿宋", "editor_size": "实践值",
+                "editor_before_pt": "实践值",
+                "rule_color": "实践值：报头下红色分隔线", "rule_width_pt": "实践值：约 0.5 mm",
+                "rule_gap_mm": "实践值", "blank_lines_after_rule": "实践值：分隔线下空一行排第一篇标题"}
     }
   },
   "seal_default": {
-    "红头": true, "白头": true, "信函": true, "纪要": false, "材料": false,
-    "basis": "7.3.5（有发文机关署名的公文加盖印章）；纪要、材料不盖章为实践值"
+    "红头": true, "白头": true, "信函": true, "纪要": false, "材料": false, "简报": false,
+    "basis": "7.3.5（有发文机关署名的公文加盖印章）；纪要、材料、简报不盖章为实践值"
   }
 }

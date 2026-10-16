@@ -229,6 +229,56 @@ class EvalsTest(ValidateTestBase):
         rep = self.run_checks("gongwen-demo")
         self.assert_not_has(rep.warnings, "只有 3 条")
 
+    def handoff_cases(self, mutate):
+        d = self.repo.add_skill()
+        path = d / "evals/evals.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        for item in data["evals"]:
+            item["tags"] = [t for t in item["tags"] if "交接卡" not in t]
+        mutate(data)
+        write_json(path, data)
+        return self.run_checks("gongwen-demo")
+
+    def test_handoff_case_required(self):
+        # 必错：没有任何交接卡或转交用例
+        rep = self.handoff_cases(lambda data: None)
+        self.assert_has(rep.errors, "缺少交接卡或转交场景的用例")
+        code, _out = run_quiet(validate.main, ["--root", str(self.root), "--skill", "gongwen-demo"])
+        self.assertEqual(code, 1)
+
+    def test_handoff_case_accepted_forms(self):
+        # 必过：tags 为"交接卡"、tags 含"转交"（子串）、expectations 提到交接卡，三种任一即可
+        def tag(data):
+            data["evals"][0]["tags"].append("交接卡")
+
+        def transfer_tag(data):
+            data["evals"][0]["tags"].append("转交行业包")
+
+        def expectation(data):
+            data["evals"][0]["expectations"].append("末尾输出交接卡，写明转交 gongwen-format")
+
+        for mutate in (tag, transfer_tag, expectation):
+            rep = self.handoff_cases(mutate)
+            self.assert_not_has(rep.errors, "交接卡")
+            self.assertEqual(rep.errors, [])
+
+    def test_handoff_case_not_required_for_draft(self):
+        d = self.repo.add_skill(status="draft")
+        path = d / "evals/evals.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        for item in data["evals"]:
+            item["tags"] = ["测试"]
+        write_json(path, data)
+        rep = self.run_checks("gongwen-demo")
+        self.assert_not_has(rep.errors, "交接卡")
+
+    def test_is_handoff_case(self):
+        self.assertTrue(validate.is_handoff_case({"tags": ["交接卡"], "expectations": ["x"]}))
+        self.assertTrue(validate.is_handoff_case({"tags": ["转交direct"], "expectations": ["x"]}))
+        self.assertTrue(validate.is_handoff_case({"tags": [], "expectations": ["输出交接卡"]}))
+        self.assertFalse(validate.is_handoff_case({"tags": ["防编造", "交流发言"], "expectations": ["不编造数据"]}))
+        self.assertFalse(validate.is_handoff_case({"tags": "交接卡", "expectations": None}))
+
     def test_eval_structure_and_files(self):
         d = self.repo.add_skill()
         path = d / "evals/evals.json"
@@ -402,8 +452,111 @@ class EvalOverlapTest(ValidateTestBase):
         self.assertIn("88.5万元（评测材料：evals/files/材料.docx", joined)
 
     def test_overlap_tokens(self):
-        tokens = validate.overlap_tokens("门急诊3216 人次；2026-09-26；２０２６年１０月１６日；12人；0571人；第123条；2026年")
-        self.assertEqual(tokens, ["3216人次", "2026年10月16日", "2026年9月26日"])
+        tokens = validate.overlap_tokens("门急诊3216 人次；2026-09-26；２０２６年１０月１５日；12人；0571人；第123条；2026年")
+        self.assertEqual(tokens, ["3216人次", "2026年10月15日", "2026年9月26日"])
+
+    def test_overlap_tokens_whitelist(self):
+        # 评测当前日期、法规标准的固定日期、外部来源日期都不抽取，写法（汉字、短横线、全角）不影响判断
+        text = ("2026年10月16日；２０２６-１０-１６；2012年7月1日起施行；GB/T 9704-2012 于2012-06-29发布；"
+                "共产党员网2021-04-17转载；国办发〔2019〕34号；GB/T 15835-2011第305条")
+        self.assertEqual(validate.overlap_tokens(text), [])
+        # 白名单只放行列入的日期，相邻的日期照常抽取
+        self.assertEqual(validate.overlap_tokens("2026年10月15日、2026年10月17日、2012年7月2日"),
+                         ["2026年10月15日", "2026年10月17日", "2012年7月2日"])
+        # 白名单的每一项都必须是统一写法，否则永远匹配不上
+        for token in validate.EVAL_ALLOWED_DATES:
+            self.assertEqual(validate.overlap_tokens(token), [], token)
+            self.assertRegex(token, r"^\d{4}年\d{1,2}月\d{1,2}日$")
+
+    def test_expectations_expected_output_and_trigger_are_sources(self):
+        d = self.make("# 示例\n\n- 病区床位增加到 456 床。\n- 整改验收费用 77.7 万元。\n- 满意度 66.6%。\n")
+        path = d / "evals/evals.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["evals"][0]["expectations"] = ["结论写明床位 456 床"]
+        data["evals"][1]["expected_output"] = "说明整改验收费用77.7万元"
+        write_json(path, data)
+        trigger = json.loads((d / "evals/trigger.json").read_text(encoding="utf-8"))
+        trigger[0]["query"] = "我们科满意度66.6%，帮我写个总结"
+        write_json(d / "evals/trigger.json", trigger)
+        rep, _ = validate.run_validation(self.root, "gongwen-demo", eval_overlap=True)
+        joined = "\n".join(self.overlap_warnings(rep))
+        self.assertIn("456床（评测材料：evals.json 第 1 条 expectations", joined)
+        self.assertIn("77.7万元（评测材料：evals.json 第 2 条 expected_output", joined)
+        self.assertIn("66.6%（评测材料：trigger.json 第 1 项 query", joined)
+
+    def test_skill_readme_is_scanned(self):
+        d = self.make("# 示例\n\n没有数字。\n")
+        write_text(d / "README.md", "# 说明\n\n示例：全年门急诊3216人次。\n")
+        rep, _ = validate.run_validation(self.root, "gongwen-demo", eval_overlap=True)
+        joined = "\n".join(self.overlap_warnings(rep))
+        self.assertIn("3216人次", joined)
+        self.assertIn("README.md 第 3 行", joined)
+
+    def test_whitelisted_dates_not_reported_in_skill(self):
+        # 材料和示例都写评测当前日期、法规施行日期时放行；写评测里的普通日期时仍报
+        d = self.make("# 示例\n\n今天是2026年10月16日；条例自2012年7月1日起施行；推进会于2026年9月26日召开。\n")
+        write_text(d / "evals/files/素材.txt", self.MATERIAL + "落款2026年10月16日；条例自2012年7月1日起施行。\n")
+        rep, _ = validate.run_validation(self.root, "gongwen-demo", eval_overlap=True)
+        warnings = self.overlap_warnings(rep)
+        self.assertEqual(len(warnings), 1, warnings)
+        self.assertIn("2026年9月26日", warnings[0])
+
+    def shared_repo(self, shared_text: str):
+        """假仓库：gongwen-demo 同步了 rules/gbt9704.md，gongwen-other 没有同步。"""
+        write_text(self.root / "shared/rules/gbt9704.md", shared_text)
+        write_text(self.root / "shared/rules/other.md", shared_text)
+        d = self.repo.add_skill(shared=REQUIRED + [{"src": "rules/gbt9704.md"}])
+        write_text(d / "evals/files/素材.txt", self.MATERIAL)
+        self.repo.add_skill("gongwen-other", shared=REQUIRED + [{"src": "rules/other.md"}])
+        self.repo.sync()
+        self.repo.add_marketplace()
+        return d
+
+    def test_shared_source_reported_once(self):
+        self.shared_repo("# 要点\n\n示例：全年门急诊3216人次。\n")
+        rep, _ = validate.run_validation(self.root, eval_overlap=True)
+        repo_warnings = [m for s, m in rep.warnings if s == validate.REPO_SCOPE and m.startswith("示例可能复用评测材料")]
+        self.assertEqual(len(repo_warnings), 1, repo_warnings)  # 报到 shared 源文件，_shared 副本不重复报
+        self.assertIn("3216人次", repo_warnings[0])
+        self.assertIn("shared/rules/gbt9704.md 第 3 行", repo_warnings[0])
+        self.assertIn("评测材料：gongwen-demo 的 evals/files/素材.txt", repo_warnings[0])
+        self.assertIn("同步进 1 个 skill", repo_warnings[0])
+        # shared/rules/other.md 只同步进没有这份评测材料的 gongwen-other，不报
+        self.assertNotIn("other.md", repo_warnings[0])
+        skill_warnings = [m for s, m in rep.warnings if s != validate.REPO_SCOPE and m.startswith("示例可能复用评测材料")]
+        self.assertEqual(skill_warnings, [])
+        self.assertEqual(rep.errors, [])
+
+    def test_shared_clean_and_skill_option_skips_repo_scan(self):
+        self.shared_repo("# 要点\n\n示例：全年门急诊3216人次。\n")
+        rep, _ = validate.run_validation(self.root, "gongwen-demo", eval_overlap=True)
+        self.assertEqual(self.overlap_warnings(rep), [])  # --skill 只查 skill 自身，不查 shared 和 examples
+        write_text(self.root / "shared/rules/gbt9704.md", "# 要点\n\n示例：全年门急诊1234人次，2026年10月16日。\n")
+        self.repo.sync()
+        rep, _ = validate.run_validation(self.root, eval_overlap=True)
+        self.assertEqual([m for _s, m in rep.warnings if "复用评测材料" in m], [])
+
+    def test_examples_dir_scanned(self):
+        self.repo.add_skill()
+        self.repo.add_marketplace()
+        write_text(self.root / "skills/gongwen-demo/evals/files/素材.txt", self.MATERIAL)
+        write_text(self.root / "examples/A-演示/正文.txt", "全年门急诊3216人次。\n推进会于2026年9月26日召开，截至2026年12月31日。\n")
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            archive.writestr("word/document.xml", "<w:document><w:body><w:p><w:r><w:t>满意度98.6%</w:t></w:r></w:p>"
+                                                  "</w:body></w:document>")
+        (self.root / "examples/A-演示/成稿.docx").write_bytes(buffer.getvalue())
+        write_text(self.root / "examples/README.md", "说明文字，没有数字。\n")
+        rep, _ = validate.run_validation(self.root, eval_overlap=True)
+        messages = [m for s, m in rep.warnings if s == validate.REPO_SCOPE and m.startswith("示例可能复用评测材料")]
+        joined = "\n".join(messages)
+        self.assertEqual(len(messages), 3, messages)
+        self.assertIn("3216人次", joined)
+        self.assertIn("2026年9月26日", joined)
+        self.assertIn("98.6%", joined)
+        self.assertIn("examples/A-演示/正文.txt 第 1 行", joined)
+        self.assertIn("examples/A-演示/成稿.docx", joined)
+        self.assertNotIn("2026年12月31日", joined)
 
 
 class RepoChecksTest(ValidateTestBase):
@@ -438,6 +591,34 @@ class RepoChecksTest(ValidateTestBase):
         self.assert_not_has(rep.errors, "f.woff2")
         code, _out = run_quiet(validate.main, ["--root", str(self.root)])
         self.assertEqual(code, 1)
+
+    def test_large_raw_results_exempt(self):
+        # evals/results/ 下的 *-raw.json 是可复算的原始评测结果，体量大是有意保留，不报 1MB 警告；
+        # 其他位置、其他文件名的大文件照常警告
+        self.repo.add_skill()
+        self.repo.add_marketplace()
+        big = '{"pad": "' + "0" * (1024 * 1024 + 1) + '"}'
+        write_text(self.root / "evals/results/v9.9-raw.json", big)
+        write_text(self.root / "evals/results/v9.9-round1-raw.json", big)
+        rep = self.run_checks()
+        self.assert_not_has(rep.warnings, "超过 1MB")
+        self.assertEqual(rep.errors, [])
+        write_text(self.root / "evals/results/v9.9-trigger.json", big)
+        write_text(self.root / "evals/other-raw.json", big)
+        write_text(self.root / "docs/v9.9-raw.json", big)
+        rep = self.run_checks()
+        warned = [m for _s, m in rep.warnings if "超过 1MB" in m]
+        self.assertEqual(len(warned), 3, warned)
+        for rel in ("evals/results/v9.9-trigger.json", "evals/other-raw.json", "docs/v9.9-raw.json"):
+            self.assertTrue(any(rel in m for m in warned), rel)
+
+    def test_exempt_raw_json_still_checked_for_syntax(self):
+        self.repo.add_skill()
+        self.repo.add_marketplace()
+        write_text(self.root / "evals/results/v9.9-raw.json", "{oops}" + " " * (1024 * 1024))
+        rep = self.run_checks()
+        self.assert_not_has(rep.warnings, "超过 1MB")
+        self.assert_has(rep.errors, "evals/results/v9.9-raw.json")
 
     def test_out_dir_skipped_only_under_tests(self):
         # .gitignore 只忽略 tests/**/_out/，其他位置的 _out 目录会入库，必须照常检查

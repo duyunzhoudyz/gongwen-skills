@@ -6,7 +6,7 @@ import shutil
 import unittest
 import zipfile
 
-from tests.tools.fixtures import TempRepoTestCase, run_quiet, skill_md, write_text
+from tests.tools.fixtures import REPO_ROOT, TempRepoTestCase, run_quiet, skill_md, write_text
 
 import build_prompts
 
@@ -166,6 +166,62 @@ class BuildPromptsTest(TempRepoTestCase):
         first = target.read_bytes()
         self.assertEqual(self.build("--offline")[0], 0)
         self.assertEqual(target.read_bytes(), first)
+
+    def add_install_files(self):
+        """在假仓库里放上安装脚本和离线使用说明的源文件。"""
+        write_text(self.root / "install.ps1", "# install.ps1\n")
+        write_text(self.root / "install.sh", "#!/usr/bin/env bash\n")
+        write_text(self.root / "tools/install.py", "print('install')\n")
+        write_text(self.root / "tools/offline_readme.md", "# 离线使用说明\n\n涉密信息严禁输入联网 AI。\n")
+
+    def test_offline_zip_includes_install_files_and_guide(self):
+        # 离线包内的 README.md 指向 install.ps1、install.sh、tools/install.py，它们必须一起打进 zip
+        self.repo.add_skill()
+        self.repo.add_marketplace(version="1.2.3")
+        write_text(self.root / "README.md", "# 主页\n")
+        self.add_install_files()
+        code, out = self.build("--offline")
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("找不到", out)
+        target = self.root / "dist/offline/gongwen-skills-offline-1.2.3.zip"
+        with zipfile.ZipFile(target) as zf:
+            names = zf.namelist()
+            for name in ("install.ps1", "install.sh", "tools/install.py", ".claude-plugin/marketplace.json"):
+                self.assertIn(name, names)
+            self.assertEqual(zf.read("tools/install.py"), (self.root / "tools/install.py").read_bytes())
+            # 离线使用说明：源文件在 tools/offline_readme.md，包里放在根目录并改名
+            self.assertIn("离线使用说明.md", names)
+            self.assertEqual(zf.read("离线使用说明.md"), (self.root / "tools/offline_readme.md").read_bytes())
+        self.assertNotIn("tools/offline_readme.md", names)
+        # 只带安装器，不把 tools/ 下的构建脚本一起带进去
+        self.assertEqual([n for n in names if n.startswith("tools/")], ["tools/install.py"])
+        first = target.read_bytes()
+        self.assertEqual(self.build("--offline")[0], 0)
+        self.assertEqual(target.read_bytes(), first)  # 仍是确定性输出
+
+    def test_offline_warns_when_install_files_missing(self):
+        self.repo.add_skill()
+        self.repo.add_marketplace()
+        code, out = self.build("--offline")
+        self.assertEqual(code, 0, out)  # 缺文件只警告，不阻断
+        for rel in ("install.ps1", "install.sh", "tools/install.py", "tools/offline_readme.md"):
+            self.assertIn(f"找不到 {rel}", out)
+        self.assertNotIn("找不到 .claude-plugin/marketplace.json", out)
+
+    def test_real_repo_offline_package_is_self_consistent(self):
+        # 真实仓库：README.md 里出现的安装脚本都在离线包文件清单里，离线使用说明的关键内容没有丢
+        self.assertEqual(build_prompts.offline_missing(REPO_ROOT), [])
+        names = {name for name, _path in build_prompts.collect_offline_files(REPO_ROOT)}
+        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        for script in ("install.ps1", "install.sh", "tools/install.py"):
+            self.assertIn(script, readme)
+            self.assertIn(script, names)
+        self.assertIn("离线使用说明.md", names)
+        guide = (REPO_ROOT / build_prompts.OFFLINE_GUIDE_SRC).read_text(encoding="utf-8")
+        for phrase in ("涉密", "系统提示词", "dist/prompts", "python-docx", "pip install", "联网"):
+            self.assertIn(phrase, guide)
+        for script in ("install.ps1", "install.sh", "install.py"):
+            self.assertIn(script, guide)
 
     def test_offline_zip_excludes_user_dirs(self):
         # 单位画像、用户产出等目录可能含内部信息，不得打进离线包

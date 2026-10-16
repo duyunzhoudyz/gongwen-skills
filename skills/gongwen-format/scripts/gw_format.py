@@ -180,7 +180,7 @@ def apply_role(paragraph, role: str, ctx: D.Ctx, *, split: int = -1, black: bool
         changes |= _font_runs(paragraph, ctx, el["font"], el["size"], start=0, end=name_start, black=False)
         if name_start < len(text):
             changes |= _font_runs(paragraph, ctx, sg["name_font"], sg["size"], start=name_start, black=False)
-    elif role in ("cc", "print", "banji_main"):
+    elif role in ("cc", "print", "banji_main", "brief_foot"):
         el = ctx.el("banji")
         changes |= _font_runs(paragraph, ctx, el["font"], el["size"], black=black)
     return changes

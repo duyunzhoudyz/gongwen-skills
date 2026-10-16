@@ -449,7 +449,7 @@ def _issue(code, level, where, category, item, line, excerpt, message, suggestio
 DATE_RES = [
     (re.compile(r"(\d{4})\s*[年\-/.]\s*(\d{1,2})\s*[月\-/.]\s*(\d{1,2})"), "ymd"),
     (re.compile(r"(\d{4})\s*年\s*(\d{1,2})\s*月\s*(底|末)"), "ym_end"),
-    (re.compile(r"(\d{4})\s*年\s*(底|末)"), "y_end"),
+    (re.compile(r"(\d{4})\s*年\s*年?\s*(底|末)"), "y_end"),  # 含"2026年年底前"
     (re.compile(r"(\d{4})\s*年\s*(\d{1,2})\s*月"), "ym_end"),
 ]
 

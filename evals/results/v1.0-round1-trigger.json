@@ -1,0 +1,4226 @@
+{
+ "summary": {
+  "total": 440,
+  "correct": 435,
+  "positive": [
+   215,
+   220
+  ],
+  "negative": [
+   220,
+   220
+  ],
+  "missing": [],
+  "by_skill": {
+   "gongwen": {
+    "pos": [
+     9,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-brief": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-data": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-direct": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-draft": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-format": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-grassroots": {
+    "pos": [
+     9,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-hospital": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-humanize": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-implement": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-k12": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-minutes": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-party": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-polish": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-profile": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-rectify": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-report": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-review": {
+    "pos": [
+     9,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-soe": {
+    "pos": [
+     9,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-speech": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-title": {
+    "pos": [
+     9,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   },
+   "gongwen-university": {
+    "pos": [
+     10,
+     10
+    ],
+    "neg": [
+     10,
+     10
+    ]
+   }
+  },
+  "confusions": [
+   {
+    "from": "gongwen-grassroots",
+    "chosen": "gongwen-rectify",
+    "count": 1
+   },
+   {
+    "from": "gongwen-soe",
+    "chosen": "gongwen-minutes",
+    "count": 1
+   },
+   {
+    "from": "gongwen",
+    "chosen": "无",
+    "count": 1
+   },
+   {
+    "from": "gongwen-title",
+    "chosen": "gongwen-format",
+    "count": 1
+   },
+   {
+    "from": "gongwen-review",
+    "chosen": "gongwen-direct",
+    "count": 1
+   }
+  ]
+ },
+ "rows": [
+  {
+   "id": "gongwen-report#13",
+   "query": "巡察反馈了问题，帮我写整改方案",
+   "owner": "gongwen-report",
+   "should_trigger": false,
+   "qid": "Q001",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#4",
+   "query": "能不能把这几个小标题弄成“三个坚持”那种数字概括的",
+   "owner": "gongwen-title",
+   "should_trigger": true,
+   "qid": "Q002",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#16",
+   "query": "这篇材料里的提法是不是最新的，帮我查一下",
+   "owner": "gongwen-humanize",
+   "should_trigger": false,
+   "qid": "Q003",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#14",
+   "query": "帮我给这篇汇报提炼几个对仗的小标题",
+   "owner": "gongwen-polish",
+   "should_trigger": false,
+   "qid": "Q004",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#3",
+   "query": "这是领导改过的花脸稿，原稿也在，你帮我看看他喜欢怎么改，记下来",
+   "owner": "gongwen-profile",
+   "should_trigger": true,
+   "qid": "Q005",
+   "chosen": "gongwen-profile",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#3",
+   "query": "帮我写个提交董事会审议的议案，关于修订投资管理办法的",
+   "owner": "gongwen-soe",
+   "should_trigger": true,
+   "qid": "Q006",
+   "chosen": "gongwen-soe",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#14",
+   "query": "上周支部开了组织生活会，帮我把三会一课记录整理一下",
+   "owner": "gongwen-minutes",
+   "should_trigger": false,
+   "qid": "Q007",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#14",
+   "query": "昨天办公会定了5件事，帮我整理督办清单，列出责任单位和时限",
+   "owner": "gongwen-implement",
+   "should_trigger": false,
+   "qid": "Q008",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#4",
+   "query": "医院周末搞了义诊，帮我写篇新闻稿发官网",
+   "owner": "gongwen-brief",
+   "should_trigger": true,
+   "qid": "Q009",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#2",
+   "query": "审计报告指出的问题要整改，帮我建个整改台账，最好能导出Excel",
+   "owner": "gongwen-rectify",
+   "should_trigger": true,
+   "qid": "Q010",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#8",
+   "query": "学校要制定课后服务实施方案，区里的通知在附件",
+   "owner": "gongwen-k12",
+   "should_trigger": true,
+   "qid": "Q011",
+   "chosen": "gongwen-k12",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#16",
+   "query": "把今天党委会的议定事项整理成会议纪要",
+   "owner": "gongwen-party",
+   "should_trigger": false,
+   "qid": "Q012",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#13",
+   "query": "省里发了专项行动通知，帮我们区拆成任务分解表，再写个实施方案",
+   "owner": "gongwen-draft",
+   "should_trigger": false,
+   "qid": "Q013",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#11",
+   "query": "帮我起草集团年度工作会上的总经理工作报告",
+   "owner": "gongwen-soe",
+   "should_trigger": false,
+   "qid": "Q014",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#20",
+   "query": "把这份方案的提纲先搭出来",
+   "owner": "gongwen-format",
+   "should_trigger": false,
+   "qid": "Q015",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#11",
+   "query": "帮我写个通知，下周三下午召开院长办公会，请各科室主任参加",
+   "owner": "gongwen-minutes",
+   "should_trigger": false,
+   "qid": "Q016",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#17",
+   "query": "院长周五在护士节表彰会上讲10分钟，帮我写个讲话稿，他喜欢短句",
+   "owner": "gongwen-profile",
+   "should_trigger": false,
+   "qid": "Q017",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#4",
+   "query": "国社科活页写完了，帮我查查有没有暴露身份的地方，字数超没超",
+   "owner": "gongwen-university",
+   "should_trigger": true,
+   "qid": "Q018",
+   "chosen": "gongwen-university",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#20",
+   "query": "这份 Word 里的标题层级字体全乱了，帮我修成国标格式",
+   "owner": "gongwen-title",
+   "should_trigger": false,
+   "qid": "Q019",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#3",
+   "query": "明天的推进会我来主持，议程在这，帮我写个主持词",
+   "owner": "gongwen-speech",
+   "should_trigger": true,
+   "qid": "Q020",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#4",
+   "query": "这事属于三重一大，要上局党组会议，帮我把议题材料弄一下，两个方案比一比",
+   "owner": "gongwen-minutes",
+   "should_trigger": true,
+   "qid": "Q021",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#20",
+   "query": "你能帮我做哪些公文方面的事？",
+   "owner": "gongwen-review",
+   "should_trigger": false,
+   "qid": "Q022",
+   "chosen": "gongwen",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#13",
+   "query": "帮我起草一份关于开展冬季安全生产检查的通知",
+   "owner": "gongwen-title",
+   "should_trigger": false,
+   "qid": "Q023",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#19",
+   "query": "把这份工作总结排成国标格式的 Word 文档",
+   "owner": "gongwen-report",
+   "should_trigger": false,
+   "qid": "Q024",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen#9",
+   "query": "提示说没装讲话那个 skill，我现在该怎么办？",
+   "owner": "gongwen",
+   "should_trigger": true,
+   "qid": "Q025",
+   "chosen": "gongwen",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#1",
+   "query": "局长周三在全市安全生产推进会上讲15分钟，帮我写个讲话稿",
+   "owner": "gongwen-speech",
+   "should_trigger": true,
+   "qid": "Q026",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#14",
+   "query": "帮我起草一份关于召开2026年度民主生活会的通知",
+   "owner": "gongwen-party",
+   "should_trigger": false,
+   "qid": "Q027",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#6",
+   "query": "督查通报点了我们镇3个问题，要报整改报告",
+   "owner": "gongwen-rectify",
+   "should_trigger": true,
+   "qid": "Q028",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#15",
+   "query": "社区党支部要开组织生活会，帮我准备对照检查材料",
+   "owner": "gongwen-grassroots",
+   "should_trigger": false,
+   "qid": "Q029",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#9",
+   "query": "起草集团2025年度合规管理工作报告，要提交董事会审议",
+   "owner": "gongwen-soe",
+   "should_trigger": true,
+   "qid": "Q030",
+   "chosen": "gongwen-soe",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#16",
+   "query": "局长下周开新闻发布会，帮我写个发布词",
+   "owner": "gongwen-speech",
+   "should_trigger": false,
+   "qid": "Q031",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen#3",
+   "query": "下周市里来督查，我要准备哪些材料，不知道从哪下手",
+   "owner": "gongwen",
+   "should_trigger": true,
+   "qid": "Q032",
+   "chosen": "gongwen",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#19",
+   "query": "把这篇稿子排成国标格式的 Word",
+   "owner": "gongwen-humanize",
+   "should_trigger": false,
+   "qid": "Q033",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#3",
+   "query": "下周三开全院医疗质量安全工作会议，帮我发个会议通知",
+   "owner": "gongwen-draft",
+   "should_trigger": true,
+   "qid": "Q034",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#19",
+   "query": "这篇学院总结已经写好了，帮我核一下标点、数字和格式",
+   "owner": "gongwen-university",
+   "should_trigger": false,
+   "qid": "Q035",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#1",
+   "query": "30个科室的月报都交上来了，帮我合并一下，算算全院的同比环比",
+   "owner": "gongwen-data",
+   "should_trigger": true,
+   "qid": "Q036",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#5",
+   "query": "WPS 里页码怎么设成一字线那种，单页在右双页在左",
+   "owner": "gongwen-format",
+   "should_trigger": true,
+   "qid": "Q037",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#1",
+   "query": "下周要交科室年终总结，素材我发你",
+   "owner": "gongwen-report",
+   "should_trigger": true,
+   "qid": "Q038",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#15",
+   "query": "给这篇年终总结起几套对仗的小标题",
+   "owner": "gongwen-report",
+   "should_trigger": false,
+   "qid": "Q039",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#6",
+   "query": "德育处要交下学期的工作计划，按周排个行事历",
+   "owner": "gongwen-k12",
+   "should_trigger": true,
+   "qid": "Q040",
+   "chosen": "gongwen-k12",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#7",
+   "query": "下周党委会第一议题传达集团工作会议精神，帮我整理一份传达要点",
+   "owner": "gongwen-implement",
+   "should_trigger": true,
+   "qid": "Q041",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#20",
+   "query": "医院要迎接三级医院等级评审，自评报告怎么写",
+   "owner": "gongwen-rectify",
+   "should_trigger": false,
+   "qid": "Q042",
+   "chosen": "gongwen-hospital",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#15",
+   "query": "督导反馈了8个问题，帮我写整改方案和整改台账",
+   "owner": "gongwen-k12",
+   "should_trigger": false,
+   "qid": "Q043",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#10",
+   "query": "局务会纪要里的议定事项，帮我做成督办台账，各科室报了进展再更新状态",
+   "owner": "gongwen-minutes",
+   "should_trigger": true,
+   "qid": "Q044",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#18",
+   "query": "医师节活动要在医院公众号发一篇推文",
+   "owner": "gongwen-hospital",
+   "should_trigger": false,
+   "qid": "Q045",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#9",
+   "query": "医保基金检查查出的问题，医院要报整改方案和整改台账",
+   "owner": "gongwen-rectify",
+   "should_trigger": true,
+   "qid": "Q046",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#10",
+   "query": "领导这半年改过的五份讲话稿都在这，帮我总结一下他的用词习惯和忌讳",
+   "owner": "gongwen-profile",
+   "should_trigger": true,
+   "qid": "Q047",
+   "chosen": "gongwen-profile",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#7",
+   "query": "学校要查 AI 率，帮我把这篇教研总结的 AI 味降一降",
+   "owner": "gongwen-humanize",
+   "should_trigger": true,
+   "qid": "Q048",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#15",
+   "query": "下周要交科室年终总结，这是素材，帮我写一份",
+   "owner": "gongwen-polish",
+   "should_trigger": false,
+   "qid": "Q049",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#15",
+   "query": "医院党委书记抓基层党建述职报告，帮我起个草",
+   "owner": "gongwen-hospital",
+   "should_trigger": false,
+   "qid": "Q050",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#19",
+   "query": "这篇通知写得太平了，帮我整体重写一遍",
+   "owner": "gongwen-review",
+   "should_trigger": false,
+   "qid": "Q051",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#15",
+   "query": "上级文件里的任务帮我拆成任务分解表，带牵头单位和时限",
+   "owner": "gongwen-data",
+   "should_trigger": false,
+   "qid": "Q052",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#15",
+   "query": "这份通知送签前帮我全面把把关，看有没有问题",
+   "owner": "gongwen-direct",
+   "should_trigger": false,
+   "qid": "Q053",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#18",
+   "query": "学校今年的本科教学质量报告要发布了，帮我把全文写出来",
+   "owner": "gongwen-university",
+   "should_trigger": false,
+   "qid": "Q054",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#12",
+   "query": "给区教育局写个请示，申请维修教学楼屋顶",
+   "owner": "gongwen-k12",
+   "should_trigger": false,
+   "qid": "Q055",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#13",
+   "query": "帮我核一下这个通知有没有错别字和提法问题",
+   "owner": "gongwen-format",
+   "should_trigger": false,
+   "qid": "Q056",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#2",
+   "query": "下周县里来检查安全生产，按检查表帮我准备自查报告和现场汇报",
+   "owner": "gongwen-grassroots",
+   "should_trigger": true,
+   "qid": "Q057",
+   "chosen": "gongwen-rectify",
+   "correct": false
+  },
+  {
+   "id": "gongwen-profile#9",
+   "query": "领导偏好卡里给院长加一条：讲话不引用古诗词，数据要放在前面",
+   "owner": "gongwen-profile",
+   "should_trigger": true,
+   "qid": "Q058",
+   "chosen": "gongwen-profile",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#13",
+   "query": "年底了，帮我写个人年度述职述责述廉报告",
+   "owner": "gongwen-party",
+   "should_trigger": false,
+   "qid": "Q059",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#7",
+   "query": "我从党政办调到宣传办了，帮我把画像里的写作角色改一下，别的别动",
+   "owner": "gongwen-profile",
+   "should_trigger": true,
+   "qid": "Q060",
+   "chosen": "gongwen-profile",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#7",
+   "query": "兄弟单位来考察交流，帮我写一篇三分钟的欢迎致辞",
+   "owner": "gongwen-speech",
+   "should_trigger": true,
+   "qid": "Q061",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#3",
+   "query": "领导说这个 docx 格式不对，帮我按国标调一下",
+   "owner": "gongwen-format",
+   "should_trigger": true,
+   "qid": "Q062",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#11",
+   "query": "市里的通知我们直接转发给下属各单位就行，帮我写个转发通知",
+   "owner": "gongwen-implement",
+   "should_trigger": false,
+   "qid": "Q063",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#19",
+   "query": "县民政局要给县委办报一篇本局养老服务工作的政务信息，帮我写",
+   "owner": "gongwen-grassroots",
+   "should_trigger": false,
+   "qid": "Q064",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#14",
+   "query": "帮我核一下这篇稿子，标点、数字用法和格式有没有问题",
+   "owner": "gongwen-humanize",
+   "should_trigger": false,
+   "qid": "Q065",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#18",
+   "query": "帮我核一下这篇述职报告的标点、数字和格式有没有问题",
+   "owner": "gongwen-report",
+   "should_trigger": false,
+   "qid": "Q066",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#1",
+   "query": "昨天院长办公会的录音我转成文字了，帮我整理成会议纪要，议定事项写清谁负责、什么时候完成",
+   "owner": "gongwen-minutes",
+   "should_trigger": true,
+   "qid": "Q067",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#4",
+   "query": "昨天总经理办公会的转写稿发你，出个纪要，再列个督办表",
+   "owner": "gongwen-soe",
+   "should_trigger": true,
+   "qid": "Q068",
+   "chosen": "gongwen-minutes",
+   "correct": false
+  },
+  {
+   "id": "gongwen#5",
+   "query": "第一次用，先简单建个档，以后别每次都问我是哪个单位的",
+   "owner": "gongwen",
+   "should_trigger": true,
+   "qid": "Q069",
+   "chosen": "gongwen",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#2",
+   "query": "上午开了个协调会，这是我的笔记，出个纪要发给相关科室",
+   "owner": "gongwen-minutes",
+   "should_trigger": true,
+   "qid": "Q070",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#18",
+   "query": "学院想给分管校领导打个签报申请实验室改造经费，这事学校发还是我们学院自己发？",
+   "owner": "gongwen-draft",
+   "should_trigger": false,
+   "qid": "Q071",
+   "chosen": "gongwen-university",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#14",
+   "query": "公司党委民主生活会的班子对照检查材料怎么写",
+   "owner": "gongwen-soe",
+   "should_trigger": false,
+   "qid": "Q072",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#14",
+   "query": "昨天党委常委会的记录发你了，整理成会议纪要",
+   "owner": "gongwen-university",
+   "should_trigger": false,
+   "qid": "Q073",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#13",
+   "query": "巡视整改专题民主生活会要开了，帮我写个人对照检查材料",
+   "owner": "gongwen-rectify",
+   "should_trigger": false,
+   "qid": "Q074",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#12",
+   "query": "院长在护士节表彰大会上讲10分钟，写个讲话稿",
+   "owner": "gongwen-hospital",
+   "should_trigger": false,
+   "qid": "Q075",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#12",
+   "query": "这份通知像在跟下级商量，满篇“建议”“可以考虑”，改成要求的口气",
+   "owner": "gongwen-polish",
+   "should_trigger": false,
+   "qid": "Q076",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#14",
+   "query": "省里发了专项行动通知，帮我们区写实施方案和任务分解表",
+   "owner": "gongwen-rectify",
+   "should_trigger": false,
+   "qid": "Q077",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#19",
+   "query": "把这个通知排成红头文件格式，标题用小标宋",
+   "owner": "gongwen-title",
+   "should_trigger": false,
+   "qid": "Q078",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#12",
+   "query": "把这三个科室报上来的总结汇总成一份全院的",
+   "owner": "gongwen-title",
+   "should_trigger": false,
+   "qid": "Q079",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#17",
+   "query": "这份整改报告帮我排成国标格式的 Word",
+   "owner": "gongwen-rectify",
+   "should_trigger": false,
+   "qid": "Q080",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#1",
+   "query": "集团要给子公司增资2个亿，下周上党委会，帮我弄个三重一大的上会材料",
+   "owner": "gongwen-soe",
+   "should_trigger": true,
+   "qid": "Q081",
+   "chosen": "gongwen-soe",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#19",
+   "query": "领导改完了，帮我核一下改后的稿子还有没有错",
+   "owner": "gongwen-profile",
+   "should_trigger": false,
+   "qid": "Q082",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#2",
+   "query": "这几篇是我们局这两年的总结和汇报，你学学我们单位的文风",
+   "owner": "gongwen-profile",
+   "should_trigger": true,
+   "qid": "Q083",
+   "chosen": "gongwen-profile",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#4",
+   "query": "我们科主任写的总结全是大白话，帮我改成正式的公文语言",
+   "owner": "gongwen-polish",
+   "should_trigger": true,
+   "qid": "Q084",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#14",
+   "query": "巡察反馈的12个问题整理成整改台账，转成Excel",
+   "owner": "gongwen-data",
+   "should_trigger": false,
+   "qid": "Q085",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#15",
+   "query": "帮我核一下这个通知，看有没有用到禁用词、有没有错别字",
+   "owner": "gongwen-profile",
+   "should_trigger": false,
+   "qid": "Q086",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#12",
+   "query": "帮我写一份我们国企党建和生产经营深度融合的经验材料",
+   "owner": "gongwen-party",
+   "should_trigger": false,
+   "qid": "Q087",
+   "chosen": "gongwen-soe",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#3",
+   "query": "这个批复写得模棱两可，看不出到底同不同意，帮我改明确",
+   "owner": "gongwen-direct",
+   "should_trigger": true,
+   "qid": "Q088",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#2",
+   "query": "把这篇3000字的经验材料压成800字的政务信息报市里",
+   "owner": "gongwen-brief",
+   "should_trigger": true,
+   "qid": "Q089",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#7",
+   "query": "我是辅导员，下周要和学业预警的学生谈话，帮我列个谈心谈话提纲",
+   "owner": "gongwen-university",
+   "should_trigger": true,
+   "qid": "Q090",
+   "chosen": "gongwen-university",
+   "correct": true
+  },
+  {
+   "id": "gongwen#16",
+   "query": "写条政务信息报区里，讲我们街道推行报表一表通的做法",
+   "owner": "gongwen",
+   "should_trigger": false,
+   "qid": "Q091",
+   "chosen": "gongwen-grassroots",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#13",
+   "query": "把这个通知排成国标格式的 Word 文件",
+   "owner": "gongwen-review",
+   "should_trigger": false,
+   "qid": "Q092",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#1",
+   "query": "医院明年迎接三级医院复审，帮我按2025年版评审标准搭个自评报告的框架",
+   "owner": "gongwen-hospital",
+   "should_trigger": true,
+   "qid": "Q093",
+   "chosen": "gongwen-hospital",
+   "correct": true
+  },
+  {
+   "id": "gongwen#4",
+   "query": "领导让我弄个材料，我也说不清是啥，你帮我捋捋该从哪下手",
+   "owner": "gongwen",
+   "should_trigger": true,
+   "qid": "Q094",
+   "chosen": "gongwen",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#18",
+   "query": "按八关帮我核一下这份请示能不能送签",
+   "owner": "gongwen-title",
+   "should_trigger": false,
+   "qid": "Q095",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#13",
+   "query": "以学校名义给市政府写个函，商请支持新校区建设",
+   "owner": "gongwen-university",
+   "should_trigger": false,
+   "qid": "Q096",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#15",
+   "query": "把公司中标地铁项目的消息写成新闻稿发公众号",
+   "owner": "gongwen-soe",
+   "should_trigger": false,
+   "qid": "Q097",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#20",
+   "query": "这事我该用请示还是报告？",
+   "owner": "gongwen-direct",
+   "should_trigger": false,
+   "qid": "Q098",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#10",
+   "query": "按你刚才的核稿意见直接改一版，事实别动",
+   "owner": "gongwen-review",
+   "should_trigger": true,
+   "qid": "Q099",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#5",
+   "query": "领导说我的小标题大而无当，帮我逐条对一下和正文对不对得上",
+   "owner": "gongwen-title",
+   "should_trigger": true,
+   "qid": "Q100",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen#20",
+   "query": "这篇稿子送签前帮我核一下有没有错别字、标点和数字问题",
+   "owner": "gongwen",
+   "should_trigger": false,
+   "qid": "Q101",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#19",
+   "query": "这份通知写了六千多字，帮我压缩到三千字以内",
+   "owner": "gongwen-draft",
+   "should_trigger": false,
+   "qid": "Q102",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#5",
+   "query": "下周全院经验交流会，我们科要发言8分钟，介绍日间手术的做法",
+   "owner": "gongwen-speech",
+   "should_trigger": true,
+   "qid": "Q103",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#8",
+   "query": "去掉这篇材料里的免责声明和对冲语气",
+   "owner": "gongwen-direct",
+   "should_trigger": true,
+   "qid": "Q104",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#15",
+   "query": "送签前帮我按八关把一下关，列个问题清单",
+   "owner": "gongwen-humanize",
+   "should_trigger": false,
+   "qid": "Q105",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#13",
+   "query": "巡察反馈了12个问题，帮我写整改方案和整改台账",
+   "owner": "gongwen-implement",
+   "should_trigger": false,
+   "qid": "Q106",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#11",
+   "query": "下周区里养老服务现场会我要交流发言，帮我写2000字的经验交流材料",
+   "owner": "gongwen-brief",
+   "should_trigger": false,
+   "qid": "Q107",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#14",
+   "query": "领导下周在全市会议上讲话，帮我写个讲话稿",
+   "owner": "gongwen-title",
+   "should_trigger": false,
+   "qid": "Q108",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#15",
+   "query": "帮我写个通知，把我们的整改方案印发给各科室",
+   "owner": "gongwen-rectify",
+   "should_trigger": false,
+   "qid": "Q109",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#2",
+   "query": "把这份上级文件的任务分解成表，牵头单位、配合单位、完成时限都列出来",
+   "owner": "gongwen-implement",
+   "should_trigger": true,
+   "qid": "Q110",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#9",
+   "query": "安全生产月的材料，同时出报集团的信息、官网新闻稿和推文三个版本",
+   "owner": "gongwen-brief",
+   "should_trigger": true,
+   "qid": "Q111",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#2",
+   "query": "把这篇年终总结转成 Word，按公文格式排好",
+   "owner": "gongwen-format",
+   "should_trigger": true,
+   "qid": "Q112",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#14",
+   "query": "把核稿意见.json 写成 Word 里的批注",
+   "owner": "gongwen-review",
+   "should_trigger": false,
+   "qid": "Q113",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#3",
+   "query": "党委会下周要研究食堂外包，帮我准备上会的议题材料",
+   "owner": "gongwen-minutes",
+   "should_trigger": true,
+   "qid": "Q114",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#11",
+   "query": "帮我把这篇年终总结的 AI 味去掉",
+   "owner": "gongwen-format",
+   "should_trigger": false,
+   "qid": "Q115",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#14",
+   "query": "帮我核一下这篇新闻稿的标点、数字和提法有没有问题",
+   "owner": "gongwen-brief",
+   "should_trigger": false,
+   "qid": "Q116",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen#18",
+   "query": "帮我把这篇年终总结的 AI 味去掉",
+   "owner": "gongwen",
+   "should_trigger": false,
+   "qid": "Q117",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#14",
+   "query": "起草一份关于开展安全生产大检查的通知",
+   "owner": "gongwen-format",
+   "should_trigger": false,
+   "qid": "Q118",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#10",
+   "query": "把这份《安全生产责任制考核办法》用正式文件印发下去，帮我写印发通知",
+   "owner": "gongwen-draft",
+   "should_trigger": true,
+   "qid": "Q119",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#13",
+   "query": "把昨天局务会的情况写成一篇新闻稿发公众号",
+   "owner": "gongwen-minutes",
+   "should_trigger": false,
+   "qid": "Q120",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#17",
+   "query": "县里巡察反馈了我们镇8个问题，帮我写整改方案和整改台账",
+   "owner": "gongwen-grassroots",
+   "should_trigger": false,
+   "qid": "Q121",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#15",
+   "query": "学院党支部组织生活会的对照检查材料怎么写",
+   "owner": "gongwen-university",
+   "should_trigger": false,
+   "qid": "Q122",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#13",
+   "query": "帮我核一下这个通知，看看格式和标点有没有问题",
+   "owner": "gongwen-polish",
+   "should_trigger": false,
+   "qid": "Q123",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#5",
+   "query": "对照省厅文件帮我看看我们的实施方案有没有漏项",
+   "owner": "gongwen-implement",
+   "should_trigger": true,
+   "qid": "Q124",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#1",
+   "query": "帮我看看这个发文标题对不对：关于对2026年度先进集体进行表彰的决定",
+   "owner": "gongwen-title",
+   "should_trigger": true,
+   "qid": "Q125",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#11",
+   "query": "帮我把这篇年终总结的 AI 味去掉",
+   "owner": "gongwen-review",
+   "should_trigger": false,
+   "qid": "Q126",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#5",
+   "query": "把这份纪要里定的事列个督办清单，导成Excel",
+   "owner": "gongwen-minutes",
+   "should_trigger": true,
+   "qid": "Q127",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#16",
+   "query": "巡察反馈了12个问题，帮我建个整改台账",
+   "owner": "gongwen-minutes",
+   "should_trigger": false,
+   "qid": "Q128",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#7",
+   "query": "专题会议纪要里会议指出、会议强调、会议要求老分不清，这份记录你帮我出个纪要",
+   "owner": "gongwen-minutes",
+   "should_trigger": true,
+   "qid": "Q129",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#18",
+   "query": "帮我核一下这篇讲话稿的提法、标点和数字",
+   "owner": "gongwen-speech",
+   "should_trigger": false,
+   "qid": "Q130",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#6",
+   "query": "下级报来的请示领导同意了，帮我回个批复",
+   "owner": "gongwen-draft",
+   "should_trigger": true,
+   "qid": "Q131",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#18",
+   "query": "帮我写一篇局长在安全生产推进会上的讲话，15分钟",
+   "owner": "gongwen-polish",
+   "should_trigger": false,
+   "qid": "Q132",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#17",
+   "query": "这是我写的原稿和领导改过的稿子，帮我总结一下领导的改稿习惯",
+   "owner": "gongwen-polish",
+   "should_trigger": false,
+   "qid": "Q133",
+   "chosen": "gongwen-profile",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#3",
+   "query": "这个月的巡视整改进展要报上去，台账我已经更新好了，帮我写进展报告",
+   "owner": "gongwen-rectify",
+   "should_trigger": true,
+   "qid": "Q134",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#5",
+   "query": "我们科降低术后肺部感染的PDCA项目，帮我整理成评比用的成果材料",
+   "owner": "gongwen-hospital",
+   "should_trigger": true,
+   "qid": "Q135",
+   "chosen": "gongwen-hospital",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#20",
+   "query": "帮我核一下这份发给卫健委的请示，标点和格式有没有问题",
+   "owner": "gongwen-hospital",
+   "should_trigger": false,
+   "qid": "Q136",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#18",
+   "query": "市里印发了乡村振兴实施意见，我们镇要出贯彻落实方案和任务分解表",
+   "owner": "gongwen-grassroots",
+   "should_trigger": false,
+   "qid": "Q137",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#13",
+   "query": "这篇公众号推文是 AI 写的，AI 味太重了，帮我改改",
+   "owner": "gongwen-brief",
+   "should_trigger": false,
+   "qid": "Q138",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#7",
+   "query": "帮我检查一下发文字号、成文日期这些写得对不对",
+   "owner": "gongwen-review",
+   "should_trigger": true,
+   "qid": "Q139",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#8",
+   "query": "职代会闭幕的时候董事长要讲几句，帮我准备个闭幕讲话",
+   "owner": "gongwen-speech",
+   "should_trigger": true,
+   "qid": "Q140",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#16",
+   "query": "把昨天党委会的议定事项整理成督办清单",
+   "owner": "gongwen-rectify",
+   "should_trigger": false,
+   "qid": "Q141",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#15",
+   "query": "局长周五在全市安全生产会上讲15分钟，帮我写个讲话稿",
+   "owner": "gongwen-draft",
+   "should_trigger": false,
+   "qid": "Q142",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#10",
+   "query": "区里让各街道报社区准入清单执行和一表通报表减负情况，帮我写报告",
+   "owner": "gongwen-grassroots",
+   "should_trigger": true,
+   "qid": "Q143",
+   "chosen": "gongwen-grassroots",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#20",
+   "query": "这份经营分析报告写得太长了，帮我压缩到2000字",
+   "owner": "gongwen-soe",
+   "should_trigger": false,
+   "qid": "Q144",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#8",
+   "query": "下个月开党代会，帮我起草党委向大会作的工作报告，过去五年的材料都在附件",
+   "owner": "gongwen-report",
+   "should_trigger": true,
+   "qid": "Q145",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#18",
+   "query": "帮我把这段话改得更像公文，顺便压缩一下篇幅",
+   "owner": "gongwen-format",
+   "should_trigger": false,
+   "qid": "Q146",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#17",
+   "query": "这篇讲话稿太长了，帮我从6000字压到3000字",
+   "owner": "gongwen-speech",
+   "should_trigger": false,
+   "qid": "Q147",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#19",
+   "query": "这个事情用请示还是报告？",
+   "owner": "gongwen-format",
+   "should_trigger": false,
+   "qid": "Q148",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#17",
+   "query": "把这篇活动材料改成一条500字的政务信息，数据要实",
+   "owner": "gongwen-data",
+   "should_trigger": false,
+   "qid": "Q149",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#12",
+   "query": "省里发了通知，帮我们出个实施方案把任务拆下去",
+   "owner": "gongwen-report",
+   "should_trigger": false,
+   "qid": "Q150",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#16",
+   "query": "按我们画像里的发文字号，帮我把这个通知的版头写好",
+   "owner": "gongwen-profile",
+   "should_trigger": false,
+   "qid": "Q151",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#13",
+   "query": "这个批复写得模棱两可，帮我改成明确同意",
+   "owner": "gongwen-humanize",
+   "should_trigger": false,
+   "qid": "Q152",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#8",
+   "query": "纪检要九项准则落实情况自查报告，行风办的素材在这",
+   "owner": "gongwen-hospital",
+   "should_trigger": true,
+   "qid": "Q153",
+   "chosen": "gongwen-hospital",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#15",
+   "query": "帮我给这篇汇报材料起几个小标题",
+   "owner": "gongwen-review",
+   "should_trigger": false,
+   "qid": "Q154",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#17",
+   "query": "省国资委发了安全生产专项整治通知，帮我拆成任务分解表",
+   "owner": "gongwen-soe",
+   "should_trigger": false,
+   "qid": "Q155",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#1",
+   "query": "帮我给区财政局写个函，商请追加今年的学生营养餐补助经费",
+   "owner": "gongwen-draft",
+   "should_trigger": true,
+   "qid": "Q156",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#8",
+   "query": "把这几次支委会的手写记录理成规范的会议记录",
+   "owner": "gongwen-party",
+   "should_trigger": true,
+   "qid": "Q157",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#1",
+   "query": "这篇总结是 DeepSeek 写的，一股 AI 味，帮我改改",
+   "owner": "gongwen-humanize",
+   "should_trigger": true,
+   "qid": "Q158",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen#17",
+   "query": "下周要交科室年终总结，素材我发你",
+   "owner": "gongwen",
+   "should_trigger": false,
+   "qid": "Q159",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#13",
+   "query": "职代会上院长要作工作报告，帮我写报告",
+   "owner": "gongwen-speech",
+   "should_trigger": false,
+   "qid": "Q160",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#11",
+   "query": "七一表彰大会上书记要讲话，帮我写个讲话稿",
+   "owner": "gongwen-party",
+   "should_trigger": false,
+   "qid": "Q161",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen#7",
+   "query": "我用的是网页版，这一步做完了，下一步该粘贴哪个提示词？",
+   "owner": "gongwen",
+   "should_trigger": true,
+   "qid": "Q162",
+   "chosen": "无",
+   "correct": false
+  },
+  {
+   "id": "gongwen-speech#19",
+   "query": "这篇讲话稿是 AI 写的，AI 味太重，帮我改改",
+   "owner": "gongwen-speech",
+   "should_trigger": false,
+   "qid": "Q163",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#1",
+   "query": "期末了，帮我给班上42个孩子写评语，每个人的情况我列在表里了",
+   "owner": "gongwen-k12",
+   "should_trigger": true,
+   "qid": "Q164",
+   "chosen": "gongwen-k12",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#15",
+   "query": "我是支部书记，帮我写一篇学习两会精神的心得体会",
+   "owner": "gongwen-implement",
+   "should_trigger": false,
+   "qid": "Q165",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#7",
+   "query": "新建日间手术中心要提交党委会议研究，帮我写个议题材料",
+   "owner": "gongwen-hospital",
+   "should_trigger": true,
+   "qid": "Q166",
+   "chosen": "gongwen-hospital",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#12",
+   "query": "帮我写全院2026年度工作报告，要提交职代会审议",
+   "owner": "gongwen-draft",
+   "should_trigger": false,
+   "qid": "Q167",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#7",
+   "query": "这是昨天数学组集体备课的录音转写，整理成教研活动记录",
+   "owner": "gongwen-k12",
+   "should_trigger": true,
+   "qid": "Q168",
+   "chosen": "gongwen-k12",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#17",
+   "query": "下周要交科室年终总结，素材我发你，帮我写一份",
+   "owner": "gongwen-review",
+   "should_trigger": false,
+   "qid": "Q169",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#14",
+   "query": "科室要买两台呼吸机，帮我写个签报给分管院长",
+   "owner": "gongwen-hospital",
+   "should_trigger": false,
+   "qid": "Q170",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#3",
+   "query": "学科评估要填5个社会服务典型案例，帮我把这个案例整理成稿",
+   "owner": "gongwen-university",
+   "should_trigger": true,
+   "qid": "Q171",
+   "chosen": "gongwen-university",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#20",
+   "query": "给医保局的这个请示是不是该用函？帮我看看用什么文种，用错了就改过来",
+   "owner": "gongwen-polish",
+   "should_trigger": false,
+   "qid": "Q172",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen#11",
+   "query": "领导让我给区财政局写个东西要一笔经费，我该写请示还是什么？",
+   "owner": "gongwen",
+   "should_trigger": false,
+   "qid": "Q173",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#2",
+   "query": "组织生活会要交个人对照检查材料，我把今年的几件事列出来了",
+   "owner": "gongwen-party",
+   "should_trigger": true,
+   "qid": "Q174",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#4",
+   "query": "帮我写一份这学期的班主任工作总结，班级记录都在这",
+   "owner": "gongwen-k12",
+   "should_trigger": true,
+   "qid": "Q175",
+   "chosen": "gongwen-k12",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#4",
+   "query": "七一要给支部讲党课，题目定了，帮我备个讲稿",
+   "owner": "gongwen-party",
+   "should_trigger": true,
+   "qid": "Q176",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#8",
+   "query": "校长办公会的转写稿太口语了，出一份纪要，原则同意和同意别弄混",
+   "owner": "gongwen-minutes",
+   "should_trigger": true,
+   "qid": "Q177",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#17",
+   "query": "镇里这季度要报篇信息争取被县里采用，帮我写",
+   "owner": "gongwen-brief",
+   "should_trigger": false,
+   "qid": "Q178",
+   "chosen": "gongwen-grassroots",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#4",
+   "query": "这份Word开了修订，是书记改的，帮我归纳一下书记的改稿习惯",
+   "owner": "gongwen-profile",
+   "should_trigger": true,
+   "qid": "Q179",
+   "chosen": "gongwen-profile",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#5",
+   "query": "办公室和分管领导各改了一版，帮我把两稿合成一稿，冲突的标出来",
+   "owner": "gongwen-polish",
+   "should_trigger": true,
+   "qid": "Q180",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#10",
+   "query": "把我们社区助餐点的做法整理成经验交流材料",
+   "owner": "gongwen-report",
+   "should_trigger": true,
+   "qid": "Q181",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#5",
+   "query": "方案里一堆'有关部门''相关方面''适时推进'，责任落不到人，帮我处理一下",
+   "owner": "gongwen-direct",
+   "should_trigger": true,
+   "qid": "Q182",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#18",
+   "query": "三家子公司的经营快报合并一下，算算同比环比，再出个图",
+   "owner": "gongwen-soe",
+   "should_trigger": false,
+   "qid": "Q183",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#1",
+   "query": "明年学校迎本科审核评估，学院版自评报告怎么写？材料我发你",
+   "owner": "gongwen-university",
+   "should_trigger": true,
+   "qid": "Q184",
+   "chosen": "gongwen-university",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#19",
+   "query": "30个科室的月报数据帮我汇总一下，算个同比环比",
+   "owner": "gongwen-rectify",
+   "should_trigger": false,
+   "qid": "Q185",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#4",
+   "query": "上周住院患者跌倒骨折了，护理部要做RCA，上报单和谈话记录都在这",
+   "owner": "gongwen-hospital",
+   "should_trigger": true,
+   "qid": "Q186",
+   "chosen": "gongwen-hospital",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#10",
+   "query": "这个对外担保事项要不要走党委前置研究？帮我对照前置研究清单判断一下",
+   "owner": "gongwen-soe",
+   "should_trigger": true,
+   "qid": "Q187",
+   "chosen": "gongwen-soe",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#9",
+   "query": "我们医院想请市医保局调整住院结算方式，这事该用请示还是函？",
+   "owner": "gongwen-draft",
+   "should_trigger": true,
+   "qid": "Q188",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#3",
+   "query": "社区下周二停水，帮我写个贴单元门口的通知，再弄一条发业主群",
+   "owner": "gongwen-grassroots",
+   "should_trigger": true,
+   "qid": "Q189",
+   "chosen": "gongwen-grassroots",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#6",
+   "query": "年底书记要抓基层党建述职，素材党建办整理好了",
+   "owner": "gongwen-party",
+   "should_trigger": true,
+   "qid": "Q190",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#7",
+   "query": "帮我看看这份整改报告和台账的完成情况对不对得上",
+   "owner": "gongwen-rectify",
+   "should_trigger": true,
+   "qid": "Q191",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#14",
+   "query": "镇里召开防汛工作会议，帮我起草会议通知发给各村和站所",
+   "owner": "gongwen-grassroots",
+   "should_trigger": false,
+   "qid": "Q192",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#16",
+   "query": "巡察反馈了15个问题，帮我写整改方案和整改台账",
+   "owner": "gongwen-soe",
+   "should_trigger": false,
+   "qid": "Q193",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#18",
+   "query": "下面报上来一篇信息，看看能不能被市里采用",
+   "owner": "gongwen-review",
+   "should_trigger": false,
+   "qid": "Q194",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#20",
+   "query": "上级关于开展专题学习教育的通知来了，帮我出个本单位的学习贯彻落实方案",
+   "owner": "gongwen-party",
+   "should_trigger": false,
+   "qid": "Q195",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#7",
+   "query": "网格员入户走访该问些什么，帮我设计个走访提纲和记录表",
+   "owner": "gongwen-grassroots",
+   "should_trigger": true,
+   "qid": "Q196",
+   "chosen": "gongwen-grassroots",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#8",
+   "query": "电脑没有方正小标宋，排版时标题用什么字体代替",
+   "owner": "gongwen-format",
+   "should_trigger": true,
+   "qid": "Q197",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#9",
+   "query": "学院想申请学校经费改造实验室，要给分管副校长打个签报",
+   "owner": "gongwen-university",
+   "should_trigger": true,
+   "qid": "Q198",
+   "chosen": "gongwen-university",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#12",
+   "query": "民主生活会上的对照检查发言材料帮我准备一下",
+   "owner": "gongwen-speech",
+   "should_trigger": false,
+   "qid": "Q199",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#14",
+   "query": "局长周五在全市安全生产会上讲15分钟，帮我写个讲话稿",
+   "owner": "gongwen-report",
+   "should_trigger": false,
+   "qid": "Q200",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#5",
+   "query": "县气象台发了暴雨橙色预警，镇里要马上给各村发防汛紧急通知",
+   "owner": "gongwen-grassroots",
+   "should_trigger": true,
+   "qid": "Q201",
+   "chosen": "gongwen-grassroots",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#5",
+   "query": "帮我写个请示，向县政府申请拨付敬老院改造资金",
+   "owner": "gongwen-draft",
+   "should_trigger": true,
+   "qid": "Q202",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#1",
+   "query": "区委巡察组反馈了12个问题，帮我们街道写个整改方案",
+   "owner": "gongwen-rectify",
+   "should_trigger": true,
+   "qid": "Q203",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#12",
+   "query": "通知里“仅供参考”“请结合实际”这种免责的话太多，帮我删掉，语气改坚决点",
+   "owner": "gongwen-humanize",
+   "should_trigger": false,
+   "qid": "Q204",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#3",
+   "query": "这个请示格式和标点有没有毛病？",
+   "owner": "gongwen-review",
+   "should_trigger": true,
+   "qid": "Q205",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen#19",
+   "query": "帮我建个完整的单位画像，再学学我们单位以往发文的文风",
+   "owner": "gongwen",
+   "should_trigger": false,
+   "qid": "Q206",
+   "chosen": "gongwen-profile",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#15",
+   "query": "给这份汇报材料起几个小标题",
+   "owner": "gongwen-format",
+   "should_trigger": false,
+   "qid": "Q207",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#8",
+   "query": "区教育局发了校园安全隐患排查的通知，要学校出落实方案，时间节点帮我倒排一下",
+   "owner": "gongwen-implement",
+   "should_trigger": true,
+   "qid": "Q208",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#6",
+   "query": "经验材料要个主副标题，主标题得把做法提炼出来",
+   "owner": "gongwen-title",
+   "should_trigger": true,
+   "qid": "Q209",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#20",
+   "query": "下周院长办公会上我要代表科室做个表态发言，帮我写一下",
+   "owner": "gongwen-minutes",
+   "should_trigger": false,
+   "qid": "Q210",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#7",
+   "query": "公司是深证100样本股，今年的可持续发展报告怎么搭框架、披露口径怎么写",
+   "owner": "gongwen-soe",
+   "should_trigger": true,
+   "qid": "Q211",
+   "chosen": "gongwen-soe",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#13",
+   "query": "帮我写个请示，向县政府申请村道水毁修复资金",
+   "owner": "gongwen-grassroots",
+   "should_trigger": false,
+   "qid": "Q212",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#4",
+   "query": "把这几组数据写成一段能直接放进总结里的话，同比环比都带上",
+   "owner": "gongwen-data",
+   "should_trigger": true,
+   "qid": "Q213",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#6",
+   "query": "这份公示里有没有泄露个人信息的地方，帮我查查",
+   "owner": "gongwen-review",
+   "should_trigger": true,
+   "qid": "Q214",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen#10",
+   "query": "一篇稿子从起草到排版要经过哪几步？帮我排个顺序",
+   "owner": "gongwen",
+   "should_trigger": true,
+   "qid": "Q215",
+   "chosen": "gongwen",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#5",
+   "query": "记一下，以后“赋能”“抓手”这种词别用了，加到禁用词里",
+   "owner": "gongwen-profile",
+   "should_trigger": true,
+   "qid": "Q216",
+   "chosen": "gongwen-profile",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#6",
+   "query": "社区助餐点开张了，发个公众号告诉居民怎么去吃饭",
+   "owner": "gongwen-brief",
+   "should_trigger": true,
+   "qid": "Q217",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#20",
+   "query": "昨天校务会的记录发你，整理成会议纪要",
+   "owner": "gongwen-k12",
+   "should_trigger": false,
+   "qid": "Q218",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#9",
+   "query": "这篇信息稿开头“随着……”、结尾“未来可期”，太 AI 了，帮我改",
+   "owner": "gongwen-humanize",
+   "should_trigger": true,
+   "qid": "Q219",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#12",
+   "query": "董事长在年中工作会上的讲话稿，帮我写一下",
+   "owner": "gongwen-soe",
+   "should_trigger": false,
+   "qid": "Q220",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#10",
+   "query": "下个月开教代会，校长的学校工作报告先帮我拟个提纲",
+   "owner": "gongwen-university",
+   "should_trigger": true,
+   "qid": "Q221",
+   "chosen": "gongwen-university",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#9",
+   "query": "组织生活会前要跟支部委员谈心谈话，帮我拟个谈话提纲",
+   "owner": "gongwen-party",
+   "should_trigger": true,
+   "qid": "Q222",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#10",
+   "query": "领导在 Word 里加了一堆批注，你照着批注把稿子改一遍",
+   "owner": "gongwen-polish",
+   "should_trigger": true,
+   "qid": "Q223",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#16",
+   "query": "巡察组反馈了我们医院12个问题，帮我写整改方案",
+   "owner": "gongwen-hospital",
+   "should_trigger": false,
+   "qid": "Q224",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#13",
+   "query": "给省国资委写个请示，申请追加国有资本经营预算",
+   "owner": "gongwen-soe",
+   "should_trigger": false,
+   "qid": "Q225",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#6",
+   "query": "请示里只写了两个方案各有利弊，没写我们倾向哪个，帮我看看怎么改",
+   "owner": "gongwen-direct",
+   "should_trigger": true,
+   "qid": "Q226",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#19",
+   "query": "这篇班主任工作总结是AI写的，AI味太重了，帮我改改",
+   "owner": "gongwen-k12",
+   "should_trigger": false,
+   "qid": "Q227",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#18",
+   "query": "这篇对照检查材料AI味太重了，帮我把AI腔去掉，别的不动",
+   "owner": "gongwen-party",
+   "should_trigger": false,
+   "qid": "Q228",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#7",
+   "query": "同一套材料，帮我出局里的年度总结和我自己的述职报告",
+   "owner": "gongwen-report",
+   "should_trigger": true,
+   "qid": "Q229",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#7",
+   "query": "厂区凌晨起了一场火，已经扑灭，赶紧帮我起草报集团值班室的紧急信息首报",
+   "owner": "gongwen-brief",
+   "should_trigger": true,
+   "qid": "Q230",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#8",
+   "query": "算一下各科室出院人次的占比，再出个柱状图放汇报里",
+   "owner": "gongwen-data",
+   "should_trigger": true,
+   "qid": "Q231",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#13",
+   "query": "我是校长，年底要述职，帮我写述职报告",
+   "owner": "gongwen-k12",
+   "should_trigger": false,
+   "qid": "Q232",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#8",
+   "query": "写一篇党建和生产经营融合的经验材料，就写党员突击队抢修机组那件事",
+   "owner": "gongwen-soe",
+   "should_trigger": true,
+   "qid": "Q233",
+   "chosen": "gongwen-soe",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#19",
+   "query": "帮我写个安全生产月宣传活动方案",
+   "owner": "gongwen-brief",
+   "should_trigger": false,
+   "qid": "Q234",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#10",
+   "query": "质控科交上来的绩效监测自评材料初稿，帮我看看指标名称、百分点和口径有没有问题",
+   "owner": "gongwen-hospital",
+   "should_trigger": true,
+   "qid": "Q235",
+   "chosen": "gongwen-hospital",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#6",
+   "query": "豆包生成的讲话稿太像 AI 了，改得像人写的",
+   "owner": "gongwen-humanize",
+   "should_trigger": true,
+   "qid": "Q236",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen#6",
+   "query": "年底科室总结、我的述职和给院里的汇报都要交，先做哪个、分别找哪个模块？",
+   "owner": "gongwen",
+   "should_trigger": true,
+   "qid": "Q237",
+   "chosen": "gongwen",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#9",
+   "query": "社区两委会讨论了加装电梯的事，帮我把会议记录整理一下",
+   "owner": "gongwen-minutes",
+   "should_trigger": true,
+   "qid": "Q238",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#18",
+   "query": "把这几篇历史稿合成今年的年终总结",
+   "owner": "gongwen-profile",
+   "should_trigger": false,
+   "qid": "Q239",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#18",
+   "query": "给这篇汇报材料提炼几个对仗的小标题",
+   "owner": "gongwen-humanize",
+   "should_trigger": false,
+   "qid": "Q240",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#13",
+   "query": "通篇赋能、闭环、打造，帮我换成正常的公文用词",
+   "owner": "gongwen-direct",
+   "should_trigger": false,
+   "qid": "Q241",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#18",
+   "query": "给这篇汇报材料起个主标题和几个小标题",
+   "owner": "gongwen-direct",
+   "should_trigger": false,
+   "qid": "Q242",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#16",
+   "query": "把这篇3000字的经验材料压成一篇800字的政务信息报送",
+   "owner": "gongwen-polish",
+   "should_trigger": false,
+   "qid": "Q243",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#5",
+   "query": "寒假快到了，以学校名义给家长写一封信，提醒假期安全",
+   "owner": "gongwen-k12",
+   "should_trigger": true,
+   "qid": "Q244",
+   "chosen": "gongwen-k12",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#4",
+   "query": "市卫健委的通知帮我转化成我们医院的贯彻落实方案",
+   "owner": "gongwen-implement",
+   "should_trigger": true,
+   "qid": "Q245",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#16",
+   "query": "检查一下这几个小标题和正文内容对不对得上",
+   "owner": "gongwen-review",
+   "should_trigger": false,
+   "qid": "Q246",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#11",
+   "query": "帮我写一份9月份医疗质量分析报告，有分析有建议，科室数据都在附件",
+   "owner": "gongwen-data",
+   "should_trigger": false,
+   "qid": "Q247",
+   "chosen": "gongwen-hospital",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#16",
+   "query": "局长周五要在全市宣传思想工作会上讲话，帮我写篇讲话稿",
+   "owner": "gongwen-brief",
+   "should_trigger": false,
+   "qid": "Q248",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#10",
+   "query": "实施方案里的 AI 套话帮我清一下，一是二是和小标题别动",
+   "owner": "gongwen-humanize",
+   "should_trigger": true,
+   "qid": "Q249",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#18",
+   "query": "会议纪要已经定稿了，帮我排成纪要格式的 Word",
+   "owner": "gongwen-minutes",
+   "should_trigger": false,
+   "qid": "Q250",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#1",
+   "query": "院里昨天开了医疗质量推进会，帮我写条信息报市卫健委",
+   "owner": "gongwen-brief",
+   "should_trigger": true,
+   "qid": "Q251",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#2",
+   "query": "下周开家长会，我是初二班主任，帮我弄个发言稿",
+   "owner": "gongwen-k12",
+   "should_trigger": true,
+   "qid": "Q252",
+   "chosen": "gongwen-k12",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#20",
+   "query": "给县卫健委写个报告，说明上周住院患者跌倒事件的经过和处置情况",
+   "owner": "gongwen-report",
+   "should_trigger": false,
+   "qid": "Q253",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#4",
+   "query": "8个科室报上来的总结，帮我汇总成全院的年度总结，数据对不上的标出来",
+   "owner": "gongwen-report",
+   "should_trigger": true,
+   "qid": "Q254",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#20",
+   "query": "给这篇信息起三个标题，正文不用动",
+   "owner": "gongwen-brief",
+   "should_trigger": false,
+   "qid": "Q255",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#10",
+   "query": "集团发了安全生产治本攻坚的通知，帮公司出个实施方案，看看有没有层层加码的地方",
+   "owner": "gongwen-implement",
+   "should_trigger": true,
+   "qid": "Q256",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#19",
+   "query": "把这篇通知排成国标格式的 Word",
+   "owner": "gongwen-direct",
+   "should_trigger": false,
+   "qid": "Q257",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#12",
+   "query": "市里领导下周来我们街道检查，帮我准备一个迎检汇报材料",
+   "owner": "gongwen-rectify",
+   "should_trigger": false,
+   "qid": "Q258",
+   "chosen": "gongwen-grassroots",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#8",
+   "query": "考核反馈的问题在这，帮我弄个问题清单、任务清单、责任清单",
+   "owner": "gongwen-rectify",
+   "should_trigger": true,
+   "qid": "Q259",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#8",
+   "query": "请示标题写成“关于申请购置设备的请示报告”行不行",
+   "owner": "gongwen-title",
+   "should_trigger": true,
+   "qid": "Q260",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#15",
+   "query": "把这期工作简报排成 Word 文档",
+   "owner": "gongwen-brief",
+   "should_trigger": false,
+   "qid": "Q261",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#9",
+   "query": "期中表彰会上有个学生代表要发言，帮这位同学准备一篇发言稿",
+   "owner": "gongwen-speech",
+   "should_trigger": true,
+   "qid": "Q262",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#11",
+   "query": "下周给支部党员讲一堂党课，帮我写党课讲稿",
+   "owner": "gongwen-speech",
+   "should_trigger": false,
+   "qid": "Q263",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#16",
+   "query": "帮我写一份申请购置设备的请示",
+   "owner": "gongwen-direct",
+   "should_trigger": false,
+   "qid": "Q264",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#9",
+   "query": "把这周三安全教育班会的情况整理成学校要的记录",
+   "owner": "gongwen-k12",
+   "should_trigger": true,
+   "qid": "Q265",
+   "chosen": "gongwen-k12",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#6",
+   "query": "我们的单位画像是去年建的，帮我体检一下，看看有没有过时的地方",
+   "owner": "gongwen-profile",
+   "should_trigger": true,
+   "qid": "Q266",
+   "chosen": "gongwen-profile",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#4",
+   "query": "镇长要在全县防汛会上表态发言，三分钟，写得实在点",
+   "owner": "gongwen-speech",
+   "should_trigger": true,
+   "qid": "Q267",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#16",
+   "query": "这份通知的标题太平了，帮我想几个更好的标题",
+   "owner": "gongwen-draft",
+   "should_trigger": false,
+   "qid": "Q268",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#3",
+   "query": "年终总结正文写好了，帮我提炼几个小标题，要对仗的",
+   "owner": "gongwen-title",
+   "should_trigger": true,
+   "qid": "Q269",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#20",
+   "query": "给这篇讲话的三个部分起几个对仗的小标题",
+   "owner": "gongwen-speech",
+   "should_trigger": false,
+   "qid": "Q270",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#17",
+   "query": "通读一下这篇稿子，标点、数字、提法有没有问题",
+   "owner": "gongwen-title",
+   "should_trigger": false,
+   "qid": "Q271",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#12",
+   "query": "这篇稿子“可能”“或许”太多，还有一堆免责声明，帮我删干净",
+   "owner": "gongwen-review",
+   "should_trigger": false,
+   "qid": "Q272",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#20",
+   "query": "我是学院党委书记，给支部党员列个谈心谈话提纲",
+   "owner": "gongwen-university",
+   "should_trigger": false,
+   "qid": "Q273",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#11",
+   "query": "帮我写今年科室的年终工作总结，素材我发你",
+   "owner": "gongwen-rectify",
+   "should_trigger": false,
+   "qid": "Q274",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#12",
+   "query": "我们局自己想搞个读书月活动，帮我写个活动实施方案",
+   "owner": "gongwen-implement",
+   "should_trigger": false,
+   "qid": "Q275",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#6",
+   "query": "我是骨科主任，年度述职要上台讲10分钟，得写DRG和CMI，这是科室数据和我做的几件事",
+   "owner": "gongwen-hospital",
+   "should_trigger": true,
+   "qid": "Q276",
+   "chosen": "gongwen-hospital",
+   "correct": true
+  },
+  {
+   "id": "gongwen#13",
+   "query": "帮我起草一个关于开展冬季消防安全检查的通知，发给局属各单位",
+   "owner": "gongwen",
+   "should_trigger": false,
+   "qid": "Q277",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#4",
+   "query": "帮我写个文明养犬倡议书，社区和业委会一起发",
+   "owner": "gongwen-grassroots",
+   "should_trigger": true,
+   "qid": "Q278",
+   "chosen": "gongwen-grassroots",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#7",
+   "query": "稿子太单薄了，不加新数据的前提下帮我扩到2000字左右",
+   "owner": "gongwen-polish",
+   "should_trigger": true,
+   "qid": "Q279",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#9",
+   "query": "报告里夹着要钱的话，结尾还写了妥否请批示，帮我改对",
+   "owner": "gongwen-direct",
+   "should_trigger": true,
+   "qid": "Q280",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#14",
+   "query": "市领导来调研，给我们局长准备一份10分钟的汇报材料",
+   "owner": "gongwen-speech",
+   "should_trigger": false,
+   "qid": "Q281",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#12",
+   "query": "把这篇8000字的调研报告压缩到3000字，结构不要动",
+   "owner": "gongwen-brief",
+   "should_trigger": false,
+   "qid": "Q282",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen#8",
+   "query": "你们这套公文工具一共有哪些模块，分别管什么？",
+   "owner": "gongwen",
+   "should_trigger": true,
+   "qid": "Q283",
+   "chosen": "gongwen",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#14",
+   "query": "巡察反馈了12个问题，帮我写整改方案和整改台账",
+   "owner": "gongwen-draft",
+   "should_trigger": false,
+   "qid": "Q284",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#16",
+   "query": "昨天镇党委会的记录发你了，整理一份会议纪要",
+   "owner": "gongwen-grassroots",
+   "should_trigger": false,
+   "qid": "Q285",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#2",
+   "query": "科室想买两台呼吸机，帮我写个签报报分管院长",
+   "owner": "gongwen-draft",
+   "should_trigger": true,
+   "qid": "Q286",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#8",
+   "query": "轻度去一下 AI 痕迹就行，结构别动",
+   "owner": "gongwen-humanize",
+   "should_trigger": true,
+   "qid": "Q287",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#3",
+   "query": "帮我起草领导班子民主生活会对照检查材料，征求意见汇总在这",
+   "owner": "gongwen-party",
+   "should_trigger": true,
+   "qid": "Q288",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#15",
+   "query": "省里发了个专项行动通知，帮我拆成任务分解表，列清牵头单位和时限",
+   "owner": "gongwen-minutes",
+   "should_trigger": false,
+   "qid": "Q289",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#3",
+   "query": "这个报告原来是写给区政府的，现在要改成发给各学校的通知，帮我改改口气",
+   "owner": "gongwen-polish",
+   "should_trigger": true,
+   "qid": "Q290",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#6",
+   "query": "学院年终总结要交学校考核，数据要和学校核定的对上，流水账发你",
+   "owner": "gongwen-university",
+   "should_trigger": true,
+   "qid": "Q291",
+   "chosen": "gongwen-university",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#4",
+   "query": "送签前帮我过一遍这份报告",
+   "owner": "gongwen-review",
+   "should_trigger": true,
+   "qid": "Q292",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#17",
+   "query": "支部主题党日搞完了，写一篇发公众号的新闻稿",
+   "owner": "gongwen-party",
+   "should_trigger": false,
+   "qid": "Q293",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#17",
+   "query": "这篇通知的标点和数字用法帮我查一下",
+   "owner": "gongwen-format",
+   "should_trigger": false,
+   "qid": "Q294",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#3",
+   "query": "这一期迎评简报的素材给你，帮我编成第5期",
+   "owner": "gongwen-brief",
+   "should_trigger": true,
+   "qid": "Q295",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#6",
+   "query": "把集团改革任务台账按三季度进展更新一下，顺便写个改革进展报告",
+   "owner": "gongwen-soe",
+   "should_trigger": true,
+   "qid": "Q296",
+   "chosen": "gongwen-soe",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#10",
+   "query": "党支部年度工作总结和明年计划怎么写，记录我发你",
+   "owner": "gongwen-party",
+   "should_trigger": true,
+   "qid": "Q297",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#11",
+   "query": "开学典礼上校长要讲10分钟，帮我写个讲话稿",
+   "owner": "gongwen-k12",
+   "should_trigger": false,
+   "qid": "Q298",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#3",
+   "query": "区里下个月来督导评估，学校要交自评报告，指标表发你",
+   "owner": "gongwen-k12",
+   "should_trigger": true,
+   "qid": "Q299",
+   "chosen": "gongwen-k12",
+   "correct": true
+  },
+  {
+   "id": "gongwen#12",
+   "query": "向上级说明情况顺便要经费，这事用请示还是报告？",
+   "owner": "gongwen",
+   "should_trigger": false,
+   "qid": "Q300",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen#1",
+   "query": "我刚到医院院办上班，第一次用这个，你都能帮我做什么？",
+   "owner": "gongwen",
+   "should_trigger": true,
+   "qid": "Q301",
+   "chosen": "gongwen",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#20",
+   "query": "按督查组的检查清单逐项写一份自查报告",
+   "owner": "gongwen-implement",
+   "should_trigger": false,
+   "qid": "Q302",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#10",
+   "query": "整改台账里好几条写着基本完成，帮我按口径重新理一下状态",
+   "owner": "gongwen-rectify",
+   "should_trigger": true,
+   "qid": "Q303",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#5",
+   "query": "支部这个月的主题党日还没想好，帮我出个方案",
+   "owner": "gongwen-party",
+   "should_trigger": true,
+   "qid": "Q304",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#5",
+   "query": "学校科技节办完了，写篇公众号推文",
+   "owner": "gongwen-brief",
+   "should_trigger": true,
+   "qid": "Q305",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#5",
+   "query": "帮我对照今年的申报通知，给这份国自然申请书做个形式审查",
+   "owner": "gongwen-university",
+   "should_trigger": true,
+   "qid": "Q306",
+   "chosen": "gongwen-university",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#1",
+   "query": "下个月开民主生活会，帮我弄个个人发言提纲，组织反馈给我的意见我贴给你",
+   "owner": "gongwen-party",
+   "should_trigger": true,
+   "qid": "Q307",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#19",
+   "query": "根据今年的纠风工作要点，帮我们医院拆解任务、制定实施方案",
+   "owner": "gongwen-hospital",
+   "should_trigger": false,
+   "qid": "Q308",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#11",
+   "query": "帮我把这篇年终总结的 AI 味去掉",
+   "owner": "gongwen-direct",
+   "should_trigger": false,
+   "qid": "Q309",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#14",
+   "query": "帮我核一下这份请示的格式、标点和数字",
+   "owner": "gongwen-direct",
+   "should_trigger": false,
+   "qid": "Q310",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#7",
+   "query": "下面几个乡镇报的表有的填元有的填万元，帮我统一单位再汇总",
+   "owner": "gongwen-data",
+   "should_trigger": true,
+   "qid": "Q311",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#11",
+   "query": "帮我写心内科2026年年终工作总结，素材我发你",
+   "owner": "gongwen-hospital",
+   "should_trigger": false,
+   "qid": "Q312",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#5",
+   "query": "领导说“赋能”“闭环”太多，像网上抄的，帮我清理一下这些词",
+   "owner": "gongwen-humanize",
+   "should_trigger": true,
+   "qid": "Q313",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#4",
+   "query": "市里转发了省里的通知，我们县也要转发下去，标题怎么写才不啰嗦，帮我起草转发通知",
+   "owner": "gongwen-draft",
+   "should_trigger": true,
+   "qid": "Q314",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#15",
+   "query": "这篇汇报材料 AI 味太重了，帮我改得像人写的",
+   "owner": "gongwen-title",
+   "should_trigger": false,
+   "qid": "Q315",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#18",
+   "query": "把这份带表格的汇报排成国标格式的Word文档",
+   "owner": "gongwen-data",
+   "should_trigger": false,
+   "qid": "Q316",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#1",
+   "query": "帮我把我们医院的单位画像建完整，公文处理办法和议事规则我发你",
+   "owner": "gongwen-profile",
+   "should_trigger": true,
+   "qid": "Q317",
+   "chosen": "gongwen-profile",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#2",
+   "query": "领导在稿子上批了“太虚”“数据呢”，帮我按批注改一下",
+   "owner": "gongwen-polish",
+   "should_trigger": true,
+   "qid": "Q318",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#17",
+   "query": "我是辅导员，这个季度的思想汇报要交支部，要点我列好了，帮我整理成文",
+   "owner": "gongwen-university",
+   "should_trigger": false,
+   "qid": "Q319",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#12",
+   "query": "年终总结的素材都在这，帮我写个3000字的科室总结",
+   "owner": "gongwen-data",
+   "should_trigger": false,
+   "qid": "Q320",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#11",
+   "query": "帮我把这个请示里“可能”“建议考虑”这些含糊的话改成明确表态",
+   "owner": "gongwen-humanize",
+   "should_trigger": false,
+   "qid": "Q321",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#11",
+   "query": "帮我把这篇年终总结的 AI 味去掉",
+   "owner": "gongwen-polish",
+   "should_trigger": false,
+   "qid": "Q322",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen#14",
+   "query": "局长下周三在全市安全生产推进会上讲15分钟，帮我写讲话稿",
+   "owner": "gongwen",
+   "should_trigger": false,
+   "qid": "Q323",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#9",
+   "query": "市卫健委院感专项检查反馈了8个问题，帮我出整改台账和整改报告",
+   "owner": "gongwen-hospital",
+   "should_trigger": true,
+   "qid": "Q324",
+   "chosen": "gongwen-hospital",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#7",
+   "query": "中心组研讨我要发言，帮我把这几点体会理成发言提纲",
+   "owner": "gongwen-party",
+   "should_trigger": true,
+   "qid": "Q325",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#9",
+   "query": "上级文件里的任务帮我对标对表列个清单，看看哪些归我们科室",
+   "owner": "gongwen-implement",
+   "should_trigger": true,
+   "qid": "Q326",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#12",
+   "query": "这份请示写得太软了，改得态度明确一点",
+   "owner": "gongwen-format",
+   "should_trigger": false,
+   "qid": "Q327",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#13",
+   "query": "这篇总结写好了，帮我核一下里面的数字和百分点前后对不对得上",
+   "owner": "gongwen-data",
+   "should_trigger": false,
+   "qid": "Q328",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#6",
+   "query": "给医保局的函要用信函格式出 docx",
+   "owner": "gongwen-format",
+   "should_trigger": true,
+   "qid": "Q329",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#2",
+   "query": "AI 写的稿子结尾挂着'以上内容仅供参考，请结合实际情况调整'，帮我清掉",
+   "owner": "gongwen-direct",
+   "should_trigger": true,
+   "qid": "Q330",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#5",
+   "query": "明年的工作要点帮我起个草，去年的要点和今年的总结都在附件",
+   "owner": "gongwen-report",
+   "should_trigger": true,
+   "qid": "Q331",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#8",
+   "query": "把网格员这个月的走访流水账整理成独居老人关爱台账，迎检要用",
+   "owner": "gongwen-grassroots",
+   "should_trigger": true,
+   "qid": "Q332",
+   "chosen": "gongwen-grassroots",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#6",
+   "query": "这篇讲话稿太书面了，念起来拗口，帮我改得口语一点，控制在10分钟",
+   "owner": "gongwen-polish",
+   "should_trigger": true,
+   "qid": "Q333",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#11",
+   "query": "镇里要交全镇年终总结和明年工作计划，素材我整理好了",
+   "owner": "gongwen-grassroots",
+   "should_trigger": false,
+   "qid": "Q334",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#3",
+   "query": "上级让报送贯彻落实情况，按之前的任务分解表把各项进展写成报告",
+   "owner": "gongwen-implement",
+   "should_trigger": true,
+   "qid": "Q335",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#8",
+   "query": "下面报上来的这篇信息能不能被市里采用，帮我评估一下",
+   "owner": "gongwen-brief",
+   "should_trigger": true,
+   "qid": "Q336",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#16",
+   "query": "下周要交科室年终总结，素材我发你",
+   "owner": "gongwen-format",
+   "should_trigger": false,
+   "qid": "Q337",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#19",
+   "query": "党委会定了调整科室设置，帮我根据会议决定起草一份通知印发全院",
+   "owner": "gongwen-minutes",
+   "should_trigger": false,
+   "qid": "Q338",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#15",
+   "query": "帮我写个召开全市安全生产工作会议的通知",
+   "owner": "gongwen-speech",
+   "should_trigger": false,
+   "qid": "Q339",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#20",
+   "query": "暴雨预警来了，镇里要给各村发个防汛应急通知，再给居民写份告知书",
+   "owner": "gongwen-draft",
+   "should_trigger": false,
+   "qid": "Q340",
+   "chosen": "gongwen-grassroots",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#20",
+   "query": "这篇太长了，帮我压到2000字",
+   "owner": "gongwen-humanize",
+   "should_trigger": false,
+   "qid": "Q341",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#9",
+   "query": "这个通知标题太长了一行放不下，怎么回行好看",
+   "owner": "gongwen-title",
+   "should_trigger": true,
+   "qid": "Q342",
+   "chosen": "gongwen-format",
+   "correct": false
+  },
+  {
+   "id": "gongwen-report#6",
+   "query": "调研记录整理好了，帮我写一份关于基层报表负担的调研报告",
+   "owner": "gongwen-report",
+   "should_trigger": true,
+   "qid": "Q343",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#6",
+   "query": "给排查出隐患的经营性自建房户主写一份安全隐患告知书",
+   "owner": "gongwen-grassroots",
+   "should_trigger": true,
+   "qid": "Q344",
+   "chosen": "gongwen-grassroots",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#18",
+   "query": "这篇整改报告帮我全面核一下格式、标点和提法",
+   "owner": "gongwen-rectify",
+   "should_trigger": false,
+   "qid": "Q345",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#10",
+   "query": "学校这学期的工作总结，按德育、教学、安全几块写，要报教育局",
+   "owner": "gongwen-k12",
+   "should_trigger": true,
+   "qid": "Q346",
+   "chosen": "gongwen-k12",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#2",
+   "query": "下面科室报上来的总结，你帮我把把关，看看有什么问题",
+   "owner": "gongwen-review",
+   "should_trigger": true,
+   "qid": "Q347",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#13",
+   "query": "领导在稿子上批了“太虚”“数据呢”，帮我按批注改一版",
+   "owner": "gongwen-profile",
+   "should_trigger": false,
+   "qid": "Q348",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#19",
+   "query": "这个实施方案8000字太长了，帮我压到3000字以内",
+   "owner": "gongwen-implement",
+   "should_trigger": false,
+   "qid": "Q349",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#7",
+   "query": "街道要表彰一批防汛先进集体和个人，写个表彰通报",
+   "owner": "gongwen-draft",
+   "should_trigger": true,
+   "qid": "Q350",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#6",
+   "query": "领导说我们这个方案跟上级文件太像了，基本是抄的，帮我改成我们自己的措施",
+   "owner": "gongwen-implement",
+   "should_trigger": true,
+   "qid": "Q351",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#14",
+   "query": "把这两稿合并成一稿，取长补短，冲突的地方标出来",
+   "owner": "gongwen-profile",
+   "should_trigger": false,
+   "qid": "Q352",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#2",
+   "query": "董事会开完了，按会议记录出个董事会决议，票数帮我核一下",
+   "owner": "gongwen-soe",
+   "should_trigger": true,
+   "qid": "Q353",
+   "chosen": "gongwen-soe",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#20",
+   "query": "12个社区报上来的月报表，帮我合并汇总，算一下环比",
+   "owner": "gongwen-grassroots",
+   "should_trigger": false,
+   "qid": "Q354",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#8",
+   "query": "这是我这个月的辅导员工作记录，帮我整理成工作写实",
+   "owner": "gongwen-university",
+   "should_trigger": true,
+   "qid": "Q355",
+   "chosen": "gongwen-university",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#7",
+   "query": "这份文档字体乱七八糟，统一成三号仿宋，行距也调一下",
+   "owner": "gongwen-format",
+   "should_trigger": true,
+   "qid": "Q356",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#17",
+   "query": "帮学校写个课后服务方案，每周开几天、开哪些兴趣班我列在下面了",
+   "owner": "gongwen-implement",
+   "should_trigger": false,
+   "qid": "Q357",
+   "chosen": "gongwen-k12",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#16",
+   "query": "巡视反馈了12个问题，帮学校写整改方案和整改台账",
+   "owner": "gongwen-university",
+   "should_trigger": false,
+   "qid": "Q358",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#17",
+   "query": "送签前帮我核一下这份请示，看看格式标点有没有问题",
+   "owner": "gongwen-draft",
+   "should_trigger": false,
+   "qid": "Q359",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#17",
+   "query": "期中考试各班成绩表发你，帮我算平均分和优秀率，做个图",
+   "owner": "gongwen-k12",
+   "should_trigger": false,
+   "qid": "Q360",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#16",
+   "query": "局长要在全市专项整治部署会上讲话，帮我写个讲话稿",
+   "owner": "gongwen-implement",
+   "should_trigger": false,
+   "qid": "Q361",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#3",
+   "query": "占比从35%涨到38.2%，到底是提高了3.2%还是3.2个百分点？帮我写成一句话",
+   "owner": "gongwen-data",
+   "should_trigger": true,
+   "qid": "Q362",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#17",
+   "query": "这份会议纪要帮我核一下标点、数字和格式有没有问题",
+   "owner": "gongwen-minutes",
+   "should_trigger": false,
+   "qid": "Q363",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#2",
+   "query": "校长开学典礼要讲话，面向新生，十分钟左右，素材我发你",
+   "owner": "gongwen-speech",
+   "should_trigger": true,
+   "qid": "Q364",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#3",
+   "query": "年底要述职述责述廉，我是分管财务的副局长，这是我今年做的几件事",
+   "owner": "gongwen-report",
+   "should_trigger": true,
+   "qid": "Q365",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#17",
+   "query": "30个科室的月报，帮我合并成全院的表，算一下同比环比",
+   "owner": "gongwen-hospital",
+   "should_trigger": false,
+   "qid": "Q366",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#6",
+   "query": "局务会的转写稿帮我整理成会议记录存档，按发言顺序，谁说的要对得上",
+   "owner": "gongwen-minutes",
+   "should_trigger": true,
+   "qid": "Q367",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#20",
+   "query": "按领导偏好卡里的习惯，把这篇讲话稿改一版",
+   "owner": "gongwen-profile",
+   "should_trigger": false,
+   "qid": "Q368",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#3",
+   "query": "帮我看看这份汇报哪些地方 AI 味重，先别改，标出来就行",
+   "owner": "gongwen-humanize",
+   "should_trigger": true,
+   "qid": "Q369",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#9",
+   "query": "院长讲话的录音整理稿，帮我改成能印发的书面材料",
+   "owner": "gongwen-polish",
+   "should_trigger": true,
+   "qid": "Q370",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#7",
+   "query": "素材都在这了，先帮我搭个汇报提纲，正文我自己写",
+   "owner": "gongwen-title",
+   "should_trigger": true,
+   "qid": "Q371",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#8",
+   "query": "给县政府写个报告，说明上周仓库起火的经过和处置情况",
+   "owner": "gongwen-draft",
+   "should_trigger": true,
+   "qid": "Q372",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#17",
+   "query": "这份汇报里全是'建议考虑''仅供参考'，帮我改得态度明确一点",
+   "owner": "gongwen-report",
+   "should_trigger": false,
+   "qid": "Q373",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#17",
+   "query": "下周要交科室年终总结，素材我发你",
+   "owner": "gongwen-direct",
+   "should_trigger": false,
+   "qid": "Q374",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#7",
+   "query": "这篇讲话稿太软了，处处给自己留余地，帮我把语气提起来",
+   "owner": "gongwen-direct",
+   "should_trigger": true,
+   "qid": "Q375",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#10",
+   "query": "下周三市里开优化营商环境新闻发布会，局长作发布，帮我写个发布词",
+   "owner": "gongwen-brief",
+   "should_trigger": true,
+   "qid": "Q376",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#11",
+   "query": "帮我写支部年度党建工作报告",
+   "owner": "gongwen-report",
+   "should_trigger": false,
+   "qid": "Q377",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#16",
+   "query": "这篇总结是 DeepSeek 写的，AI 味太重了，帮我改改",
+   "owner": "gongwen-report",
+   "should_trigger": false,
+   "qid": "Q378",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#1",
+   "query": "省里发了个燃气安全专项整治的通知，区里要10天内出实施方案，帮我们局把任务拆一下",
+   "owner": "gongwen-implement",
+   "should_trigger": true,
+   "qid": "Q379",
+   "chosen": "gongwen-implement",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#1",
+   "query": "这份通知是 DeepSeek 写的，满篇'建议各单位''可以考虑'，帮我改成正经的要求口气",
+   "owner": "gongwen-direct",
+   "should_trigger": true,
+   "qid": "Q380",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#5",
+   "query": "这篇讲话稿提法多，你从严审一下",
+   "owner": "gongwen-review",
+   "should_trigger": true,
+   "qid": "Q381",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#15",
+   "query": "巡察反馈了12个问题，帮我写整改方案和整改台账",
+   "owner": "gongwen-party",
+   "should_trigger": false,
+   "qid": "Q382",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#4",
+   "query": "稿子里全是“不是……而是……”和破折号，帮我顺一顺",
+   "owner": "gongwen-humanize",
+   "should_trigger": true,
+   "qid": "Q383",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen#15",
+   "query": "把这份院长办公会的会议记录整理成纪要发给各科室",
+   "owner": "gongwen",
+   "should_trigger": false,
+   "qid": "Q384",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#2",
+   "query": "国考结果反馈下来了，四级手术比例和CMI都掉了，写个分析报告给院长办公会",
+   "owner": "gongwen-hospital",
+   "should_trigger": true,
+   "qid": "Q385",
+   "chosen": "gongwen-hospital",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#19",
+   "query": "帮我写子公司三季度经营分析报告，按集团模板来",
+   "owner": "gongwen-data",
+   "should_trigger": false,
+   "qid": "Q386",
+   "chosen": "gongwen-soe",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#5",
+   "query": "这是公司9月的财务快报，帮我写份月度经营分析报告",
+   "owner": "gongwen-soe",
+   "should_trigger": true,
+   "qid": "Q387",
+   "chosen": "gongwen-soe",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#10",
+   "query": "每页22行每行28字在 Word 里怎么设置",
+   "owner": "gongwen-format",
+   "should_trigger": true,
+   "qid": "Q388",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#17",
+   "query": "下周要交科室年终总结，素材我发你，帮我写一篇",
+   "owner": "gongwen-humanize",
+   "should_trigger": false,
+   "qid": "Q389",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#11",
+   "query": "第一次用这个，你先简单问我几个问题建个简版画像，然后帮我写个通知",
+   "owner": "gongwen-profile",
+   "should_trigger": false,
+   "qid": "Q390",
+   "chosen": "gongwen",
+   "correct": true
+  },
+  {
+   "id": "gongwen-implement#18",
+   "query": "这份实施方案帮我核一下标点、格式和错别字",
+   "owner": "gongwen-implement",
+   "should_trigger": false,
+   "qid": "Q391",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#16",
+   "query": "请示里“建议考虑”“原则上可以”太多，改得态度明确一点",
+   "owner": "gongwen-title",
+   "should_trigger": false,
+   "qid": "Q392",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#6",
+   "query": "年度目标完成了多少、比时间进度快还是慢，帮我算一下",
+   "owner": "gongwen-data",
+   "should_trigger": true,
+   "qid": "Q393",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#1",
+   "query": "这份汇报8000多字，帮我压到3000字以内，数据别丢",
+   "owner": "gongwen-polish",
+   "should_trigger": true,
+   "qid": "Q394",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#2",
+   "query": "市里领导下周来我们局调研政务服务，帮我弄个汇报材料",
+   "owner": "gongwen-report",
+   "should_trigger": true,
+   "qid": "Q395",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#19",
+   "query": "把这个通知排成国标格式的 Word 文件",
+   "owner": "gongwen-polish",
+   "should_trigger": false,
+   "qid": "Q396",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#2",
+   "query": "市里转发了省厅的通知，我们区再转发，标题怎么写才不会出现好几个关于",
+   "owner": "gongwen-title",
+   "should_trigger": true,
+   "qid": "Q397",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#4",
+   "query": "核稿意见出来了，帮我批注到 Word 文档里",
+   "owner": "gongwen-format",
+   "should_trigger": true,
+   "qid": "Q398",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-rectify#5",
+   "query": "上级发了个财经纪律自查表让我们逐项自查，帮我写自查报告",
+   "owner": "gongwen-rectify",
+   "should_trigger": true,
+   "qid": "Q399",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#14",
+   "query": "学校运动会开完了，写篇新闻稿发公众号",
+   "owner": "gongwen-k12",
+   "should_trigger": false,
+   "qid": "Q400",
+   "chosen": "gongwen-brief",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#9",
+   "query": "利润从去年亏500万到今年盈利300万，同比增长该怎么写",
+   "owner": "gongwen-data",
+   "should_trigger": true,
+   "qid": "Q401",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#1",
+   "query": "镇里搞了个积分超市，想写篇政务信息报县里，争取被市里采用",
+   "owner": "gongwen-grassroots",
+   "should_trigger": true,
+   "qid": "Q402",
+   "chosen": "gongwen-grassroots",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#10",
+   "query": "质控年报的小标题现在是一二三四平铺直叙，帮我换几种说法",
+   "owner": "gongwen-title",
+   "should_trigger": true,
+   "qid": "Q403",
+   "chosen": "gongwen-title",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#9",
+   "query": "看看这个报告是不是夹带了请示事项",
+   "owner": "gongwen-review",
+   "should_trigger": true,
+   "qid": "Q404",
+   "chosen": "gongwen-direct",
+   "correct": false
+  },
+  {
+   "id": "gongwen-rectify#4",
+   "query": "巡察集中整改期满了，帮我写整改落实情况报告",
+   "owner": "gongwen-rectify",
+   "should_trigger": true,
+   "qid": "Q405",
+   "chosen": "gongwen-rectify",
+   "correct": true
+  },
+  {
+   "id": "gongwen-humanize#2",
+   "query": "读着像机器写的，帮我把 AI 腔去掉，数字别动",
+   "owner": "gongwen-humanize",
+   "should_trigger": true,
+   "qid": "Q406",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#9",
+   "query": "帮我检查一下这个 Word 的页边距和字号是不是符合 9704",
+   "owner": "gongwen-format",
+   "should_trigger": true,
+   "qid": "Q407",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#18",
+   "query": "教代会上校长要做学校年度工作报告，帮我起草",
+   "owner": "gongwen-k12",
+   "should_trigger": false,
+   "qid": "Q408",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen#2",
+   "query": "这个月单位一般要准备哪些材料？我在县里一个乡镇",
+   "owner": "gongwen",
+   "should_trigger": true,
+   "qid": "Q409",
+   "chosen": "gongwen",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#12",
+   "query": "街道党工委书记在全街道安全生产大会上讲15分钟，帮我写讲话稿",
+   "owner": "gongwen-grassroots",
+   "should_trigger": false,
+   "qid": "Q410",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#12",
+   "query": "照我们单位以前那几篇的风格，帮我写今年的年终总结",
+   "owner": "gongwen-profile",
+   "should_trigger": false,
+   "qid": "Q411",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#16",
+   "query": "昨天党委会定的几件事整理成督办清单",
+   "owner": "gongwen-data",
+   "should_trigger": false,
+   "qid": "Q412",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#10",
+   "query": "这个Excel里的经营数据帮我体检一下，看看有没有空值、重复和单位不统一",
+   "owner": "gongwen-data",
+   "should_trigger": true,
+   "qid": "Q413",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#5",
+   "query": "帮我把1到9月的办件量做个折线图，打印是黑白的",
+   "owner": "gongwen-data",
+   "should_trigger": true,
+   "qid": "Q414",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#12",
+   "query": "帮我起草学校2027年党政工作要点",
+   "owner": "gongwen-university",
+   "should_trigger": false,
+   "qid": "Q415",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#2",
+   "query": "第二类审核评估自评报告里'教学成效'这一章帮我起草，数据从状态数据分析报告里来",
+   "owner": "gongwen-university",
+   "should_trigger": true,
+   "qid": "Q416",
+   "chosen": "gongwen-university",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#2",
+   "query": "这张表的合计好像对不上，帮我查查是哪里出了问题",
+   "owner": "gongwen-data",
+   "should_trigger": true,
+   "qid": "Q417",
+   "chosen": "gongwen-data",
+   "correct": true
+  },
+  {
+   "id": "gongwen-k12#16",
+   "query": "支部要开组织生活会，帮我写对照检查材料",
+   "owner": "gongwen-k12",
+   "should_trigger": false,
+   "qid": "Q418",
+   "chosen": "gongwen-party",
+   "correct": true
+  },
+  {
+   "id": "gongwen-university#11",
+   "query": "校长开学典礼上要讲15分钟，帮我写个讲话稿",
+   "owner": "gongwen-university",
+   "should_trigger": false,
+   "qid": "Q419",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-soe#19",
+   "query": "把这次党委会的会议记录整理成党委会纪要",
+   "owner": "gongwen-soe",
+   "should_trigger": false,
+   "qid": "Q420",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#6",
+   "query": "书记在七一表彰大会上要讲话，帮我起草一下",
+   "owner": "gongwen-speech",
+   "should_trigger": true,
+   "qid": "Q421",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-profile#8",
+   "query": "把我们学校的发文字号格式和党政两套代字记进画像，以后起草都按这个来",
+   "owner": "gongwen-profile",
+   "should_trigger": true,
+   "qid": "Q422",
+   "chosen": "gongwen-profile",
+   "correct": true
+  },
+  {
+   "id": "gongwen-brief#18",
+   "query": "帮我写个通知，下周三召开防汛工作部署会",
+   "owner": "gongwen-brief",
+   "should_trigger": false,
+   "qid": "Q423",
+   "chosen": "gongwen-draft",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#12",
+   "query": "这篇稿子'值得注意的是''不是……而是……'太多了，改一下",
+   "owner": "gongwen-direct",
+   "should_trigger": false,
+   "qid": "Q424",
+   "chosen": "gongwen-humanize",
+   "correct": true
+  },
+  {
+   "id": "gongwen-party#19",
+   "query": "辅导员要和挂科的学生谈心谈话，帮我拟个谈话提纲",
+   "owner": "gongwen-party",
+   "should_trigger": false,
+   "qid": "Q425",
+   "chosen": "gongwen-university",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#10",
+   "query": "这份通知读着像在跟下级商量，帮我改成部署的口气",
+   "owner": "gongwen-direct",
+   "should_trigger": true,
+   "qid": "Q426",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-format#1",
+   "query": "这个通知帮我套个红头，发文字号某发〔2026〕21号",
+   "owner": "gongwen-format",
+   "should_trigger": true,
+   "qid": "Q427",
+   "chosen": "gongwen-format",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#3",
+   "query": "三季度医疗质量分析报告，质控科的数据表我贴给你",
+   "owner": "gongwen-hospital",
+   "should_trigger": true,
+   "qid": "Q428",
+   "chosen": "gongwen-hospital",
+   "correct": true
+  },
+  {
+   "id": "gongwen-draft#11",
+   "query": "昨天院长办公会的记录发你了，整理一份会议纪要",
+   "owner": "gongwen-draft",
+   "should_trigger": false,
+   "qid": "Q429",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-speech#10",
+   "query": "区委书记参加青年干部座谈会要讲话，帮我弄个稿子",
+   "owner": "gongwen-speech",
+   "should_trigger": true,
+   "qid": "Q430",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-polish#8",
+   "query": "按减负规定的篇幅要求，把这个实施方案压一压",
+   "owner": "gongwen-polish",
+   "should_trigger": true,
+   "qid": "Q431",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-minutes#12",
+   "query": "局长周五在全市安全生产推进会上讲15分钟，帮我写讲话稿",
+   "owner": "gongwen-minutes",
+   "should_trigger": false,
+   "qid": "Q432",
+   "chosen": "gongwen-speech",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#1",
+   "query": "帮我把这个通知核一下，明天就要送签了",
+   "owner": "gongwen-review",
+   "should_trigger": true,
+   "qid": "Q433",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-title#11",
+   "query": "帮我写一篇科室年终总结，素材我发你",
+   "owner": "gongwen-title",
+   "should_trigger": false,
+   "qid": "Q434",
+   "chosen": "gongwen-report",
+   "correct": true
+  },
+  {
+   "id": "gongwen-grassroots#9",
+   "query": "村里三季度的村务公开要贴了，财务收支和低保名单怎么公开",
+   "owner": "gongwen-grassroots",
+   "should_trigger": true,
+   "qid": "Q435",
+   "chosen": "gongwen-grassroots",
+   "correct": true
+  },
+  {
+   "id": "gongwen-data#20",
+   "query": "这篇汇报材料太长了，帮我压到2000字，数字别动",
+   "owner": "gongwen-data",
+   "should_trigger": false,
+   "qid": "Q436",
+   "chosen": "gongwen-polish",
+   "correct": true
+  },
+  {
+   "id": "gongwen-direct#4",
+   "query": "稿子里'可能''在一定程度上''或许'太多了，说话不硬气，帮我改改",
+   "owner": "gongwen-direct",
+   "should_trigger": true,
+   "qid": "Q437",
+   "chosen": "gongwen-direct",
+   "correct": true
+  },
+  {
+   "id": "gongwen-review#8",
+   "query": "领导让我核稿，你按八关帮我出个问题清单",
+   "owner": "gongwen-review",
+   "should_trigger": true,
+   "qid": "Q438",
+   "chosen": "gongwen-review",
+   "correct": true
+  },
+  {
+   "id": "gongwen-hospital#13",
+   "query": "昨天院长办公会议的记录发你了，整理一份会议纪要",
+   "owner": "gongwen-hospital",
+   "should_trigger": false,
+   "qid": "Q439",
+   "chosen": "gongwen-minutes",
+   "correct": true
+  },
+  {
+   "id": "gongwen-report#9",
+   "query": "我们院想自己搞个门诊服务提升实施方案，不是上级要求的，帮我起草一下",
+   "owner": "gongwen-report",
+   "should_trigger": true,
+   "qid": "Q440",
+   "chosen": "gongwen-report",
+   "correct": true
+  }
+ ]
+}

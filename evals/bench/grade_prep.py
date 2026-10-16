@@ -6,11 +6,13 @@
 产出：
     grade_tasks/<批次>.md         评分员任务说明（含 expectations，不含分组信息）
     grade_tasks/<批次>/<skill>-<id>-甲.md  机检摘要的盲化副本
+    grade_refs/<skill>.txt         公开文件清单：skill 内置资料中含文件名称、文号的行，评分员据此判断引用是否有出处
     blind.json                     "甲""乙"与 A、B 的对应关系（评分员不可见）
 """
 import argparse
 import json
 import random
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -22,6 +24,28 @@ except Exception:
 
 REPO = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
+
+# 公开文件清单：skill 内置资料中出现文件名称（书名号）或文号的行。评分员据此判断引用是否有出处，
+# 两组用同一份清单，不泄露分组。
+REF_LINE_RE = re.compile(r"《[^》]{2,60}》|〔\d{4}〕\s*\d+\s*号|GB/T\s*\d+")
+
+
+def write_ref_list(skill, out_dir):
+    """把 skills/<skill> 下 SKILL.md 和 references 中含文件名称、文号的行写成清单，返回清单路径。"""
+    root = REPO / "skills" / skill
+    files = [root / "SKILL.md"] + sorted((root / "references").rglob("*.md"))
+    seen, lines = set(), []
+    for f in files:
+        if not f.exists():
+            continue
+        for line in f.read_text(encoding="utf-8").splitlines():
+            text = line.strip()
+            if text and REF_LINE_RE.search(text) and text not in seen:
+                seen.add(text)
+                lines.append(text)
+    path = out_dir / f"{skill}.txt"
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
 
 
 def main():
@@ -39,12 +63,15 @@ def main():
     (bench / "grades").mkdir(exist_ok=True)
     scratch = bench / "grade_tmp"
     scratch.mkdir(exist_ok=True)
+    ref_dir = bench / "grade_refs"
+    ref_dir.mkdir(exist_ok=True)
 
-    evals = {}
+    evals, refs = {}, {}
     for row in index:
         if row["skill"] not in evals:
             data = json.loads((REPO / "skills" / row["skill"] / "evals" / "evals.json").read_text(encoding="utf-8"))
             evals[row["skill"]] = {e["id"]: e for e in data["evals"]}
+            refs[row["skill"]] = write_ref_list(row["skill"], ref_dir)
 
     chunks = {}
     for row in index:
@@ -76,6 +103,7 @@ def main():
             blocks.append(
                 f"---\n\n## 用例：{skill} #{eid}\n\n用户消息：\n\n<<<\n{e['prompt']}\n>>>\n\n"
                 f"用户提供的文件：{files}\n\n输入材料全文（含用户消息）：{bench / 'inputs' / (key + '.txt')}\n\n"
+                f"公开文件清单：{refs[skill]}\n\n"
                 f"场景标注：单位类型 {e['unit_type']}，角色模式 {e['role_mode']}，标签 {'、'.join(e['tags'])}\n\n"
                 f"期望结果简述：{e['expected_output']}\n\n期望（expectations，共 {len(e['expectations'])} 条）：\n\n{exps}\n\n"
                 + "\n\n".join(outs) + "\n"

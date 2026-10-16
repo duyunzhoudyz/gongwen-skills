@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from tests.lint.helpers import gl, ids, issues_of, run
+from tests.lint.helpers import RULES_PATH, gl, ids, issues_of, load_json, run
 
 NOTICE_HEAD = "某市某局关于做好某项工作的通知\n\n各区某局：\n\n"
 
@@ -128,6 +128,39 @@ class HeadingSequenceTest(unittest.TestCase):
         self.assertIsNone(gl.heading_of("1.5亿元已拨付"))
         self.assertIsNone(gl.heading_of("一、二年级学生"))
 
+    def test_heading_of_same_number_before_season_or_grade(self):
+        # v1.0 评测后第 17 项：“四、四季度安排”等序号与后面的数字相同，是一级标题，不能被否定前瞻挡掉
+        self.assertEqual(gl.heading_of("四、四季度安排"), (1, 4))
+        self.assertEqual(gl.heading_of("一、一季度情况"), (1, 1))
+        self.assertEqual(gl.heading_of("二、二年级工作"), (1, 2))
+        self.assertEqual(gl.heading_of("二、二季度工作"), (1, 2))
+        self.assertEqual(gl.heading_of("## 三、三季度重点任务"), (1, 3))
+        self.assertEqual(gl.heading_of("**一、一等奖获得者**"), (1, 1))
+
+    def test_heading_of_other_numbers_keep_old_judgement(self):
+        # 序号与后面的数字不同时仍按原来的判断：“一、二年级”是“一年级、二年级”的并列写法，不是标题
+        self.assertIsNone(gl.heading_of("一、二年级学生"))
+        self.assertIsNone(gl.heading_of("三、四年级学生"))
+        self.assertIsNone(gl.heading_of("三、四季度要抓好三件事"))
+        self.assertIsNone(gl.heading_of("一二年级学生"))
+        self.assertIsNone(gl.heading_of("一季度，全市完成投资12亿元"))
+        # 非“、”分隔符的否定前瞻不变
+        self.assertIsNone(gl.heading_of("一，二年级学生"))
+        self.assertIsNone(gl.heading_of("三：四季度任务"))
+        # 普通一级标题不受影响
+        self.assertEqual(gl.heading_of("二、四项重点工作"), (1, 2))
+        self.assertEqual(gl.heading_of("三、工作安排"), (1, 3))
+
+    def test_str001_season_headings_no_false_alarm(self):
+        # 评测用例：“四、四季度安排”不被识别，后面的（一）被判“第2项之后出现第1项”，STR-001 误报 P1
+        text = (NOTICE_HEAD + "一、一季度情况\n\n（一）甲。\n\n（二）乙。\n\n二、二季度工作\n\n（一）丙。\n\n"
+                "三、三季度工作\n\n（一）丁。\n\n（二）戊。\n\n四、四季度安排\n\n（一）己。\n\n（二）庚。\n")
+        self.assertNotIn("STR-001", ids(run(text, "通知", "structure")))
+        # 真跳号照报
+        text = (NOTICE_HEAD + "一、一季度情况\n\n（一）甲。\n\n三、三季度工作\n\n（一）丁。\n")
+        found = issues_of(run(text, "通知", "structure"), "STR-001")
+        self.assertTrue(any("跳号" in i["message"] for i in found))
+
 
 class CountSummaryTest(unittest.TestCase):
     def test_mismatch_with_headings(self):
@@ -250,6 +283,88 @@ class DocTypeRulesTest(unittest.TestCase):
     def test_str005_body_sentence_not_title(self):
         r = run("全年共受理群众来信来访326件，办结率98%。", checks="structure")
         self.assertNotIn("STR-005", ids(r))
+
+
+class QianbaoRecipientTest(unittest.TestCase):
+    """v1.0 评测后第 5、33 项：签报按规定写“关于……的请示”、主送领导职务，不报 STR-006；
+    主送里的【待补】【待核实】标记先剔除再判断。"""
+
+    SIGNOFF = "\n妥否，请批示。\n\n心内科\n2026年10月16日\n"
+    QINGSHI = "关于购置心电监护仪2台的请示\n\n{zhusong}\n\n心内科现有心电监护仪12台，拟购置2台。\n{tail}"
+
+    def text(self, zhusong: str, middle: str = "", head: str = "") -> str:
+        body = self.QINGSHI.format(zhusong=zhusong, tail=(middle + self.SIGNOFF))
+        return head + body
+
+    def test_leader_with_countersign_section_not_reported(self):
+        # 评测用例 8：分管副院长 + “会签情况”栏，未指定文书类型，标题推断为请示
+        text = self.text("分管副院长：", "\n会签情况：\n设备科：【待补：会签意见】\n财务科：【待补：会签意见】\n")
+        r = run(text, None, "structure")
+        self.assertEqual(r["doc_type"], "请示")
+        self.assertNotIn("STR-006", ids(r))
+        # 评测用例 9：总经理，“决策程序和会签情况”写成了小标题
+        text = self.text("总经理：", "\n四、决策程序和会签情况\n\n本事项需法律合规部会签。\n")
+        self.assertNotIn("STR-006", ids(run(text, None, "structure")))
+
+    def test_leader_without_signoff_marks_still_reported(self):
+        for zhusong in ("分管副院长：", "总经理：", "王区长：", "李书记："):
+            with self.subTest(zhusong=zhusong):
+                found = issues_of(run(self.text(zhusong), None, "structure"), "STR-006")
+                self.assertEqual([i["message"] for i in found], ["请示主送领导个人"])
+        found = issues_of(run(self.text("区人民政府、区财政局："), None, "structure"), "STR-006")
+        self.assertEqual([i["message"] for i in found], ["请示主送了多个机关"])
+
+    def test_qianbao_doc_type_exempt(self):
+        self.assertNotIn("STR-006", ids(run(self.text("分管副院长："), "签报", "structure")))
+        self.assertNotIn("STR-006", ids(run(self.text("院长、分管副院长："), "签报", "structure")))
+
+    def test_qianbao_header_exempt(self):
+        # 稿首单列“签报”“呈批件”表头：即使显式指定为请示，也不查主送领导个人
+        for header in ("签报\n\n", "呈批件\n\n", "# 签报\n\n", "签　报\n\n", "**呈批件**\n\n"):
+            with self.subTest(header=header):
+                text = self.text("分管副院长：", head=header)
+                self.assertNotIn("STR-006", ids(run(text, "请示", "structure")))
+        # 表头只认稿首：正文里单独一行的“签报”不算
+        text = self.text("分管副院长：", "\n签报\n")
+        self.assertIn("STR-006", ids(run(text, "请示", "structure")))
+
+    def test_infer_qianbao_from_header(self):
+        text = self.text("分管副院长：", head="签报\n\n")
+        self.assertEqual(run(text, None, "structure")["doc_type"], "签报")
+        text = self.text("分管副院长：", head="呈批件\n\n")
+        r = run(text, None, "structure")
+        self.assertEqual((r["doc_type"], r["doc_type_source"]), ("签报", "稿首表头推断"))
+        self.assertNotIn("STR-006", ids(r))
+        # 只有“会签情况”栏不改变推断结果，只免查主送
+        text = self.text("分管副院长：", "\n会签情况：\n设备科：同意。\n")
+        self.assertEqual(run(text, None, "structure")["doc_type"], "请示")
+        # 指定了文书类型的以参数为准
+        self.assertEqual(run(text, "请示", "structure")["doc_type"], "请示")
+
+    def test_marker_only_zhusong_not_reported(self):
+        # 评测用例 10：主送写成【待补：称谓，按本校签报格式】，含逗号，原先被判“请示主送了多个机关”
+        for zhusong in ("【待补：分管教学副校长的称谓，按本校签报格式】：", "【待核实：主送机关，是否为校长】：",
+                        "【待补：称谓，按本校格式】:", "【待补：主送机关】"):
+            with self.subTest(zhusong=zhusong):
+                self.assertNotIn("STR-006", ids(run(self.text(zhusong), "请示", "structure")))
+                self.assertNotIn("STR-006", ids(run(self.text(zhusong), None, "structure")))
+
+    def test_marker_stripped_before_judging(self):
+        # 剔除标记后仍有内容的，照常判断
+        found = issues_of(run(self.text("王区长【待补：全名，职务】："), "请示", "structure"), "STR-006")
+        self.assertEqual([i["message"] for i in found], ["请示主送领导个人"])
+        found = issues_of(run(self.text("区人民政府【待核实：是否加区财政局，区教育局】、区财政局："), "请示", "structure"),
+                          "STR-006")
+        self.assertEqual([i["message"] for i in found], ["请示主送了多个机关"])
+        self.assertNotIn("STR-006", ids(run(self.text("区人民政府【待核实：是否加区财政局，区教育局】："), "请示", "structure")))
+
+    def test_marker_only_zhusong_in_report(self):
+        text = "关于防汛工作情况的报告\n\n【待补：主送机关，如县人民政府、县应急管理局】：\n\n汛期工作开展顺利。\n"
+        self.assertNotIn("STR-006", ids(run(text, "报告", "structure")))
+
+    def test_rule_description_mentions_qianbao(self):
+        rules = {r["id"]: r for r in load_json(RULES_PATH)["procedural"]}
+        self.assertIn("签报主送领导职务不适用", rules["STR-006"]["description"])
 
 
 class DocTypeInferenceTest(unittest.TestCase):

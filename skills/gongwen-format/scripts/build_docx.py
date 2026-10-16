@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """把公文正文（.txt/.md）排成符合 GB/T 9704-2012 的 docx。
 
-版式：红头（文件格式）、信函、纪要、白头（无版头）、材料（只有标题和正文）。
-未指定版式时，法定公文用白头，常用材料用材料版式。
+版式：红头（文件格式）、信函、纪要、白头（无版头）、材料（只有标题和正文）、简报（报头、各篇、报尾）。
+未指定版式时，法定公文用白头，常用材料用材料版式；版式信息或正文有简报报头的用简报版式。
 生成后自动回读检查（check_docx.py），报告识别结果、字体情况和检查结论。
 
 退出码：0 成功；2 输入错误或缺少依赖。
@@ -19,17 +19,21 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from gw_layout import (UPWARD_TYPES, Parsed, break_title, doc_kind, extract_pipe_tables,  # noqa: E402
-                       normalize_date, parse_lines, read_body_text, summarize, text_width_chars)
+from gw_layout import (BRIEF_META_KEYS, UPWARD_TYPES, Parsed, break_title, doc_kind,  # noqa: E402
+                       extract_pipe_tables, has_brief_header, norm_issue, norm_total, normalize_date, parse_brief,
+                       parse_lines, read_body_text, summarize, text_width_chars)
 
 LAYOUTS = {"红头": "红头", "文件": "红头", "文件格式": "红头", "红头文件": "红头",
            "信函": "信函", "信函格式": "信函", "函件": "信函",
            "纪要": "纪要", "纪要格式": "纪要",
            "白头": "白头", "白头文件": "白头",
-           "材料": "材料", "普通材料": "材料"}
+           "材料": "材料", "普通材料": "材料",
+           "简报": "简报", "工作简报": "简报", "简报格式": "简报"}
 META_KEYS = ("版式", "份号", "密级", "保密期限", "紧急程度", "发文机关标志", "发文字号", "签发人", "标题",
              "主送机关", "附件", "发文机关署名", "成文日期", "印章", "附注", "抄送", "印发机关", "印发日期",
-             "三级标题加粗", "表格字体", "表格字号")
+             "三级标题加粗", "表格字体", "表格字号") + BRIEF_META_KEYS
+BRIEF_IGNORED = ("发文机关标志", "发文字号", "签发人", "主送机关", "附件", "发文机关署名", "成文日期", "印章", "附注",
+                 "印发机关", "份号", "密级", "保密期限", "紧急程度")
 TABLE_FONTS = ("仿宋", "宋体")
 TABLE_SIZES = ("四号", "小四")
 HEAD_ROLES = ("copy_no", "secret", "urgency", "issuer", "docno", "signer")
@@ -201,7 +205,9 @@ def merge_fields(parsed: Parsed, meta: dict, warnings: List[str]) -> Dict[str, o
         if key in meta and meta[key] not in (None, "", []):
             old = parsed.fields.get(key)
             new = meta[key]
-            if old and key in ("标题", "主送机关", "成文日期") and not _same(str(old), str(new)):
+            if key == "期号" and old and norm_issue(old) != norm_issue(new):
+                warnings.append(f"版式信息中的“期号”与正文识别结果不一致，已采用版式信息：{new}（正文中为：{old}）")
+            elif old and key in ("标题", "主送机关", "成文日期", "简报名称", "编印单位") and not _same(str(old), str(new)):
                 warnings.append(f"版式信息中的“{key}”与正文识别结果不一致，已采用版式信息：{new}（正文中为：{old}）")
             fields[key] = new
     return fields
@@ -212,9 +218,12 @@ def decide_layout(cli_layout: Optional[str], meta: dict, parsed: Parsed, report:
     if raw:
         layout = LAYOUTS.get(str(raw).strip())
         if not layout:
-            raise BuildError(f"无法识别的版式：{raw}。可选：红头、信函、纪要、白头、材料")
+            raise BuildError(f"无法识别的版式：{raw}。可选：红头、信函、纪要、白头、材料、简报")
         report["layout_reason"] = "命令行指定" if cli_layout else "版式信息指定"
         return layout
+    if parsed.kind == "简报":
+        report["layout_reason"] = "未指定版式，版式信息或正文中有简报报头，按简报排版"
+        return "简报"
     issuers = parsed.find("issuer")
     if issuers:
         layout = "纪要" if issuers[0].text.endswith("纪要") else "红头"
@@ -249,7 +258,10 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None, fon
     # 正文中的 Markdown 管道表格先换成占位行，识别结构后在原位置生成 Word 表格
     lines, tables, table_notes = extract_pipe_tables(lines)
     report["warnings"] += table_notes
-    parsed = parse_lines(lines)
+    explicit = LAYOUTS.get(str(layout or meta.get("版式") or "").strip())
+    brief_mode = explicit == "简报" or (not explicit and (has_brief_header(lines) or any(
+        meta.get(k) not in (None, "", []) for k in BRIEF_META_KEYS)))
+    parsed = parse_brief(lines, force=explicit == "简报") if brief_mode else parse_lines(lines)
     report["warnings"] += parsed.warnings
     report["detected"] = parsed.detected
     lay = decide_layout(layout, meta, parsed, report)
@@ -308,6 +320,14 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None, fon
                 report["notes"].append(f"{key}已按 GB/T 9704-2012 写成“{new}”")
 
     b = Builder(ctx, lay)
+    if lay == "简报":
+        _build_brief(b, parsed, fields, meta, tables, report, need)
+        parsed.fields.update(fields)  # 识别结果报告含版式信息中的报头、报尾要素
+        D.setup_page_numbers(b.section, ctx, first_page_blank=False)
+        report["fields"] = {k: v for k, v in fields.items() if v not in (None, "", [])}
+        report["fields"]["版式"] = lay
+        report["summary"] = summarize(parsed)
+        return b.doc, report
     used_lines = 0
     head_lines: List[Tuple[str, str]] = []
     if fields.get("份号") and lay != "信函":
@@ -536,6 +556,118 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None, fon
     return b.doc, report
 
 
+def _build_brief(b: Builder, parsed: Parsed, fields: Dict[str, object], meta: dict, tables, report: dict, need) -> None:
+    """简报：报头（简报名称、期号行、编印单位和日期行、红色分隔线）、各篇标题与正文、报尾。
+
+    简报无国家标准格式，参数取 gbt9704_params.json 的 elements.brief（常见做法，各单位以往期样式为准）。
+    报头要素缺失写【待补】；报尾（报、送、发、抄送、印数）有就排，没有就不排。
+    """
+    D, ctx = b.D, b.ctx
+    el = ctx.el("brief")
+    red = D.color_hex(ctx.params, el["name_color"])
+    ignored = [k for k in BRIEF_IGNORED if meta.get(k) not in (None, "", [])]
+    if ignored:
+        report["warnings"].append("简报版式不排" + "、".join(ignored) + "，已忽略；需要时请在 Word 中手工加注")
+
+    # 简报名称：红色居中，字号随名称长短取小初到二号
+    name = need("简报名称")
+    width_pt = ctx.text_width_twips / 20
+    size = max(float(el["name_size_min_pt"]), min(float(el["name_size_max_pt"]),
+               width_pt * float(el["name_fill_ratio"]) / max(1.0, text_width_chars(name))))
+    size = int(size * 2) / 2
+    if text_width_chars(name) * size > width_pt:
+        report["warnings"].append(f"简报名称“{name}”较长，一行排不下，会回行；请核对名称或缩短")
+    p = b.doc.add_paragraph()
+    font, bold = ctx.font(el["name_font"])
+    D.format_run(p.add_run(name), font=font, size=size, bold=True if bold else None, color=red)
+    D.set_para(p, align="center", line_exact=round(size * float(el["name_line_ratio"]), 1), before_pt=0, after_pt=0,
+               snap=False, keep_next=True)
+
+    # 期号行：第12期，有总期号时写成“第12期（总第68期）”
+    issue = norm_issue(fields.get("期号")) if fields.get("期号") else need("期号")
+    fields["期号"] = issue
+    if fields.get("总期号"):
+        fields["总期号"] = norm_total(fields["总期号"])
+        issue += "（" + fields["总期号"] + "）"
+    p = b.doc.add_paragraph()
+    D.format_run(p.add_run(issue), font=ctx.font(el["issue_font"])[0], size=ctx.size(el["issue_size"]))
+    D.set_para(p, align="center", line_exact=ctx.line_pt, before_pt=float(el["issue_before_pt"]), after_pt=0,
+               snap=False, keep_next=True)
+
+    # 编印行：左编印单位、右日期，同一行；行下红色分隔线
+    editor = str(fields["编印单位"]) if fields.get("编印单位") else need("编印单位")
+    if not editor.startswith("【待补") and not editor.endswith(("编", "编印", "编发")):
+        editor += "编"
+    date = str(fields["印发日期"]) if fields.get("印发日期") else need("印发日期")
+    if text_width_chars(editor) + text_width_chars(date) + 1 > float(D.pv(ctx.params, "grid.chars_per_line")):
+        report["warnings"].append("编印单位较长，与日期排不进同一行，日期会被挤到下一行；请缩短或改用简称")
+    p = b.doc.add_paragraph()
+    D.format_run(p.add_run(editor + "\t" + date), font=ctx.font(el["editor_font"])[0], size=ctx.size(el["editor_size"]))
+    D.set_para(p, align="left", line_exact=ctx.line_pt, before_pt=float(el["editor_before_pt"]), after_pt=0,
+               snap=False, keep_next=True)
+    D.set_tabs(p, [(ctx.text_width_twips, "right")])
+    D.set_border(p, "bottom", sz_eighths=int(round(el["rule_width_pt"] * 8)), color=red,
+                 space_pt=int(round(el["rule_gap_mm"] * 72 / 25.4)))
+    b.blank(el["blank_lines_after_rule"])
+
+    # 各篇：标题（连续几行都算标题）、题注、层次标题、正文、表格
+    table_queue = list(tables)
+    table_font, table_size = _table_style(meta, report)
+    items = [it for it in parsed.items if not it.role.startswith("brief_")]
+    max_chars = int(ctx.text_width_twips / 20 // ctx.size(ctx.el("title")["size"]))
+    prev = None
+    for it in items:
+        role = it.role
+        if role == "title":
+            if prev is not None and prev != "title":
+                b.blank(1)  # 两篇之间空一行
+            parts = [t for t in re.split(r"[\s　]+", it.text) if t]  # 标题中间的空格当作换行处
+            if len(parts) > 1 and all(text_width_chars(t) <= max_chars for t in parts):
+                lines = parts
+            else:
+                lines = break_title("".join(parts), max_chars)
+            if len(lines) > 1 and len(parts) == 1:
+                report["notes"].append("标题较长，已分行排列：" + " / ".join(lines) + "（要改断行位置，请把标题拆成两行写）")
+            D.set_para(b.title(lines), reset_indent=False, keep_next=True)
+        else:
+            if prev in ("title", "title_note") and role != "title_note":
+                b.blank(1)  # 标题下空一行，与标题、正文连在一起
+                D.set_para(b.doc.paragraphs[-1], reset_indent=False, keep_next=True)
+            if role == "table":
+                if prev == "table":
+                    b.blank(1)
+                tb = table_queue.pop(0) if table_queue else None
+                if tb is not None:
+                    D.add_body_table(b.doc, ctx, tb.header, tb.rows, tb.aligns, font_role=table_font, size_name=table_size)
+            else:
+                para = b.para(role, it.text, split=it.split)
+                if role == "title_note":
+                    D.set_para(para, reset_indent=False, keep_next=True)
+        prev = role
+    if tables:
+        report["notes"].append(f"正文中的 {len(tables)} 张 Markdown 表格已转为 Word 表格（全框线、表头加粗、"
+                               f"{table_font}{table_size}，与版心同宽）；不支持合并单元格，需要合并的请在 Word 中处理")
+    if not any(it.role == "title" for it in items):
+        report["warnings"].append("没有识别到篇目标题；每篇标题应是不带句末标点的独立短行")
+
+    # 报尾：版心底部一条分隔线，其下排报、送、发、抄送和印数；有就排，没有就不排
+    foot: List[Tuple[str, str]] = []
+    for key in ("报", "送", "发", "抄送"):
+        val = fields.get(key)
+        if val in (None, "", []):
+            continue
+        text = "，".join(_as_list(val)) if isinstance(val, list) else str(val).strip()
+        foot.append(("cc", text if re.match(rf"^{key}\s*[：:]", text) else f"{key}：{text}"))
+    if fields.get("印数"):
+        n = str(fields["印数"]).strip()
+        m = re.search(r"\d+", n)
+        foot.append(("print", n if n.startswith(("（", "(")) else f"（共印{m.group(0) if m else n}份）"))
+    if foot:
+        D.add_banji_table(b.doc, ctx, [foot], with_lines="top")
+    else:
+        report["notes"].append("没有报送范围（报、送、发、抄送）和印数，未排报尾；需要时在版式信息中补“报”“送”“发”“印数”")
+
+
 def _warn_docno_width(docno: str, signers: List[str], ctx, report: dict) -> None:
     """上行文发文字号与签发人同一行：估算宽度，超出版心时提示（Word 会把签发人挤到下一行）。"""
     import gw_docx as D
@@ -608,7 +740,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("-o", "--output", help="输出 docx 路径；默认输出到正文同目录：正文.txt 对应“成稿.docx”，正文-××.txt "
                                                "对应“成稿-××.docx”，其他文件用原文件名（如 送审稿.txt 对应“送审稿.docx”）；"
                                                "已存在时加 -v2、-v3")
-    parser.add_argument("--layout", help="版式：红头、信函、纪要、白头、材料（优先于版式信息）")
+    parser.add_argument("--layout", help="版式：红头、信函、纪要、白头、材料、简报（优先于版式信息）")
     parser.add_argument("--font-fallback", action="store_true", help="本机缺标准字体时改用已安装的替代字体")
     parser.add_argument("--json", action="store_true", help="以 JSON 输出报告")
     parser.add_argument("--no-check", action="store_true", help="生成后不自动回读检查")

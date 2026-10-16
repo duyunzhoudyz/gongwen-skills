@@ -3,7 +3,7 @@
 - 模块范围：`skills/gongwen-draft/` 下的 SKILL.md、README.md、references/（不含 `_shared/`）、scripts/draft_check.py、evals/，以及 `tests/draft/`
 - 阅读方式：2026-10-16 通过 GitHub API 和 raw.githubusercontent.com 在线读取，未克隆、未下载到本仓库。"读取版本"为当日默认分支的提交号前 7 位。
 - 借鉴方式分三种：**思路**（分类方法、判定原则，不涉及文字）；**改写**（参考原文的规则，用自拟的公文语境表述和例句重写）；**反例**（把来源中的写法当作本 skill 要纠正的毛病，例句自拟）。本模块所有例句、示例材料、评测材料均为自拟，未整段照录任何来源。
-- 承接：本模块的文种决策、行文规则检查表和分文种骨架，承接并深化了 v0.1 总入口 `skills/gongwen/references/interim-drafting.md` 第二部分（本仓库自研内容，未修改该文件）。逐节对照结果见第六部分。
+- 承接：本模块的文种决策、行文规则检查表和分文种骨架，承接并深化了 v0.1 总入口 `skills/gongwen/references/interim-drafting.md` 第二部分（本仓库自研内容，未修改该文件；该文件在 v1.0 迁入 gongwen-draft 后删除）。逐节对照结果见第六部分。
 
 ## 一、MIT 许可来源
 
@@ -55,9 +55,9 @@
 
 ## 六、v0.1 过渡起草的迁移对照（W1-DR-3，2026-10-16）
 
-按计划 D1，逐节对照 `skills/gongwen/references/interim-drafting.md` 第一、二、六、七部分与本 skill 的 SKILL.md 和 references。结论：本 skill 已覆盖全部条目，“缺失”0 项，没有需要迁入的内容；第一部分第5条“先提纲还是直接成稿”已被计划 D11 取代，不迁。
+按计划 D1，逐节对照 `skills/gongwen/references/interim-drafting.md`（该文件在 v1.0 迁入 gongwen-draft 后删除）第一、二、六、七部分与本 skill 的 SKILL.md 和 references。结论：本 skill 已覆盖全部条目，“缺失”0 项，没有需要迁入的内容；第一部分第5条“先提纲还是直接成稿”已被计划 D11 取代，不迁。
 
-| interim-drafting.md | 条目 | 本 skill 中的位置 | 结果 |
+| interim-drafting.md（已删除） | 条目 | 本 skill 中的位置 | 结果 |
 |---|---|---|---|
 | 一、1 | 保密；纪要、通报先查人名 | SKILL.md 开工检查第1条；`references/doc-types/tongbao.md` 第四部分 | 已有 |
 | 一、2 | 只用用户事实，列素材清单；转译模式展示清单 | SKILL.md 第三步通用规则第2条；角色适配·转译模式（素材台账） | 已有 |

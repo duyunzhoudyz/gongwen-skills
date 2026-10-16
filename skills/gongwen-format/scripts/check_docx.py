@@ -21,8 +21,9 @@ from typing import Dict, List, Optional, Sequence
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import gw_fonts as F  # noqa: E402
-from gw_layout import (DATE_CN_RE, MARKERS_RE, SECRET_WORDS_RE, doc_kind, draft_note_index,  # noqa: E402
-                       is_pipe_residue, parse_lines, text_width_chars)
+from gw_layout import (DATE_CN_RE, MARKERS_RE, ROLE_LABELS, SECRET_WORDS_RE, doc_kind,  # noqa: E402
+                       draft_note_index, has_brief_header, is_pipe_residue, parse_brief, parse_lines,
+                       text_width_chars)
 
 CJK_RE = re.compile(r"[一-鿿]")
 # 序号位与 gw_layout.DOCNO_PAT 一致：阿拉伯数字，或尚未编号的“【待补：序号】”
@@ -43,7 +44,7 @@ BAD_ORDINALS = [
     (re.compile(r"^[一二三四五六七八九十]+[.．，]"), "一级序数后用顿号“一、”", ORDINAL_HINT),
     (re.compile(r"^\((\d+|[一二三四五六七八九十]+)\)"), "序数括号应为全角“（）”", ORDINAL_HINT),
 ]
-LAYOUT_NAMES = ("红头", "信函", "纪要", "白头", "材料")  # --layout 可选值
+LAYOUT_NAMES = ("红头", "信函", "纪要", "白头", "材料", "简报")  # --layout 可选值
 LEVEL_FONT = {"h1": "黑体", "h2": "楷体", "h3": "仿宋", "h4": "仿宋", "body": "仿宋", "attendance": "仿宋"}
 LEVEL_NAME = {"h1": "一级标题", "h2": "二级标题", "h3": "三级标题", "h4": "四级标题", "body": "正文"}
 ALLOW_PREFIX = "按本单位制度保留："
@@ -200,14 +201,21 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
         paras, texts = paras[:cut], texts[:cut]
     # 正文表格（不含版记）：识别时在表格位置插入占位，表格上一行的表题不按正文检查
     tables = [(a, el) for a, el in D.body_tables(doc) if cut is None or a < cut]
-    parsed = parse_lines(texts, red=[D.para_is_red(p, doc) for p in paras], tables_after=[a for a, _ in tables])
-    kind, doc_type = doc_kind(str(parsed.fields.get("标题") or ""))
+    red_flags = [D.para_is_red(p, doc) for p in paras]
     letter_issuer = None
     sec0 = doc.sections[0]
     if sec0.different_first_page_header_footer:
         htxt = _part_text(sec0.first_page_header._element).strip()
         if htxt:
             letter_issuer = sec0.first_page_header
+    # 简报：开头有简报名称加期号行或编印行的，报头、报尾要素不当作发文机关标志、正文来查
+    brief = layout == "简报" or (layout is None and letter_issuer is None and has_brief_header(texts, red_flags))
+    anchors = [a for a, _ in tables]
+    parsed = (parse_brief(texts, red=red_flags, tables_after=anchors, force=layout == "简报") if brief
+              else parse_lines(texts, red=red_flags, tables_after=anchors))
+    kind, doc_type = doc_kind(str(parsed.fields.get("标题") or ""))
+    if brief:
+        layout, doc_type = "简报", "简报"
     if layout is None:
         roles = parsed.roles()
         if letter_issuer is not None:
@@ -224,8 +232,8 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
                 suggestion="标题一般以“关于”开头或以文种结尾", basis="GB/T 9704-2012 7.3.1")
 
     for it in parsed.items:
-        if it.role in ("table", "table_caption"):
-            continue  # 表格另查；表题居中、不缩进，不按正文检查
+        if it.role in ("table", "table_caption") or it.role.startswith("brief_"):
+            continue  # 表格另查；表题居中、不缩进，不按正文检查；简报报头、报尾另查
         p = paras[it.src]
         line = it.src + 1
         text = texts[it.src]
@@ -281,6 +289,9 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
                 col.add("DOCX-055", "P1", "格式要素", "发文机关标志应为红色", line=line, excerpt=text,
                         suggestion="字体颜色设为红色", basis="GB/T 9704-2012 7.2.4")
 
+    if layout == "简报":
+        _check_brief_frame(col, doc, paras, parsed)
+
     # ---- 纪要出席名单前空一行（10.3） ----
     if layout == "纪要" or doc_type == "纪要":
         _check_attendance_gap(col, doc, paras, parsed, line_pt)
@@ -318,7 +329,7 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
             if re.match(r"^抄\s*送\s*:", stripped):
                 col.add("DOCX-060", "P1", "标点", "“抄送”后应用全角冒号", line=ln, excerpt=stripped,
                         suggestion="抄送：", basis="GB/T 9704-2012 7.4.2")
-            if not stripped.endswith("。"):
+            if not stripped.endswith("。") and layout != "简报":  # 简报报尾无国标，不要求句号
                 col.add("DOCX-060", "P1", "标点", "抄送最后一个机关名称后标句号", line=ln, excerpt=stripped,
                         suggestion=stripped + "。", basis="GB/T 9704-2012 7.4.2")
         if stripped.endswith("印发") and not MARKERS_RE.search(stripped):
@@ -391,6 +402,85 @@ def _blank_before(doc, paras, idx: int, line_pt: float) -> bool:
     return not (rule == "exact" and val is not None and val < line_pt * 0.5)
 
 
+def _bottom_rule_color(p) -> Optional[str]:
+    """段落下边框的颜色（无下边框返回 None）。"""
+    from docx.oxml.ns import qn
+    ppr = p._p.pPr
+    bdr = ppr.find(qn("w:pBdr")) if ppr is not None else None
+    bottom = bdr.find(qn("w:bottom")) if bdr is not None else None
+    if bottom is None or bottom.get(qn("w:val")) in (None, "nil", "none"):
+        return None
+    return (bottom.get(qn("w:color")) or "auto").upper()
+
+
+def _has_top_rule(p) -> bool:
+    from docx.oxml.ns import qn
+    ppr = p._p.pPr
+    bdr = ppr.find(qn("w:pBdr")) if ppr is not None else None
+    top = bdr.find(qn("w:top")) if bdr is not None else None
+    return top is not None and top.get(qn("w:val")) not in (None, "nil", "none")
+
+
+def _check_brief_frame(col: Collector, doc, paras, parsed) -> None:
+    """简报的报头、报尾。简报没有国家标准格式，这里只查常见做法：报头有简报名称（红色居中）、期号、
+    编印单位和日期，其下有红色分隔线；报尾（有的话）上方有分隔线。报头、报尾要素不当作正文检查。"""
+    import gw_docx as D
+    from docx.oxml.ns import qn
+    from gw_layout import BRIEF_SEP_RE
+    basis = "实践（简报无国家标准格式，以本单位往期简报为准）"
+    by = {it.role: it for it in parsed.items if it.role in ("brief_name", "brief_issue", "brief_editor")}
+    missing = [label for role, label in (("brief_name", "简报名称"), ("brief_issue", "期号"),
+                                         ("brief_editor", "编印单位和日期")) if role not in by]
+    if missing:
+        col.add("DOCX-110", "P1", "结构", "简报报头缺少：" + "、".join(missing), excerpt="报头",
+                suggestion="报头依次为简报名称、期号行、编印单位与日期同一行，缺的先写【待补】；运行 build_docx.py --layout 简报 重排",
+                basis=basis)
+    name = by.get("brief_name")
+    if name is not None:
+        p = paras[name.src]
+        if not D.para_is_red(p, doc) or D.para_align(p, doc) != "center":
+            col.add("DOCX-111", "P1", "格式要素", "简报名称应为红色、居中", line=name.src + 1, excerpt=name.text,
+                    suggestion="简报名称设为红色、居中、大字号", basis=basis)
+    head = [paras[it.src] for it in by.values()]
+    if head and not any(_bottom_rule_color(p) is not None and D.is_red(_bottom_rule_color(p)) for p in head):
+        last = by.get("brief_editor") or by.get("brief_issue") or name
+        col.add("DOCX-112", "P1", "格式要素", "简报报头下没有红色分隔线", line=last.src + 1, excerpt=last.text,
+                suggestion="在编印单位和日期行下加红色下边框作分隔线", basis=basis)
+    for role in ("brief_issue", "brief_editor"):
+        it = by.get(role)
+        if it is None:
+            continue
+        p = paras[it.src]
+        fonts = [(D.run_font(r, p, doc), len(r.text)) for r in p.runs if r.text.strip()]
+        sizes = [(D.run_size(r, p, doc), len(r.text)) for r in p.runs if r.text.strip()]
+        font, size = _majority(fonts), _majority(sizes)
+        if (font is not None and F.font_class(font) != "仿宋") or (size is not None and abs(size - 16) > 0.25):
+            col.add("DOCX-114", "P2", "字体", f"{ROLE_LABELS[role]}一般用三号仿宋，现为“{font}”{size} 磅",
+                    line=it.src + 1, excerpt=it.text, suggestion="设为三号仿宋", basis=basis)
+    # 报尾：浮动表格，或报尾各行是普通段落
+    foot_ok = None
+    for tbl in doc.tables:
+        text = "".join(t.text or "" for t in tbl._tbl.iter(qn("w:t"))).strip()
+        if D.is_banji_table(tbl._tbl) and re.match(r"^(?:报|送|发|抄\s*送)\s*[：:]|^[（(]?共印", text):
+            top = tbl._tbl.find(qn("w:tblPr") + "/" + qn("w:tblBorders") + "/" + qn("w:top"))
+            foot_ok = top is not None and top.get(qn("w:val")) not in ("nil", "none")
+            excerpt = text[:20]
+            break
+    else:
+        foots = [it for it in parsed.items if it.role == "brief_foot"]
+        if foots:
+            first = foots[0].src
+            j = first - 1
+            while j >= 0 and not paras[j].text.strip() and _bottom_rule_color(paras[j]) is None:
+                j -= 1
+            foot_ok = _has_top_rule(paras[first]) or (j >= 0 and (
+                _bottom_rule_color(paras[j]) is not None or bool(BRIEF_SEP_RE.match(paras[j].text.strip()))))
+            excerpt = foots[0].text
+    if foot_ok is False:
+        col.add("DOCX-113", "P1", "格式要素", "简报报尾上方没有分隔线", excerpt=excerpt,
+                suggestion="报尾（报、送、发、抄送、印数）与正文之间加一条分隔线", basis=basis)
+
+
 def _check_attendance_gap(col: Collector, doc, paras, parsed, line_pt: float) -> None:
     """纪要：第一个出席（请假、列席）段前应空一行；排在开头、前面没有正文的不查。"""
     items = [it for it in parsed.items if it.src >= 0 or it.role == "table"]
@@ -446,7 +536,7 @@ def _check_tables(col: Collector, doc, tables: Sequence) -> None:
 # check_document 可能报出的检查项，--allow 只接受这些 ID
 KNOWN_IDS = {f"DOCX-{n:03d}" for n in (1, 2, 3, 4, 10, 11, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24, 30, 31, 32, 33,
                                      40, 41, 42, 43, 44, 45, 46, 47, 50, 51, 52, 53, 54, 55, 60, 61, 70, 71, 72,
-                                     73, 74, 80, 81, 82, 90, 100, 101, 102)}
+                                     73, 74, 80, 81, 82, 90, 100, 101, 102, 110, 111, 112, 113, 114)}
 
 
 def _majority(values: List[tuple]) -> Optional[object]:
@@ -651,7 +741,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="检查 docx 是否符合 GB/T 9704-2012《党政机关公文格式》。",
                                      epilog="退出码：默认 0；--strict 时存在 P0 返回 1；输入错误返回 2。")
     parser.add_argument("file", help="待检查的 .docx 文件")
-    parser.add_argument("--layout", help="版式：红头、信函、纪要、白头、材料；不写时自动判断")
+    parser.add_argument("--layout", help="版式：红头、信函、纪要、白头、材料、简报；不写时自动判断")
     parser.add_argument("--json", action="store_true", help="以机检 JSON 输出（开发规范第 8 节）")
     parser.add_argument("--strict", action="store_true", help="存在 P0 时返回 1")
     parser.add_argument("--allow", metavar="DOCX-050",

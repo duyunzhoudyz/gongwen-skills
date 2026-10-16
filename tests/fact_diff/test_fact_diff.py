@@ -690,6 +690,83 @@ class OrdinalApproxTest(FactDiffTestCase):
         self.assertFalse(report["consistent"])
 
 
+class SummaryCountTest(FactDiffTestCase):
+    """v1.0 评测后第 1 项：做法、措施等的纯概括数（“三条做法”“措施共5项”）不报“正文有、台账无”，
+    改为 P2 提示“概括数，请核对与分项一致”；真正的业务数字（新增5项制度、培训3场次）照报。"""
+
+    LEDGER_TEXT = "会议材料：全年完成PCI 612台。"
+
+    def ledger(self, body: str, *extra: str):
+        a = self.write("素材台账.md", self.LEDGER_TEXT)
+        b = self.write("正文.txt", body)
+        return self.run_main(str(a), str(b), "--ledger", *extra)
+
+    def test_summary_counts_become_p2_hint(self):
+        cases = {
+            "具体做法有三条。": "3条",              # 数字在后：做法有N条
+            "检查中推行分级管理，具体做法有3条。": "3条",
+            "我们采取了三条做法，成效明显。": "3条",  # 数字在前：N条做法
+            "总结出5项措施。": "5项",
+            "措施共5项：一是排查，二是整改。": "5项",
+            "主要经验有三点。": "3点",
+            "从3方面入手。": "3",
+            "形成五项主要措施。": "5项",
+            "主要有三个问题，一是。": "3个",
+        }
+        for body, value in cases.items():
+            code, out, _ = self.ledger(body, "--json", "--strict")
+            self.assertEqual(code, 0, (body, out))
+            report = json.loads(out)
+            self.assertEqual(report["added"], [], body)
+            self.assertEqual([(i["value"], i["hint"]) for i in report["uncertain"]], [(value, "概括数")], body)
+
+    def test_summary_item_carries_level_and_note(self):
+        code, out, _ = self.ledger("具体做法有三条。", "--json")
+        item = json.loads(out)["uncertain"][0]
+        self.assertEqual((item["hint"], item["level"]), ("概括数", "P2"))
+        self.assertIn("概括数，请核对与分项一致", item["note"])
+        code, out, _ = self.ledger("具体做法有三条。")
+        self.assertEqual(code, 0)
+        self.assertIn("概括数，请核对与分项一致", out)
+        self.assertIn("P2", out)
+
+    def test_real_business_numbers_still_reported(self):
+        # 宁可少放行：带业务动词、不带概括词、概括词后不是句读、超过十的，一律留在“正文有、台账无”
+        cases = {
+            "新增5项制度。": "5项",
+            "培训3场次。": "3场",
+            "新增3项措施。": "3项",
+            "累计出台5项措施。": "5项",
+            "发现3个问题。": "3个",
+            "查处问题共5个。": "5个",
+            "3项任务已全部完成。": "3项",
+            "完成任务3项。": "3项",
+            "措施有12项。": "12项",
+            "下午3点开会。": "3点",
+            "推进3项重点工作。": "3项",
+            "措施共5项制度。": "5项",
+        }
+        for body, value in cases.items():
+            code, out, _ = self.ledger(body, "--json", "--strict")
+            report = json.loads(out)
+            self.assertEqual(code, 1, (body, out))
+            self.assertIn(value, [i["value"] for i in report["added"]], body)
+            self.assertEqual(report["uncertain"], [], body)
+
+    def test_summary_and_business_number_in_same_text(self):
+        body = "具体做法有三条。全年新增5项制度，培训3场次。"
+        code, out, _ = self.ledger(body, "--json", "--strict")
+        report = json.loads(out)
+        self.assertEqual(code, 1)
+        self.assertEqual([i["value"] for i in report["added"]], ["5项", "3场"])
+        self.assertEqual([(i["value"], i["hint"]) for i in report["uncertain"]], [("3条", "概括数")])
+
+    def test_summary_in_diff_mode_goes_to_third_list(self):
+        report = self.diff("工作开展顺利。", "具体做法有三条。")
+        self.assertEqual(report["added"], [])
+        self.assertEqual([(i["value"], i["hint"]) for i in report["uncertain"]], [("3条", "概括数")])
+
+
 class MultiRefTest(FactDiffTestCase):
     """W1-PL-3：--ref 追加原稿，合并作比对基准，注明出处。"""
 

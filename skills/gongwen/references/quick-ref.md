@@ -63,4 +63,4 @@
 
 转交速查（skill 名省略 gongwen- 前缀，完整路线见路线表）：法定公文、签报、单纯问文种 → draft；总结、计划、汇报、调研、经验、述职、自主方案、大会工作报告 → report；讲话、致辞、主持词 → speech；纪要、会议记录、议题材料、督办清单 → minutes；信息、简报、新闻稿、推文 → brief；对照检查、党建报告、党课、心得 → party；上级来文拆任务、落实方案 → implement；整改、按清单自查 → rectify；报表、计算、图表 → data；标题提纲 → title；压缩、按批注改 → polish；AI 腔 → humanize；免责和对冲 → direct；核稿 → review；排版 → format；完整画像 → profile。装有行业包的，本行业专用文书交 grassroots、hospital、university、k12、soe；未安装的交核心 skill，按单位画像处理，不拒绝。
 
-目标 skill 未安装或在网页版：按输出格式规范第四部分给交接卡、“新开对话粘贴 dist/prompts/<skill 名>.md 继续”的说明、安装命令，三样都给；交接卡写法见路线表第四部分。本 skill 不代为起草。
+目标 skill 未安装或在网页版：按输出格式规范第四部分给交接卡、“新开对话粘贴 dist/prompts/<skill 名>.md 继续”的说明、安装命令，三样都给；交接卡写法见路线表第四部分。本 skill 不代为起草。问“下一步粘贴哪个提示词”的，按路线说出下一站的 dist/prompts/<skill 名>.md，贴来交接卡的换“本站”重出。

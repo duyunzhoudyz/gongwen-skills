@@ -496,10 +496,11 @@ def _border_el(tag: str, val: str, sz: int = 0, color: str = "000000"):
     return el
 
 
-def add_banji_table(doc, ctx: Ctx, rows: List[List[Tuple[str, str]]], *, with_lines: bool = True):
+def add_banji_table(doc, ctx: Ctx, rows: List[List[Tuple[str, str]]], *, with_lines=True):
     """在文末加版记表格，浮动并对齐版心下边缘。
 
     rows：每行是若干段落 (类型, 文本)，类型为 cc（抄送）、main（版记主送）、print（印发）。
+    with_lines：True 为首末粗线加行间细线，False 无线，"top" 只在表上方加一条粗线（简报报尾）。
     """
     bj = ctx.el("banji")
     char_pt = ctx.size(bj["size"])
@@ -521,9 +522,11 @@ def add_banji_table(doc, ctx: Ctx, rows: List[List[Tuple[str, str]]], *, with_li
     set_attrs(get_or_add(tblpr, "jc", TBLPR_ORDER), {"val": "center"})
     borders = get_or_add(tblpr, "tblBorders", TBLPR_ORDER)
     for tag in ("top", "left", "bottom", "right", "insideH", "insideV"):
-        if with_lines and tag in ("top", "bottom"):
+        if with_lines == "top" and tag == "top":
             borders.append(_border_el(tag, "single", thick))
-        elif with_lines and tag == "insideH":
+        elif with_lines is True and tag in ("top", "bottom"):
+            borders.append(_border_el(tag, "single", thick))
+        elif with_lines is True and tag == "insideH":
             borders.append(_border_el(tag, "single", thin))
         else:
             borders.append(_border_el(tag, "nil"))
@@ -552,7 +555,8 @@ def add_banji_table(doc, ctx: Ctx, rows: List[List[Tuple[str, str]]], *, with_li
             para = cell.paragraphs[0] if first else cell.add_paragraph()
             first = False
             if kind in ("cc", "main"):
-                label_w = 3  # “抄送：”三个字
+                m_label = re.match(r"^[^：:]{1,4}[：:]", text)
+                label_w = _text_width(m_label.group(0)) if m_label else 3  # “抄送：”三个字，“报：”两个字
                 set_para(para, align="left", char_pt=char_pt, left=side + label_w, hanging=label_w, right=side,
                          line_exact=ctx.line_pt, before_pt=0, after_pt=0, snap=False, chars=False)
                 run = para.add_run(text)
@@ -665,7 +669,7 @@ def is_banji_table(tbl_el) -> bool:
     if tblpr is not None and tblpr.find(qn("w:tblpPr")) is not None:
         return True
     text = "".join(t.text or "" for t in tbl_el.iter(qn("w:t"))).strip()
-    return "抄送" in text or text.endswith("印发")
+    return "抄送" in text or text.endswith("印发") or bool(re.match(r"^(?:报|送|发)[：:]", text))
 
 
 def body_tables(doc) -> List[Tuple[int, object]]:

@@ -701,9 +701,13 @@ def check_text_lines(lines: List[Line], doc_type: str = "") -> Tuple[str, List[I
     notes: List[str] = []
     dtype = doc_type.strip()
     if not dtype:
-        dtype = infer_type(doc.title.text if doc.title else None)
+        if lines and lines[0].text in FORM_LABELS:
+            dtype = "签报"  # 稿首有签报表头：内部签报，标题“关于……的请示”不据此推断为请示
+        else:
+            dtype = infer_type(doc.title.text if doc.title else None)
         if dtype:
-            notes.append(f"未指定 --doc-type，按标题推断为“{dtype}”")
+            basis = "稿首表头" if dtype == "签报" and lines and lines[0].text in FORM_LABELS else "标题"
+            notes.append(f"未指定 --doc-type，按{basis}推断为“{dtype}”")
         else:
             notes.append("未指定 --doc-type，标题也推断不出文种，只做标题检查")
     elif dtype not in KNOWN_TYPES:

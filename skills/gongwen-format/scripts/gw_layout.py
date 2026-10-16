@@ -93,6 +93,7 @@ ROLE_LABELS = {
     "signature": "发文机关署名", "date": "成文日期", "note": "附注",
     "banji_main": "版记主送", "cc": "抄送", "print": "印发机关和印发日期", "blank": "空行",
     "table": "表格", "table_caption": "表题",
+    "brief_name": "简报名称", "brief_issue": "期号", "brief_editor": "编印单位和日期", "brief_foot": "简报报尾",
 }
 HEADING_ROLES = ("h1", "h2", "h3", "h4")
 BODY_ROLES = ("body", "h1", "h2", "h3", "h4", "attendance")
@@ -794,16 +795,208 @@ def _looks_title(text: str) -> bool:
             and not DOCNO_RE.search(text) and not ATTACH_RE.match(text))
 
 
+# ---------------------------------------------------------------------------
+# 简报：报头、各篇标题与正文、报尾（无国家标准格式，按机关常见做法识别）
+# ---------------------------------------------------------------------------
+
+BRIEF_META_KEYS = ("简报名称", "期号", "总期号", "编印单位", "报", "送", "发", "印数")
+BRIEF_ISSUE_RE = re.compile(
+    r"^(?P<no>(?:增刊\s*)?第\s*(?:[0-9０-９]+|[一二三四五六七八九十百〇零]+)\s*期|【待补[：:][^】]*期号[^】]*】)"
+    r"(?:[\s　]*[（(]?\s*(?P<total>总\s*第\s*[0-9０-９]+\s*期)\s*[）)]?)?$")
+BRIEF_EDITOR_RE = re.compile(
+    r"^(?P<editor>\S(?:.*?\S)?)[\s　]+(?P<date>\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日|【待补[：:][^】]*】)$")
+BRIEF_EDITOR_ONLY_RE = re.compile(r"^\S.{0,28}(?:编印|编发|编)$")
+BRIEF_SEP_RE = re.compile(r"^[─━—\-=＝_＿·.]{3,}$")
+BRIEF_DIST_RE = re.compile(r"^(?P<k>抄\s*送|报|送|发)\s*[：:]\s*(?P<v>.*)$")
+BRIEF_COUNT_RE = re.compile(r"^[（(]?\s*共印\s*(?P<n>[^\s）)]+?)\s*份\s*[）)]?$")
+BRIEF_NAME_END_RE = re.compile(r"(?:简报|动态|信息|专报|快报|通讯|工作交流)$")
+BRIEF_TITLE_MAX = 50
+BRIEF_TITLE_END = tuple("。；：:，、！？!?…")
+BRIEF_NOTE_RE = re.compile(r"^[（(][^（）()]{0,40}[）)]$")
+BRIEF_NOT_TITLE_RE = re.compile(r"^(?:[一二三四五六七八九十]是|编者按|按语|编者的话)")
+
+
+def norm_issue(value) -> str:
+    """期号写成“第12期”：只有数字的补“第”“期”，“增刊第3期”原样保留。"""
+    v = re.sub(r"\s+", "", str(value or ""))
+    return f"第{v}期" if re.fullmatch(r"[0-9０-９]+", v) else v
+
+
+def norm_total(value) -> str:
+    """总期号写成“总第68期”：只有数字的补“总第”“期”，去掉外围括号。"""
+    v = re.sub(r"\s+", "", str(value or "")).strip("（）()")
+    return f"总第{v}期" if re.fullmatch(r"[0-9０-９]+", v) else v
+
+
+def _brief_lines(raw_lines: Sequence[str], tables_after: Optional[Sequence[int]]) -> List[Tuple[int, str]]:
+    anchors: Dict[int, int] = {}
+    for a in tables_after or ():
+        anchors[a] = anchors.get(a, 0) + 1
+    lines: List[Tuple[int, str]] = [(-1, TABLE_MARK)] * anchors.get(-1, 0)
+    for idx, raw in enumerate(raw_lines):
+        text = clean_line(raw)
+        if text:
+            lines.append((idx, text))
+        lines.extend([(-1, TABLE_MARK)] * anchors.get(idx, 0))
+    return lines
+
+
+def _brief_header(lines: Sequence[Tuple[int, str]], red: Optional[Sequence[bool]], force: bool):
+    """识别开头的报头，返回 {name, issue, editor, sep, end}（各项为 (下标, 文字) 或 None），不是简报返回 None。
+
+    简报名称须以“简报”等结尾（force 时放宽为短行），后面接期号行或编印行；没有名称时须同时有期号行和编印行。
+    """
+    head = list(lines[:6])
+    res: Dict[str, object] = {"name": None, "issue": None, "editor": None, "sep": None}
+    i = 0
+
+    def at(k):
+        return head[k][1] if k < len(head) else ""
+
+    if head and not (BRIEF_ISSUE_RE.match(at(0)) or BRIEF_EDITOR_RE.match(at(0)) or BRIEF_SEP_RE.match(at(0))):
+        t = at(0)
+        idx = head[0][0]
+        is_red = red is not None and 0 <= idx < len(red) and red[idx]
+        name_like = bool(BRIEF_NAME_END_RE.search(t)) or force or (is_red and not t.endswith(("纪要", "文件")))
+        if len(t) <= 30 and not has_sentence_punct(t) and t != TABLE_MARK and name_like:
+            res["name"] = head[0]
+            i = 1
+        else:
+            return None
+    if BRIEF_ISSUE_RE.match(at(i)):
+        res["issue"] = head[i]
+        i += 1
+    if BRIEF_EDITOR_RE.match(at(i)) or BRIEF_EDITOR_ONLY_RE.match(at(i)):
+        res["editor"] = head[i]
+        i += 1
+    if BRIEF_SEP_RE.match(at(i)):
+        res["sep"] = head[i]
+        i += 1
+    ok = (res["name"] and (res["issue"] or res["editor"])) or (res["issue"] and res["editor"])
+    if not ok:
+        return None
+    res["end"] = i
+    return res
+
+
+def has_brief_header(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None) -> bool:
+    """正文开头是否有简报报头（简报名称加期号行或编印行）。"""
+    return _brief_header(_brief_lines(raw_lines, None), red, False) is not None
+
+
+def _is_brief_title(text: str) -> bool:
+    return (text != TABLE_MARK and len(text) <= BRIEF_TITLE_MAX and not text.endswith(BRIEF_TITLE_END)
+            and not is_heading(text) and not BRIEF_NOT_TITLE_RE.match(text) and not BRIEF_NOTE_RE.match(text)
+            and not ATTACH_RE.match(text) and not CLOSING_RE.match(text) and not looks_like_date(text))
+
+
+def classify_brief_body(lines: Sequence[Tuple[int, str]]) -> List[Item]:
+    """简报各篇：不带句末标点的短行是篇目标题（连续几行都算标题），标题下的括号注（如“（某街道供稿）”）是题注，
+    其余按层次标题、表格、正文识别。末尾没有正文可跟的标题行按正文处理。"""
+    items: List[Item] = []
+    n = len(lines)
+    for k, (idx, text) in enumerate(lines):
+        prev = items[-1].role if items else None
+        if text == TABLE_MARK:
+            items.append(Item("table", text, idx))
+        elif k + 1 < n and lines[k + 1][1] == TABLE_MARK and is_table_caption(text):
+            items.append(Item("table_caption", text, idx))
+        elif _is_brief_title(text):
+            items.append(Item("title", text, idx))
+        elif is_heading(text):
+            items.append(Item(is_heading(text), text, idx, split=heading_split(text)))
+        elif prev in ("title", "title_note") and BRIEF_NOTE_RE.match(text):
+            items.append(Item("title_note", text, idx))
+        else:
+            items.append(Item("body", text, idx))
+    while items and items[-1].role in ("title", "title_note"):
+        items[-1].role = "body"
+    return items
+
+
+def parse_brief(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
+                tables_after: Optional[Sequence[int]] = None, force: bool = False) -> Parsed:
+    """识别简报：报头（简报名称、期号、编印单位和日期）、各篇标题与正文、报尾（报、送、发、抄送、印数）。
+
+    结果的 items 依次为报头项（brief_name、brief_issue、brief_editor）、正文项、报尾项（brief_foot）；
+    fields 里是报头、报尾要素和篇目。force：版式已指定为简报时放宽简报名称的判断。
+    """
+    res = Parsed(kind="简报")
+    lines = _brief_lines(raw_lines, tables_after)
+    if not lines:
+        res.warnings.append("正文为空")
+        return res
+    head_items: List[Item] = []
+    pos = 0
+    frame = _brief_header(lines, red, force)
+    if frame:
+        pos = int(frame["end"])
+        for key, role in (("name", "brief_name"), ("issue", "brief_issue"), ("editor", "brief_editor")):
+            if frame[key]:
+                head_items.append(Item(role, frame[key][1], frame[key][0]))
+        if frame["name"]:
+            res.fields["简报名称"] = frame["name"][1]
+        if frame["issue"]:
+            m = BRIEF_ISSUE_RE.match(frame["issue"][1])
+            res.fields["期号"] = norm_issue(m.group("no"))
+            if m.group("total"):
+                res.fields["总期号"] = norm_total(m.group("total"))
+        if frame["editor"]:
+            m = BRIEF_EDITOR_RE.match(frame["editor"][1])
+            if m:
+                res.fields["编印单位"] = m.group("editor").strip()
+                res.fields["印发日期"] = re.sub(r"\s+", "", m.group("date"))
+            else:
+                res.fields["编印单位"] = frame["editor"][1]
+        res.detected.append("简报报头：开头的简报名称、期号行、编印单位和日期行")
+    end = len(lines)
+    foot_items: List[Item] = []
+    while end > pos:
+        idx, text = lines[end - 1]
+        m, c = BRIEF_DIST_RE.match(text), BRIEF_COUNT_RE.match(text)
+        if m:
+            res.fields[re.sub(r"\s+", "", m.group("k"))] = m.group("v").strip()
+        elif c:
+            res.fields["印数"] = c.group("n")
+        elif not BRIEF_SEP_RE.match(text):
+            break
+        if m or c:
+            foot_items.insert(0, Item("brief_foot", text, idx))
+        end -= 1
+    if foot_items:
+        res.detected.append("简报报尾：末尾的报、送、发、抄送行和印数")
+    body = classify_brief_body(lines[pos:end])
+    res.items = head_items + body + foot_items
+    titles = [it.text for it in body if it.role == "title"]
+    if titles:
+        res.fields["篇目"] = titles
+        res.detected.append(f"篇目：按不带句末标点的短行识别出 {len(titles)} 篇的标题，请核对")
+    else:
+        res.warnings.append("没有识别到篇目标题（不带句末标点的短行）")
+    if not any(it.role not in ("title", "title_note") for it in body):
+        res.warnings.append("没有识别到正文段落")
+    for _, text in lines:
+        if MARKERS_RE.search(text):
+            res.warnings.append("正文中仍有【待补】或【待核实】标记，请补齐后再定稿")
+            break
+    for _, text in lines[:6]:
+        if SECRET_WORDS_RE.search(text) or SECRET_RE.match(text):
+            res.warnings.append("保密提示：材料含密级或“内部资料”等标识。涉密信息不得输入联网 AI 工具，请在单位内网环境处理")
+            break
+    return res
+
+
 def summarize(parsed: Parsed) -> List[str]:
     """生成识别结果报告，便于用户核对。"""
     out: List[str] = []
     f = parsed.fields
-    for key in ("发文机关标志", "发文字号", "签发人", "标题", "副标题", "主送机关", "附件", "发文机关署名", "成文日期",
-                "附注", "抄送", "印发机关", "印发日期"):
+    for key in ("简报名称", "期号", "总期号", "编印单位", "篇目", "发文机关标志", "发文字号", "签发人", "标题", "副标题",
+                "主送机关", "附件", "发文机关署名", "成文日期", "附注", "报", "送", "发", "抄送", "印数", "印发机关",
+                "印发日期"):
         if key in f and f[key]:
             val = f[key]
             if isinstance(val, list):
-                val = "；".join(str(v) for v in val)
+                val = "；".join(str(v).replace("\n", "") for v in val)
             label = "主送机关（讲话稿为称谓）" if key == "主送机关" and parsed.kind != "法定" else key
             out.append(f"{label}：{val}")
     counts: Dict[str, int] = {}

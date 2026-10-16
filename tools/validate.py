@@ -6,13 +6,16 @@
 共享资料引用闭合（SKILL.md 和 references/ 下各 .md 中出现的 references/_shared/ 路径都要存在）、
 evals、README.md、.claude-plugin/marketplace.json，以及全仓库的字体文件、大文件和 JSON 合法性。
 
-可选检查 --eval-overlap（默认不运行，结果记为警告）：评测材料中带单位的数字和完整日期，
-是否出现在本 skill 的 SKILL.md 或 references/（不含 _shared）中，提示示例可能复用了评测材料。
+可选检查 --eval-overlap（默认不运行，结果记为警告）：评测材料（evals/files/、evals.json 的 prompt、
+expected_output、expectations，以及 trigger.json 的 query）中带单位的数字和完整日期，是否出现在
+本 skill 的 SKILL.md、README.md、references/（不含 _shared）中；全仓库检查时另查 shared/ 源文件
+和 examples/，提示示例可能复用了评测材料。
 
 输出"错误 / 警告"清单；存在错误时返回 1，参数错误返回 2。
 """
 from __future__ import annotations
 
+import fnmatch
 import os
 import re
 import sys
@@ -59,6 +62,11 @@ REQUIRED_SHARED = (
 VALID_STATUS = ("stable", "beta", "draft")
 FONT_SUFFIXES = {".ttf", ".otf", ".ttc", ".woff", ".woff2"}
 MAX_FILE_BYTES = 1024 * 1024
+# 超过 1MB 也不报警告的文件：evals/results/ 下的 *-raw.json（如 v1.0-raw.json、v1.0-round1-raw.json）。
+# 理由：它们是评测的原始逐条结果，evals/bench/aggregate.py --from-raw 靠它复算 README 里的通过率，
+# 删减就无法复算；体量随评测用例数和 skill 数增长（v0.1 约 0.7MB，v1.0 约 2.6MB），属于有意保留。
+# 只放行这一类，其他位置和其他文件名的大文件仍然报警告。放行的文件仍检查 JSON 是否合法。
+LARGE_FILE_EXEMPT_GLOBS = ("evals/results/*-raw.json",)
 SKILL_MD_WARN_LINES = 300
 SKILL_MD_MAX_LINES = 500
 DESCRIPTION_WARN_CHARS = 300
@@ -98,9 +106,43 @@ EVAL_DATE_RES = (
     re.compile(r"(?<!\d)(\d{4})年(\d{1,2})月(\d{1,2})[日号]"),
     re.compile(r"(?<![\d.])(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?![\d.])"),
 )
-EVAL_ALLOWED = {"100%"}  # 通用写法，不算重合
-# 年初、季末、年末是通用的截止日期和统计时点，不算重合
+# ---- --eval-overlap 白名单：这些写法在评测材料和示例中同时出现是合法的，不算复用 ----
+# 白名单只放"固定不变、不是编出来的"内容。放行前先问一句：换一个数字会不会让示例失真？
+# 会失真的（标准施行日期、法规发布日期、外部来源日期）才放行；示例里随手写的数字和日期不放行。
+# 法规规定的截止日期（如年报披露期限）与示例日期恰好相同时，先改示例日期，再把法规日期加入下面第 4 类。
+#
+# 1) 通用写法。
+EVAL_ALLOWED = {"100%"}
+# 2) 年初、季末、年末是通用的截止日期和统计时点（1月1日、3月31日、6月30日、9月30日、12月31日）。
 EVAL_ALLOWED_MONTH_DAYS = {(1, 1), (3, 31), (6, 30), (9, 30), (12, 31)}
+# 3) 评测统一使用的"当前日期"。全部评测用例都设定为这一天，写作日历、示例、格式规则里的"今天"
+#    也只能是这一天，换掉会让评测的时间线对不上。
+EVAL_CURRENT_DATE = "2026年10月16日"
+# 4) 法规、标准中的固定日期。这些日期由文件本身决定，示例引用时不能改，所以放行；
+#    取值与 shared/rules/ 各要点文件首部记录的发布、施行日期一致。键为统一写法（年月日不补零），值为出处，
+#    仅供维护者查阅。
+EVAL_ALLOWED_LEGAL_DATES = {
+    "2012年4月16日": "《党政机关公文处理工作条例》印发日期",
+    "2012年7月1日": "《党政机关公文处理工作条例》施行日期；GB/T 9704-2012 实施日期",
+    "2012年6月29日": "GB/T 9704-2012 发布日期",
+    "2011年7月29日": "GB/T 15835-2011 发布日期",
+    "2011年11月1日": "GB/T 15835-2011 实施日期",
+    "2011年12月30日": "GB/T 15834-2011 发布日期",
+    "2012年6月1日": "GB/T 15834-2011 实施日期",
+    "2024年7月30日": "《整治形式主义为基层减负若干规定》审议批准日期",
+    "2024年8月6日": "《整治形式主义为基层减负若干规定》发布日期",
+    "2026年4月30日": "沪深交易所可持续发展报告指引规定的 2025 年度报告披露截止日（与年报同时披露）；"
+                     "gongwen-soe 的 quick-cards.md 登记，评测期望要求据此判断",
+}
+# 5) 规则依据所引外部文章的发布日期。skill 的 references 登记了来源日期，评测期望要求"依据栏注明来源和日期"，
+#    二者必然同时出现；日期是外部文章的固定信息，不能为避开重合而改。新增条目须同样满足这两点。
+EVAL_ALLOWED_SOURCE_DATES = {
+    "2021年4月17日": "共产党员网转载《秘书工作》文章的日期（gongwen-review 的 tifa-risk.md 登记，评测期望要求注明）",
+}
+# 6) 标准号、文号、条款号不在白名单里，而是由抽取规则结构性排除：数字前紧挨英文字母（GB/T 9704、T/CAS 123）
+#    或"第"（第305条）的不抽取；"号"不在单位表内（国办发〔2019〕34号 不会被抽到）；
+#    带"-年份"的标准号后缀（9704-2012）后面没有单位，也不会被抽到。见 EVAL_NUMBER_RE。
+EVAL_ALLOWED_DATES = {EVAL_CURRENT_DATE, *EVAL_ALLOWED_LEGAL_DATES, *EVAL_ALLOWED_SOURCE_DATES}
 EVAL_TEXT_SUFFIXES = {".txt", ".md", ".csv", ".tsv", ".json"}
 EVAL_ZIP_PARTS = {".docx": ("word/document.xml",), ".xlsx": ("xl/sharedStrings.xml", "xl/worksheets/")}
 FULLWIDTH_DIGITS = str.maketrans("０１２３４５６７８９％．", "0123456789%.")
@@ -519,6 +561,21 @@ def check_evals(name: str, skill_dir: Path, status: Optional[str], rep: Report, 
         rep.warn(name, f"evals/trigger.json 正反例不平衡：应触发 {positives} 条，不应触发 {negatives} 条")
 
 
+def is_handoff_case(item: dict) -> bool:
+    """判断一条评测用例是否覆盖交接卡或转交场景。
+
+    现有 22 个 skill 的 evals 用 tags 标记：绝大多数写"交接卡"，个别写"转交""转交direct""转交行业包"等，
+    没有更细的统一字段。所以这样判断，满足任一条即算：
+    1. tags 中有含"交接卡"或"转交"的标签（子串匹配，兼容"转交行业包"这类写法）；
+    2. expectations 中有一条提到"交接卡"（兼容没打标签、但期望里检查交接卡的用例）。
+    """
+    tags = item.get("tags")
+    if _is_str_list(tags) and any("交接卡" in t or "转交" in t for t in tags):
+        return True
+    expectations = item.get("expectations")
+    return _is_str_list(expectations) and any("交接卡" in e for e in expectations)
+
+
 def _check_evals_data(name: str, skill_dir: Path, data: dict, is_draft: bool, rep: Report) -> None:
     skill_name = data.get("skill_name")
     if skill_name != name:
@@ -533,6 +590,7 @@ def _check_evals_data(name: str, skill_dir: Path, data: dict, is_draft: bool, re
     roles: Set[str] = set()
     anti_fabrication = 0
     secrecy = 0
+    handoff = 0
     for index, item in enumerate(evals, start=1):
         where = f"evals/evals.json 第 {index} 条"
         if not isinstance(item, dict):
@@ -587,6 +645,8 @@ def _check_evals_data(name: str, skill_dir: Path, data: dict, is_draft: bool, re
                 anti_fabrication += 1
             if "保密" in tags:
                 secrecy += 1
+        if is_handoff_case(item):
+            handoff += 1
 
     if is_draft:
         return
@@ -600,6 +660,9 @@ def _check_evals_data(name: str, skill_dir: Path, data: dict, is_draft: bool, re
         rep.warn(name, f"evals 中标注\"防编造\"的用例 {anti_fabrication} 条，规范要求至少 2 条")
     if secrecy < 1:
         rep.warn(name, "evals 中缺少标注\"保密\"的用例")
+    if handoff < 1:
+        # 开发规范第 9 节要求至少 1 条交接卡用例；22 个 skill 实际全部满足，所以按错误处理
+        rep.error(name, "evals 中缺少交接卡或转交场景的用例（tags 含\"交接卡\"或\"转交\"，或 expectations 提到交接卡）")
 
 
 def check_skill(repo_root: Path, skill_dir: Path, rep: Report, checked_json: Set[Path],
@@ -631,8 +694,9 @@ def _normalize_overlap_text(text: str) -> str:
 def overlap_tokens(text: str) -> List[str]:
     """抽取带单位的数字（整数部分不少于 3 位或带小数）和完整日期。
 
-    年份（"2026年"）、条款号（"第305条"）、标准号（"GB/T 9704"）、字数（"1500字"）不抽取；
-    "100%"和年初、季末、年末日期（1月1日、3月31日、6月30日、9月30日、12月31日）不算重合。
+    年份（"2026年"）、条款号（"第305条"）、标准号（"GB/T 9704"）、文号（"〔2019〕34号"）、字数（"1500字"）不抽取；
+    "100%"、年初和季末年末日期（1月1日、3月31日、6月30日、9月30日、12月31日）、评测统一使用的当前日期、
+    法规标准的固定日期不算重合（见 EVAL_ALLOWED 等白名单常量）。
     """
     norm = _normalize_overlap_text(text)
     tokens: List[str] = []
@@ -648,7 +712,7 @@ def overlap_tokens(text: str) -> List[str]:
             year, month, day = (int(g) for g in m.groups())
             if 1 <= month <= 12 and 1 <= day <= 31 and (month, day) not in EVAL_ALLOWED_MONTH_DAYS:
                 token = f"{year}年{month}月{day}日"
-                if token not in tokens:
+                if token not in tokens and token not in EVAL_ALLOWED_DATES:
                     tokens.append(token)
     return tokens
 
@@ -682,7 +746,8 @@ def _eval_file_text(path: Path) -> Optional[str]:
 
 
 def _eval_sources(skill_dir: Path) -> List[Tuple[str, str]]:
-    """评测材料：evals/files/ 下的文件，以及 evals.json 中各用例的 prompt。"""
+    """评测来源：evals/files/ 下的文件；evals.json 各用例的 prompt、expected_output、expectations；
+    evals/trigger.json 的 query。每项为 (来源说明, 文本)。"""
     sources: List[Tuple[str, str]] = []
     files_dir = skill_dir / "evals" / "files"
     if files_dir.is_dir():
@@ -695,43 +760,134 @@ def _eval_sources(skill_dir: Path) -> List[Tuple[str, str]]:
         data, err = load_json_file(evals_path)
         if not err and isinstance(data, dict) and isinstance(data.get("evals"), list):
             for item in data["evals"]:
-                if isinstance(item, dict) and isinstance(item.get("prompt"), str):
-                    sources.append((f"evals.json 第 {item.get('id')} 条 prompt", item["prompt"]))
+                if not isinstance(item, dict):
+                    continue
+                label = f"evals.json 第 {item.get('id')} 条"
+                for field in ("prompt", "expected_output"):
+                    if isinstance(item.get(field), str):
+                        sources.append((f"{label} {field}", item[field]))
+                if _is_str_list(item.get("expectations")):
+                    # 一条用例的全部期望并成一段，来源只标到条，不再细分第几句
+                    sources.append((f"{label} expectations", "\n".join(item["expectations"])))
+    trigger_path = skill_dir / "evals" / "trigger.json"
+    if trigger_path.is_file():
+        data, err = load_json_file(trigger_path)
+        if not err and isinstance(data, list):
+            for index, item in enumerate(data, start=1):
+                if isinstance(item, dict) and isinstance(item.get("query"), str):
+                    sources.append((f"trigger.json 第 {index} 项 query", item["query"]))
     return sources
 
 
-def check_eval_overlap(name: str, skill_dir: Path, rep: Report) -> None:
-    """评测材料中的数字、日期出现在 SKILL.md 或 references/（不含 _shared）中时，报警告。"""
+def eval_token_sources(skill_dir: Path) -> Dict[str, str]:
+    """一个 skill 的全部评测来源中抽取到的 {token: 首次出现的来源}。"""
     token_source: Dict[str, str] = {}
     for source, text in _eval_sources(skill_dir):
         for token in overlap_tokens(text):
             token_source.setdefault(token, source)
-    if not token_source:
-        return
-    files: List[Path] = [skill_dir / "SKILL.md"]
+    return token_source
+
+
+def _scan_overlap_targets(token_source: Dict[str, str], targets: Sequence[Tuple[str, Path]]) -> Dict[str, List[str]]:
+    """在被扫描文件中找出与评测 token 相同的数字、日期，返回 {token: [位置, ...]}。
+
+    被扫描文件用与评测来源相同的 overlap_tokens 抽取后再取交集，两边口径一致（含白名单）；
+    docx、xlsx 取文字后按行（段）报位置。
+    """
+    hits: Dict[str, List[str]] = {}
+    for rel, path in targets:
+        text = _eval_file_text(path)
+        if not text:
+            continue
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if not any(ch.isdigit() or ch in "０１２３４５６７８９" for ch in line):
+                continue
+            for token in overlap_tokens(line):
+                if token in token_source:
+                    places = hits.setdefault(token, [])
+                    place = f"{rel} 第 {lineno} 行"
+                    if place not in places:
+                        places.append(place)
+    return hits
+
+
+def _skill_overlap_targets(skill_dir: Path) -> List[Tuple[str, Path]]:
+    """skill 内被扫描的文件：SKILL.md、README.md、references/ 下的 .md（不含 _shared，那份由 shared/ 源文件统一报）。"""
+    targets: List[Tuple[str, Path]] = [(name, skill_dir / name) for name in ("SKILL.md", "README.md")]
     refs_dir = skill_dir / "references"
     if refs_dir.is_dir():
-        files += sorted(p for p in refs_dir.rglob("*.md")
-                        if p.is_file() and "_shared" not in p.relative_to(refs_dir).parts)
-    hits: Dict[str, List[str]] = {}
-    for path in files:
-        try:
-            lines = path.read_text(encoding="utf-8").splitlines()
-        except (OSError, UnicodeDecodeError):
-            continue
-        rel = path.relative_to(skill_dir).as_posix()
-        for lineno, line in enumerate(lines, start=1):
-            norm = _normalize_overlap_text(line)
-            for token in token_source:
-                for m in re.finditer(re.escape(token), norm):
-                    before = norm[m.start() - 1] if m.start() else ""
-                    if before.isdigit() or before == ".":
-                        continue  # "1320人"中的"320人"不算
-                    hits.setdefault(token, []).append(f"{rel} 第 {lineno} 行")
-                    break
+        targets += [(p.relative_to(skill_dir).as_posix(), p) for p in sorted(refs_dir.rglob("*.md"))
+                    if p.is_file() and "_shared" not in p.relative_to(refs_dir).parts]
+    return [(rel, path) for rel, path in targets if path.is_file()]
+
+
+def check_eval_overlap(name: str, skill_dir: Path, rep: Report) -> None:
+    """评测来源中的数字、日期出现在本 skill 的 SKILL.md、README.md 或 references/（不含 _shared）中时，报警告。"""
+    token_source = eval_token_sources(skill_dir)
+    if not token_source:
+        return
+    hits = _scan_overlap_targets(token_source, _skill_overlap_targets(skill_dir))
     for token, places in hits.items():
         rep.warn(name, f"示例可能复用评测材料：{token}（评测材料：{token_source[token]}；"
                        f"出现在：{_join_places(places, '处')}）")
+
+
+def _shared_consumers(skill_dirs: Sequence[Path]) -> Dict[str, List[Path]]:
+    """{shared 下的源文件相对路径: 把它同步进去的 skill 目录列表}，依据各 skill 的 manifest.json。"""
+    consumers: Dict[str, List[Path]] = {}
+    for skill_dir in skill_dirs:
+        data, err = load_json_file(skill_dir / "manifest.json")
+        if err or not isinstance(data, dict) or not isinstance(data.get("shared"), list):
+            continue
+        for item in data["shared"]:
+            if isinstance(item, dict):
+                src, _ = normalize_rel_path(item.get("src"))
+                if src:
+                    consumers.setdefault(src, []).append(skill_dir)
+    return consumers
+
+
+def check_repo_eval_overlap(repo_root: Path, skill_dirs: Sequence[Path], rep: Report) -> None:
+    """全仓库的 --eval-overlap：shared/ 下的源文件，以及 examples/。
+
+    shared/ 的 .md 源文件只与把它同步进去的那些 skill 的评测材料比对（别的 skill 读不到它），
+    重合报到 shared 源文件上，不对各 skill 的 _shared 副本重复报。
+    examples/ 是公开展示的前后对比案例，与全部 skill 的评测材料比对。
+    """
+    rep.touch(REPO_SCOPE)
+    token_cache: Dict[Path, Dict[str, str]] = {}
+
+    def merged(dirs: Sequence[Path]) -> Dict[str, str]:
+        result: Dict[str, str] = {}
+        for d in dirs:
+            if d not in token_cache:
+                token_cache[d] = eval_token_sources(d)
+            for token, source in token_cache[d].items():
+                result.setdefault(token, f"{d.name} 的 {source}")
+        return result
+
+    shared_dir = repo_root / "shared"
+    if shared_dir.is_dir():
+        consumers = _shared_consumers(skill_dirs)
+        for path in sorted(p for p in shared_dir.rglob("*.md") if p.is_file()):
+            rel = path.relative_to(repo_root).as_posix()
+            users = consumers.get(path.relative_to(shared_dir).as_posix(), [])
+            token_source = merged(users)
+            if not token_source:
+                continue
+            for token, places in _scan_overlap_targets(token_source, [(rel, path)]).items():
+                rep.warn(REPO_SCOPE, f"示例可能复用评测材料：{token}（评测材料：{token_source[token]}；"
+                                     f"出现在：{_join_places(places, '处')}；该文件同步进 {len(users)} 个 skill）")
+
+    examples_dir = repo_root / "examples"
+    if examples_dir.is_dir():
+        token_source = merged(skill_dirs)
+        suffixes = EVAL_TEXT_SUFFIXES | set(EVAL_ZIP_PARTS)
+        targets = [(p.relative_to(repo_root).as_posix(), p) for p in sorted(examples_dir.rglob("*"))
+                   if p.is_file() and p.suffix.lower() in suffixes]
+        for token, places in _scan_overlap_targets(token_source, targets).items():
+            rep.warn(REPO_SCOPE, f"示例可能复用评测材料：{token}（评测材料：{token_source[token]}；"
+                                 f"出现在：{_join_places(places, '处')}）")
 
 
 # ---------------------------------------------------------------------------
@@ -810,6 +966,11 @@ def _iter_repo_files(repo_root: Path):
             yield current / name
 
 
+def is_large_file_exempt(rel: str) -> bool:
+    """rel 为相对仓库根的 POSIX 路径；匹配 LARGE_FILE_EXEMPT_GLOBS 的文件不做 1MB 体量警告。"""
+    return any(fnmatch.fnmatchcase(rel, pattern) for pattern in LARGE_FILE_EXEMPT_GLOBS)
+
+
 def check_repository(repo_root: Path, rep: Report, checked_json: Set[Path]) -> None:
     rep.touch(REPO_SCOPE)
     for path in _iter_repo_files(repo_root):
@@ -821,7 +982,7 @@ def check_repository(repo_root: Path, rep: Report, checked_json: Set[Path]) -> N
             size = path.stat().st_size
         except OSError:
             continue
-        if size > MAX_FILE_BYTES:
+        if size > MAX_FILE_BYTES and not is_large_file_exempt(rel):
             rep.warn(REPO_SCOPE, f"文件超过 1MB（{size / 1024 / 1024:.1f}MB）：{rel}")
         if suffix == ".json" and path.resolve() not in checked_json:
             _data, err = load_json_file(path)
@@ -856,6 +1017,8 @@ def run_validation(repo_root: Path, skill: Optional[str] = None,
         check_skill(repo_root, skill_dir, rep, checked_json, eval_overlap)
     check_marketplace(repo_root, skill_dirs, rep, checked_json)
     check_repository(repo_root, rep, checked_json)
+    if eval_overlap:
+        check_repo_eval_overlap(repo_root, skill_dirs, rep)
     return rep, len(skill_dirs)
 
 
@@ -869,9 +1032,11 @@ def main(argv: Optional[Sequence[str]] = None, repo_root: Optional[Path] = None)
     parser.add_argument("--skill", metavar="NAME", help="只检查指定 skill（同时跳过插件清单和全仓库检查）")
     parser.add_argument("--quiet", action="store_true", help="只输出错误，不输出警告和通过信息")
     parser.add_argument("--eval-overlap", action="store_true",
-                        help="另查示例是否复用评测材料：evals/files/ 和 evals.json prompt 中带单位的数字"
-                             "（3 位以上或带小数）、完整日期，出现在 SKILL.md 或 references/（不含 _shared）中的"
-                             "记为警告；默认不运行")
+                        help="另查示例是否复用评测材料：evals/files/、evals.json 的 prompt、expected_output、"
+                             "expectations 和 trigger.json 的 query 中带单位的数字（3 位以上或带小数）、完整日期，"
+                             "出现在各 skill 的 SKILL.md、README.md、references/（不含 _shared）中的记为警告；"
+                             "全仓库检查时另查 shared/ 源文件和 examples/（用 --skill 时不查这两处）。"
+                             "评测当前日期、法规标准的固定日期等在白名单内；默认不运行")
     add_root_argument(parser)
     args = parser.parse_args(argv)
 

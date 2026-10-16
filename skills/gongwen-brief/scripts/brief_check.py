@@ -549,7 +549,11 @@ def check_title_numbers(draft: Union["Draft", "Section"]) -> List[dict]:
 def iter_quotes(draft: Draft):
     """逐个给出引号内容：(行号, 段落, 起点, 终点, 内容, 是否有说话人)。"""
     for number, text in draft.titles + draft.paragraphs:
+        marker_spans = [m.span() for m in MARKER_RE.finditer(text)]
         for match in QUOTE_RE.finditer(text):
+            # 【待补】【待核实】标记内引用用户原话的引号是说明文字，不当作稿中引语
+            if any(lo <= match.start() and match.end() <= hi for lo, hi in marker_spans):
+                continue
             content = next(g for g in match.groups() if g is not None)
             before = text[max(0, match.start() - 30):match.start()]
             after = text[match.end():match.end() + 16]
@@ -956,7 +960,8 @@ def build_report(path: Path, doc_type: str = "信息", sources: Optional[Sequenc
         raise InputError("正文为空（【起草说明】之前没有内容）。")
     external = external or doc_type in EXTERNAL_TYPES
     default_low, default_high = ALIAS_RANGES.get(alias, DEFAULT_RANGES[doc_type])
-    low = default_low if low is None else low
+    # 用户只给“不超过N字”（只传 --max）时，N 是上限，不再套用默认下限
+    low = (None if high is not None else default_low) if low is None else low
     high = default_high if high is None else high
     if low is not None and high is not None and low > high:
         raise InputError("--min 不能大于 --max。")

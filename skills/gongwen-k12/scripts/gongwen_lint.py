@@ -23,6 +23,7 @@ import re
 import sys
 from dataclasses import dataclass
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Pattern, Sequence, Set, Tuple
 
@@ -116,6 +117,7 @@ PUNCT_TAIL = "。，；：、！？.,;:!?"
 # ---------------------------------------------------------------------------
 # 版头、标题、落款、版记的识别
 # ---------------------------------------------------------------------------
+QIANBAO_HEADERS = ("签报", "呈批件")  # 稿首表头
 FENHAO_RE = re.compile(r"^\s*\d{6}\s*$")
 MIJI_LINE_RE = re.compile(r"^\s*(?:绝密|机密|秘密)(?:\s*★.*)?\s*$")
 INNER_MARK_RE = re.compile(
@@ -125,6 +127,7 @@ INNER_MARK_RE = re.compile(
 # 【待补：】【待核实：】标记：正文唯一允许的提示内容，不参与冒号、文风类检查
 MARKER_RE = re.compile(r"【(?:待补|待核实)[：:][^】\n]*】")
 # summary.markers 计数用（与 MRK-001、MRK-002 的写法一致：全角冒号）
+ZHUSONG_MARKER_RE = re.compile(r"【(?:待补|待核实)[^】]*】")  # 主送行里的标记：冒号、括号写法不限
 TODO_MARK_RE = re.compile(r"【待补：[^】\n]*】")
 VERIFY_MARK_RE = re.compile(r"【待核实：[^】\n]*】")
 JINJI_RE = re.compile(r"^\s*(?:特急|加急|特提|平急)\s*$")
@@ -167,9 +170,12 @@ NEGATION_RE = re.compile(
 
 # 层次序数：level, 正则（第 1 组为序号）
 HEADING_PATTERNS = (
-    # “、”后可以直接是数字（如“三、2027年工作打算”）；其他误用的点号后紧跟数字的不算标题
-    (1, re.compile(r"^\s*([一二三四五六七八九十]{1,3})\s*(?:、|[，,.．:：](?!\d))"
-                   r"(?![一二三四五六七八九十]+(?:年级|产业|季度|等奖|类|级))")),
+    # “、”后可以直接是数字（如“三、2027年工作打算”）；其他误用的点号后紧跟数字的不算标题。
+    # 否定前瞻：后面紧跟“X年级”“X季度”等的是并列写法（“一、二年级学生”“三、四季度要抓好……”），不是标题。
+    # 例外：“、”前后是同一个数（“四、四季度安排”“二、二年级工作”）不可能是并列写法，按一级标题识别。
+    (1, re.compile(r"^\s*([一二三四五六七八九十]{1,3})\s*(?:"
+                   r"、(?:(?=\1(?:年级|产业|季度|等奖|类|级))|(?![一二三四五六七八九十]+(?:年级|产业|季度|等奖|类|级)))"
+                   r"|[，,.．:：](?!\d)(?![一二三四五六七八九十]+(?:年级|产业|季度|等奖|类|级)))")),
     (2, re.compile(r"^\s*[（(]\s*([一二三四五六七八九十]{1,3})\s*[）)]")),
     (3, re.compile(r"^\s*(\d{1,2})\s*(?:[.．](?!\d)|、(?!\d))")),
     (4, re.compile(r"^\s*[（(]\s*(\d{1,2})\s*[）)]")),
@@ -363,6 +369,186 @@ def context_of(text: str, start: int, end: int, width: int = 12) -> str:
 
 
 # ---------------------------------------------------------------------------
+# 表格合计、小计核算（NUM-023）
+# ---------------------------------------------------------------------------
+# 核算范围：同一张表格里首列为“合计”“总计”“总数”“小计”的行，按列与分项行的数值之和比对。
+#   - 小计：与所在分组（紧邻的连续明细行，上方没有就取下方）之和比对；
+#   - 合计、总计、总数：与全部明细行之和、各小计行之和二者之一一致即算一致（有小计时两种写法都常见）。
+# 只核算可解析为数字的单元格（支持千分位逗号、带单位的写法：1,234.5万元、300人次）；
+# 以下情形整列跳过，不报错（宁可漏报，不误报 P0）：
+#   - 表头含“率、%、占比、比重、比例、增长、增幅、增速、同比、环比”的百分比、比率、增长率列，
+#     以及“平均、人均、均值、单价、排名、名次、序号、编号”这类不能相加的列；
+#   - 参与核算的单元格中有空单元格、【待补】【待核实】单元格、无法解析的文字，或带百分号的数值；
+#   - 同一列的单位不一致（万元与元混写）。
+#   “—”“-”“/”“无”按 0 计。
+# 误差：按参与核算单元格的最大小数位数取一个末位（1 位小数允许差 0.1，2 位小数允许差 0.01）；
+#   整数列只有金额、面积等可修约的计量单位（元、万元、亿元、吨、亩、米等）允许差 1，
+#   人次、人数、件数等计数列不允许有误差。
+TOTAL_LABELS = frozenset({"合计", "总计", "总数"})
+SUBTOTAL_LABEL = "小计"
+NON_ADDITIVE_HEADER_RE = re.compile(r"率|%|％|占比|比重|比例|增长|增幅|增速|同比|环比|平均|人均|均值|单价|排名|名次|序号|编号")
+ROUNDABLE_RE = re.compile(r"元|万|亿|吨|公顷|亩|米|公里|千克|公斤|升")
+TABLE_SEP_RE = re.compile(r"^\s*\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)*\|?\s*$")
+CELL_NUMBER_RE = re.compile(r"^([+-]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)\s*([^\d\s,.+\-]{0,6})$")
+DASH_CELL_RE = re.compile(r"^(?:[-—–－/／]+|无|暂无)$")
+_UNIT_ALIASES = {"万元": "万", "亿元": "亿", "％": "%"}
+
+
+def parse_table_number(cell: str) -> Optional[Tuple[Decimal, int, str]]:
+    """把表格单元格解析为 (数值, 小数位数, 单位)；不是单纯的数字（带单位可以）返回 None。
+
+    “1,234.50万元”→(1234.50, 2, "万")，“95%”→(95, 0, "%")；单元格里的 ** 加粗符号先去掉。
+    """
+    text = re.sub(r"\*\*|__", "", cell).strip().replace("，", ",").replace("．", ".")
+    match = CELL_NUMBER_RE.match(text)
+    if not match:
+        return None
+    raw, unit = match.group(1), match.group(2).strip()
+    digits = raw.replace(",", "")
+    decimals = len(digits.split(".")[1]) if "." in digits else 0
+    return Decimal(digits), decimals, _UNIT_ALIASES.get(unit, unit)
+
+
+def _classify_cell(cell: str) -> Tuple[str, Optional[Tuple[Decimal, int, str]]]:
+    """返回 (类别, 解析结果)：num 数字、dash 无数据（按 0 计）、blank 空、todo 待补待核实、text 其他文字。"""
+    text = re.sub(r"\*\*|__", "", cell).strip()
+    if not text:
+        return "blank", None
+    if "【待补" in text or "【待核实" in text:
+        return "todo", None
+    parsed = parse_table_number(text)
+    if parsed:
+        return "num", parsed
+    if DASH_CELL_RE.match(text):
+        return "dash", None
+    return "text", None
+
+
+def _row_label(cells: Sequence[str]) -> str:
+    return re.sub(r"[\s　*_`]", "", cells[0]).rstrip("：:") if cells else ""
+
+
+def split_table_row(text: str) -> List[str]:
+    body = text.strip()
+    if body.startswith("|"):
+        body = body[1:]
+    if body.endswith("|"):
+        body = body[:-1]
+    return [c.strip() for c in body.split("|")]
+
+
+def find_markdown_tables(paras: Sequence["Para"]) -> List[Tuple[List[str], List[Tuple[Optional["Para"], List[str]]]]]:
+    """找出段落序列中的 Markdown 表格，返回 [(表头单元格, [(段落, 单元格)])]（行不含表头和分隔行）。
+
+    以“表头行 + 分隔行（|---|---|）”为起点，之后连续含“|”的行为表体；表体中遇到下一张表的表头（下一行是分隔行）即止。
+    """
+    def is_sep(k: int) -> bool:
+        return k < len(paras) and "|" in paras[k].text and bool(TABLE_SEP_RE.match(paras[k].text))
+
+    tables = []
+    i = 0
+    while i < len(paras):
+        text = paras[i].text
+        if "|" in text and not paras[i].in_table and not TABLE_SEP_RE.match(text) and is_sep(i + 1):
+            rows: List[Tuple[Optional[Para], List[str]]] = []
+            j = i + 2
+            while j < len(paras) and "|" in paras[j].text and not paras[j].in_table and not is_sep(j + 1):
+                rows.append((paras[j], split_table_row(paras[j].text)))
+                j += 1
+            tables.append((split_table_row(text), rows))
+            i = j
+        else:
+            i += 1
+    return tables
+
+
+def _sum_cells(cells: Sequence[str]) -> Optional[Tuple[Decimal, int, Set[str]]]:
+    """一组单元格求和：全部是数字（或“—”按 0 计）时返回 (和, 最大小数位数, 单位集合)，否则 None。"""
+    total, decimals, units = Decimal(0), 0, set()
+    for cell in cells:
+        kind, parsed = _classify_cell(cell)
+        if kind == "num" and parsed:
+            total += parsed[0]
+            decimals = max(decimals, parsed[1])
+            if parsed[2]:
+                units.add(parsed[2])
+        elif kind != "dash":
+            return None
+    return total, decimals, units
+
+
+def table_total_findings(header: Sequence[str],
+                         rows: Sequence[Tuple[Optional["Para"], Sequence[str]]]) -> List[Tuple[int, str]]:
+    """核算一张表格，返回 [(行下标, 说明)]，行下标对应 rows。核算规则见本节开头的说明。"""
+    labels = [_row_label(cells) for _, cells in rows]
+    is_total = [lab in TOTAL_LABELS for lab in labels]
+    is_sub = [lab == SUBTOTAL_LABEL for lab in labels]
+    is_special = [t or s for t, s in zip(is_total, is_sub)]
+    findings: List[Tuple[int, str]] = []
+
+    def cell(row: int, col: int) -> str:
+        cells = rows[row][1]
+        return cells[col] if col < len(cells) else ""
+
+    def run_of_details(start: int, step: int) -> List[int]:
+        out, k = [], start
+        while 0 <= k < len(rows) and not is_special[k]:
+            out.append(k)
+            k += step
+        return out
+
+    for i, label in enumerate(labels):
+        if not is_special[i]:
+            continue
+        # 找出本行对应的分项行：candidates = [(名称, 行下标列表)]
+        if is_sub[i]:
+            group = run_of_details(i - 1, -1) or run_of_details(i + 1, 1)
+            candidates = [("同组分项之和", group)]
+        else:
+            lo = max([k for k in range(i) if is_total[k]], default=-1) + 1
+            above = list(range(lo, i))
+            hi = next((k for k in range(i + 1, len(rows)) if is_total[k]), len(rows))
+            span = above if any(not is_special[k] or is_sub[k] for k in above) else list(range(i + 1, hi))
+            details = [k for k in span if not is_special[k]]
+            subs = [k for k in span if is_sub[k]]
+            candidates = [("分项之和", details)]
+            if subs:
+                candidates.append(("各小计之和", subs))
+        candidates = [(name, members) for name, members in candidates if members]
+        if not candidates:
+            continue
+        for col in range(1, len(header)):
+            name = header[col].strip() or f"第{col + 1}列"
+            if NON_ADDITIVE_HEADER_RE.search(name):
+                continue
+            kind, stated = _classify_cell(cell(i, col))
+            if kind != "num" or not stated or stated[2] == "%":
+                continue
+            sums = []
+            for cand_name, members in candidates:
+                result = _sum_cells([cell(k, col) for k in members])
+                if result is not None:
+                    sums.append((cand_name, result))
+            if not sums:
+                continue
+            units = {stated[2]} - {""}
+            for _, (_, _, u) in sums:
+                units |= u
+            if "%" in units or len(units) > 1:
+                continue
+            decimals = max([stated[1]] + [d for _, (_, d, _) in sums])
+            if decimals > 0:
+                tolerance = Decimal(1).scaleb(-decimals)
+            else:
+                tolerance = Decimal(1) if ROUNDABLE_RE.search("".join(units) + name) else Decimal(0)
+            if any(abs(stated[0] - total) <= tolerance for _, (total, _, _) in sums):
+                continue
+            shown = "；".join(f"{cand_name}为 {total:.{decimals}f}" for cand_name, (total, _, _) in sums)
+            findings.append((i, f"表格“{labels[i]}”行“{name}”列填写 {cell(i, col).strip()}，与{shown}不一致"))
+    return findings
+
+
+# ---------------------------------------------------------------------------
 # 输入读取
 # ---------------------------------------------------------------------------
 
@@ -390,6 +576,11 @@ def read_lines(path: Path) -> Tuple[List[Tuple[int, str, bool]], List[str]]:
     raise InputError(f"不支持的文件类型：{path.suffix or '无扩展名'}。只支持 .txt、.md、.docx。")
 
 
+class DocxLines(list):
+    """read_docx 的返回值：行列表，另带 tables 属性（表格的行列结构，供表格合计核算用）。"""
+    tables: List[List[Tuple[int, List[str]]]]
+
+
 def read_docx(path: Path) -> List[Tuple[int, str, bool]]:
     try:
         import docx  # type: ignore
@@ -401,17 +592,29 @@ def read_docx(path: Path) -> List[Tuple[int, str, bool]]:
         document = docx.Document(str(path))
     except Exception as exc:  # 损坏的 docx、加密文件等
         raise InputError(f"无法打开 docx 文件：{exc}") from exc
-    lines: List[Tuple[int, str, bool]] = []
+    lines = DocxLines()
+    lines.tables = []
     number = 0
-    p_tag, tbl_tag = qn("w:p"), qn("w:tbl")
+    p_tag, tbl_tag, tr_tag, tc_tag = qn("w:p"), qn("w:tbl"), qn("w:tr"), qn("w:tc")
     for child in document.element.body.iterchildren():
         if child.tag == p_tag:
             number += 1
             lines.append((number, Paragraph(child, document).text, False))
         elif child.tag == tbl_tag:
+            numbers = {}
             for p_el in child.iter(p_tag):
                 number += 1
+                numbers[p_el] = number
                 lines.append((number, Paragraph(p_el, document).text, True))
+            rows: List[Tuple[int, List[str]]] = []
+            for tr in child.findall(tr_tag):
+                first = next(tr.iter(p_tag), None)
+                if first is None:
+                    continue
+                cells = ["".join(Paragraph(p_el, document).text for p_el in tc.iter(p_tag)).strip()
+                         for tc in tr.findall(tc_tag)]
+                rows.append((numbers[first], cells))
+            lines.tables.append(rows)
     return lines
 
 
@@ -442,6 +645,8 @@ class Document:
         self.banji_start: Optional[int] = None
         self.signoff_date: Optional[int] = None
         self.attach_desc: Optional[int] = None
+        # docx 表格的行列结构：[[(首段落行号, [单元格文字])]]，表头在前；其他输入为空（Markdown 表格从段落中识别）
+        self.docx_tables: List[List[Tuple[int, List[str]]]] = []
         self.wenhao_present = False
         self.qianfa_present = False
         self.public_facing = False
@@ -596,7 +801,22 @@ class Document:
         end = self.banji_start if self.banji_start is not None else len(self.paras)
         return sum(nonspace_len(p.text) for p in self.paras[:end] if p.index not in skip)
 
+    def has_qianbao_header(self) -> bool:
+        """稿首（前 3 个非空段落）单独一行写着“签报”“呈批件”表头（容许 Markdown 标题、加粗、字间空格）。"""
+        for para in self.paras[:3]:
+            head = MD_HEADING_PREFIX_RE.sub("", para.text, count=1)
+            head = re.sub(r"[\s　]+|(?:\*\*|__)$", "", head).rstrip(PUNCT_TAIL)
+            if head in QIANBAO_HEADERS:
+                return True
+        return False
+
+    def qianbao_marked(self) -> bool:
+        """是否带签报标志：稿首有“签报”“呈批件”表头，或全文有“会签情况”栏（用于免查请示主送领导个人）。"""
+        return self.has_qianbao_header() or any("会签情况" in p.text for p in self.paras)
+
     def infer_doc_type(self) -> Optional[str]:
+        if self.has_qianbao_header():
+            return "签报"  # 签报按规定写“关于……的请示”，只能靠稿首表头识别
         title = self.title_text.strip().rstrip(PUNCT_TAIL)
         if title:
             for regex, doc_type in TITLE_DOC_PATTERNS:
@@ -733,7 +953,7 @@ class Linter:
     def _procedures(self) -> Dict[str, Sequence[Callable[[Document, str], List[Issue]]]]:
         return {
             "punct": (self._check_quotes, self._check_colon_nesting),
-            "number": (self._check_date_styles, self._check_quantity_points),
+            "number": (self._check_date_styles, self._check_quantity_points, self._check_table_totals),
             "format": (self._check_date_padding, self._check_signoff_date, self._check_zhusong),
             "structure": (self._check_title, self._check_heading_sequence, self._check_count_summary,
                           self._check_qingshi, self._check_baogao, self._check_han, self._check_shangxing),
@@ -1074,6 +1294,27 @@ class Linter:
         r"|销售额|营业额|交易额|利润|支出|投资额|门诊量|业务量|办件量|工作量|诊疗量|客流量|用量|销量|产量"
     )
     RATE_WORD_RE = re.compile(r"率|占比|比重|比例|增速|增幅|指数|份额|度|水平|系数|密度|进度|差距")
+
+    def _check_table_totals(self, doc: Document, doc_type: str) -> List[Issue]:
+        """NUM-023 表格合计、小计核算：Markdown 表格从段落中识别，docx 表格用读入时记下的行列结构。核算规则见 table_total_findings。"""
+        if not self._proc_applies("NUM-023", doc_type):
+            return []
+        tables = find_markdown_tables(doc.paras)
+        by_line = {p.line: p for p in doc.paras}
+        for rows in doc.docx_tables:
+            if len(rows) < 2 or (doc.truncated_line is not None and rows[0][0] >= doc.truncated_line):
+                continue
+            tables.append((rows[0][1], [(by_line.get(line), cells) for line, cells in rows[1:]]))
+        issues: List[Issue] = []
+        for header, rows in tables:
+            for row_index, message in table_total_findings(header, rows):
+                para, cells = rows[row_index]
+                excerpt = clip(" | ".join(c for c in cells if c), 80)
+                issue = self._proc_issue("NUM-023", para, 0, len(para.text) if para else 0,
+                                         message=message, excerpt=excerpt)
+                if issue:
+                    issues.append(issue)
+        return issues
 
     def _check_quantity_points(self, doc: Document, doc_type: str) -> List[Issue]:
         """NUM-020 数量指标的变化用了“百分点”。只看同一分句内、数量词之后 15 字以内的写法。"""
@@ -1446,8 +1687,16 @@ class Linter:
     def _check_main_recipient(self, doc: Document, doc_type: str) -> List[Issue]:
         if doc.zhusong is None or not self._proc_applies("STR-006", doc_type):
             return []
+        # 签报是内部文书，按规定主送领导职务，不适用“请示不向领导个人报送”（也不查多个主送）：
+        # doc_type 为签报，或稿首有“签报”“呈批件”表头，或全文有“会签情况”栏
+        if doc_type == "签报" or doc.qianbao_marked():
+            return []
         para = doc.paras[doc.zhusong]
         text = para.text.strip().rstrip("：:")
+        # 先剔除【待补…】【待核实…】标记再判断（标记里的逗号、顿号不是多个主送机关）；剔除后为空说明主送待补，不查
+        text = ZHUSONG_MARKER_RE.sub("", text).strip().rstrip("：:").strip()
+        if not text:
+            return []
         if re.search(r"(?:书记|市长|县长|区长|省长|局长|主任|院长|校长|董事长|总经理|厅长|部长|处长|同志)$", text):
             issue = self._proc_issue("STR-006", para, 0, len(para.text), excerpt=clip(para.text.strip(), 80),
                                      message=f"{doc_type}主送领导个人")
@@ -1901,7 +2150,7 @@ def resolve_doc_type(doc: Document, given: Optional[str]) -> Tuple[str, str]:
         return given.strip(), "参数"
     inferred = doc.infer_doc_type()
     if inferred:
-        return inferred, "标题推断"
+        return inferred, "稿首表头推断" if doc.has_qianbao_header() else "标题推断"
     return "其他", "默认"
 
 
@@ -2012,7 +2261,9 @@ def lint_file(path: Path, doc_type: Optional[str] = None, checks: Optional[str] 
         raise InputError(f"文件不存在：{path}")
     lines, notes = read_lines(real)
     unit = "段" if path.suffix.lower() == ".docx" else "行"
-    return lint_document(Document(path.name, lines, unit), doc_type, checks, linter, notes, banned, allow)
+    doc = Document(path.name, lines, unit)
+    doc.docx_tables = list(getattr(lines, "tables", []))
+    return lint_document(doc, doc_type, checks, linter, notes, banned, allow)
 
 
 def render_text(result: Dict[str, Any]) -> str:

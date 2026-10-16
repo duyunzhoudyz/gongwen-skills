@@ -1,0 +1,78 @@
+# 发布流程：推送 v* 标签（如 v1.0.0）时，先跑一遍与 CI 相同的检查，再构建离线包，
+# 并把 dist/offline/*.zip 作为附件传到该标签的 Release。Release 不存在就创建为草稿，
+# 内容补全、点击发布由人工完成；已存在时只追加或覆盖附件，不改动说明和发布状态。
+# 只用官方 actions/checkout、actions/setup-python，上传用 runner 自带的 gh CLI。
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONIOENCODING: utf-8
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install python-docx openpyxl
+
+      - name: 核对标签与版本号
+        run: |
+          version=$(python -c "import json; print(json.load(open('.claude-plugin/marketplace.json', encoding='utf-8'))['metadata']['version'])")
+          case "$GITHUB_REF_NAME" in
+            "v$version" | "v$version"-*) echo "标签 $GITHUB_REF_NAME 与 marketplace.json 的版本 $version 一致" ;;
+            *)
+              echo "::error::标签 $GITHUB_REF_NAME 与 marketplace.json 的版本 $version 不一致，请先改版本号或重打标签"
+              exit 1
+              ;;
+          esac
+
+      - name: 共享资料同步检查
+        run: python tools/sync_shared.py --check
+
+      - name: 校验 skill
+        run: python tools/validate.py
+
+      - name: 单元测试
+        run: python -m unittest discover -s tests -t .
+
+      - name: 提示词版一致性检查
+        run: python tools/build_prompts.py --check
+
+      - name: 构建离线包
+        run: |
+          python tools/build_prompts.py --offline
+          ls -l dist/offline/
+
+      - name: 上传到 Release
+        run: |
+          shopt -s nullglob
+          assets=(dist/offline/*.zip)
+          if [ ${#assets[@]} -eq 0 ]; then
+            echo "::error::dist/offline/ 下没有生成 zip"
+            exit 1
+          fi
+          if ! gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" --draft --verify-tag \
+              --title "$GITHUB_REF_NAME" \
+              --notes "草稿：由 release 工作流创建。请补充发布说明，核对附件后再发布。"
+          fi
+          gh release upload "$GITHUB_REF_NAME" "${assets[@]}" --clobber
+          echo "已上传：${assets[*]}"

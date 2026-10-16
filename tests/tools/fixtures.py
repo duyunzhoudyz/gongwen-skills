@@ -85,6 +85,8 @@ def make_evals(name: str, count: int = 12) -> dict:
             tags.append("防编造")
         if i == 3:
             tags.append("保密")
+        if i == 1:
+            tags.append("交接卡")  # validate 要求至少 1 条交接卡或转交用例
         items.append({
             "id": i,
             "prompt": f"帮我写第 {i} 份材料",

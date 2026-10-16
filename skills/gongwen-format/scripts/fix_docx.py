@@ -18,12 +18,13 @@ from typing import Dict, List, Optional, Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from gw_layout import BODY_ROLES, ROLE_LABELS, doc_kind, draft_note_index, parse_lines, summarize  # noqa: E402
+from gw_layout import (BODY_ROLES, ROLE_LABELS, doc_kind, draft_note_index, has_brief_header,  # noqa: E402
+                       parse_brief, parse_lines, summarize)
 
 # 两个非空段落之间应保留的空行数（键为前一段角色、后一段角色；None 表示任意）
 GAP_RULES = [
     (("issuer", None), 2), (("docno", None), 2), (("title", None), 1), (("subtitle", None), 1),
-    (("title_note", None), 1), ((None, "attachment"), 1), ((None, "signature"), -1), ((None, "date"), -1),
+    (("title_note", None), 1), (("brief_editor", None), 1), ((None, "attachment"), 1), ((None, "signature"), -1), ((None, "date"), -1),
 ]
 
 
@@ -126,14 +127,19 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None, font_fal
         paras, texts = paras[:cut], texts[:cut]
     # 正文表格（不含版记）在识别时作占位，表格上一行的表题按表题排，不当成署名或正文
     anchors = [a for a, _ in D.body_tables(doc) if cut is None or a < cut]
-    parsed = parse_lines(texts, red=[D.para_is_red(p, doc) for p in paras], tables_after=anchors)
-    kind, doc_type = doc_kind(str(parsed.fields.get("标题") or ""))
+    red_flags = [D.para_is_red(p, doc) for p in paras]
     sec0 = doc.sections[0]
     is_letter = bool(sec0.different_first_page_header_footer and
                      "".join(t.text or "" for t in sec0.first_page_header._element.iter(
                          "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t")).strip())
+    brief = layout == "简报" or (layout is None and not is_letter and has_brief_header(texts, red_flags))
+    parsed = (parse_brief(texts, red=red_flags, tables_after=anchors, force=layout == "简报") if brief
+              else parse_lines(texts, red=red_flags, tables_after=anchors))
+    kind, doc_type = doc_kind(str(parsed.fields.get("标题") or ""))
     if layout is None:
-        if is_letter:
+        if brief:
+            layout = "简报"
+        elif is_letter:
             layout = "信函"
         elif parsed.find("issuer"):
             layout = "纪要" if parsed.find("issuer")[0].text.endswith("纪要") else "红头"
@@ -164,7 +170,8 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None, font_fal
         p = paras[it.src]
         role_of[it.src] = it.role
         # 发文字号行的行首制表符用于“居左空一字”，版头要素不删行首空白
-        if it.role not in ("docno", "signer", "issuer", "copy_no", "secret", "urgency") and strip_leading_spaces(p):
+        if it.role not in ("docno", "signer", "issuer", "copy_no", "secret", "urgency", "brief_name", "brief_issue",
+                           "brief_editor") and strip_leading_spaces(p):
             stripped += 1
         changes = apply_role(p, it.role, ctx, split=it.split)
         bucket = stats.setdefault(it.role, {"段数": 0})
@@ -188,6 +195,9 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None, font_fal
             want = 0
         if role_of.get(i) == "attendance" and role_of.get(prev_i) in GAP_BEFORE_ATTENDANCE:
             want = 1  # 纪要出席名单在正文下空一行（10.3）
+        if layout == "简报" and role_of.get(i) == "title" and role_of.get(prev_i) not in (None, "title") \
+                and not str(role_of.get(prev_i)).startswith("brief_"):
+            want = 1  # 简报两篇之间空一行
         for n, j in enumerate(gap):
             if n < want:
                 if D.set_para(paras[j], line_exact=ctx.line_pt, before_pt=0, after_pt=0, reset_indent=False):
@@ -208,7 +218,12 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None, font_fal
 
     # 标题后空一行、附件说明前空一行：没有空段时用段前段后距补足
     titles = [it for it in parsed.items if it.role in ("title", "subtitle", "title_note")]
-    if titles:
+    if layout == "简报":  # 每篇标题后空一行
+        for k, it in enumerate(titles):
+            nxt = titles[k + 1].src if k + 1 < len(titles) else None
+            if it.src + 1 < len(paras) and not _is_empty(paras[it.src + 1]) and nxt != it.src + 1:
+                D.set_para(paras[it.src], after_pt=ctx.line_pt, before_pt=0, reset_indent=False)
+    elif titles:
         last = titles[-1].src
         if last + 1 < len(paras) and not _is_empty(paras[last + 1]):
             D.set_para(paras[last], after_pt=ctx.line_pt, before_pt=0, reset_indent=False)
@@ -251,13 +266,14 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None, font_fal
         if table._tbl in after_cut:
             continue  # 起草说明中的附表不处理
         cells_text = "".join(c.text for row in table.rows for c in row.cells)
-        if "抄送" in cells_text or cells_text.strip().endswith("印发"):
+        if "抄送" in cells_text or cells_text.strip().endswith("印发") or (
+                layout == "简报" and D.is_banji_table(table._tbl)):
             for row in table.rows:
                 for cell in row.cells:
                     for p in cell.paragraphs:
                         if p.text.strip():
                             apply_role(p, "cc", ctx)
-            report["notes"].append("版记表格已统一为 4 号仿宋")
+            report["notes"].append(("简报报尾表格" if layout == "简报" else "版记表格") + "已统一为 4 号仿宋")
         else:
             other_tables += 1
     if other_tables:
@@ -326,7 +342,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("file", help="待修复的 .docx（不会被修改）")
     parser.add_argument("-o", "--output", help="输出路径；默认“原文件名-修复.docx”，已存在时加 -v2、-v3")
     parser.add_argument("--report", help="修复报告路径；默认与输出文件同名加“-修复报告.md”")
-    parser.add_argument("--layout", help="版式：红头、信函、纪要、白头、材料；不写时自动判断")
+    parser.add_argument("--layout", help="版式：红头、信函、纪要、白头、材料、简报；不写时自动判断")
     parser.add_argument("--seal", choices=["是", "否"], help="署名是否按加盖印章排列；不写时法定公文按加盖处理")
     parser.add_argument("--font-fallback", action="store_true", help="本机缺标准字体时改用已安装的替代字体")
     parser.add_argument("--json", action="store_true", help="以 JSON 输出报告")

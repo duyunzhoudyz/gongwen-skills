@@ -35,10 +35,12 @@
 
 可能是序数或概数的内容单列第三张清单"可能是序数或概数（请人工判断）"，不计入前两张清单和 --strict：
     结构序数：十以内的"X点意见""X个方面""X项要求""X条建议""X件事"，"讲三点""以下三点"，"第三点"；
-    概数："X成"，如"九成以上""9成患者满意"；"数""几"开头的汉字数字，如"数十万人次""几十家"。
+    概数："X成"，如"九成以上""9成患者满意"；"数""几"开头的汉字数字，如"数十万人次""几十家"；
+    概括数：做法、措施、经验等的总条数，如"具体做法有三条""采取了三条措施""措施共5项"，提示"概括数，请核对与分项一致"
+            （P2）；带"新增""发现""完成""培训"等业务动词的，或后面不是概括词的（"新增5项制度"），仍按业务数字比对。
 
 前两张清单为"原稿有而改稿没有""改稿新增"。按出现次数比对：原稿出现 2 次、改稿 1 次，也会列出。
---json 输出中，第三张清单在 uncertain 字段（每项带 hint：序数或概数；list：missing 或 added），
+--json 输出中，第三张清单在 uncertain 字段（每项带 hint：序数、概数或概括数；list：missing 或 added），
 docx 修订等说明在 notes 字段，各原稿文件名在 original_files 字段。
 
 读取 .docx 时按"接受全部修订"后的文字比对：含修订插入（w:ins）的文字，不含修订删除（w:del）的文字，
@@ -202,6 +204,44 @@ STRUCT_FOLLOW = {
 STRUCT_NOT_FOLLOW = ("事项", "事业", "事务", "事件", "事宜", "事迹")
 # "讲三点""以下三点"：量词"点"前面是这些词时按结构序数（"下午3点"不算）
 POINT_LEAD_RE = re.compile(r"(?:讲|谈|提|说|强调|以下|如下|下面|这)$")
+
+# 概括数：做法、措施等的“总条数”（“具体做法有三条”“采取了三条措施”“措施共5项”），数字本身不是新事实，
+# 只要与后面的分项个数一致即可；单列为第三张清单的“概括数”，提示“概括数，请核对与分项一致”（P2）。
+# 判断标准（宁可少放行，拿不准的一律留在“正文有、台账无”）：
+#   1. 数字是十以内的整数，量词只限条、项、个、点、类、种，或阿拉伯数字后直接接“方面”；
+#   2. 数字前面（到最近一个句读为止，最多 8 个字）不能出现业务动词：新增、发现、完成、培训、出台、整改等
+#      带这些动词的是真实的业务数量（“新增3项措施”“发现3个问题”），不放行；
+#   3. 满足下列任一形式才放行：
+#      甲、数字在前：数字+量词后接概括词（可夹“主要”“重点”“具体”等修饰语，后面可带“的”），
+#          概括词分强弱——强概括词（做法、措施、举措、经验、方法、办法、亮点、特点、步骤、要点、对策、方面）直接放行；
+#          弱概括词（任务、问题、原因、成效、目标）容易是真实数量（“3项任务已完成”），
+#          只在数字前紧挨“主要”“重点”“以下”“如下”“包括”“分为”等引导词时放行；
+#      乙、数字在后：强概括词（不含任务、问题等弱概括词）+“有/共有/共/为/是/包括/分为”+数字+量词，
+#          且量词后是句读或行尾（“具体做法有三条。”“措施共5项：”）；
+#   4. “新增5项制度”（制度不是概括词）、“培训3场次”（量词不在限定范围）、“措施有12项”（超过十）都不放行。
+HINT_SUMMARY = "概括数"
+SUMMARY_NOTE = "概括数，请核对与分项一致"
+SUMMARY_LEVEL = "P2"
+SUMMARY_UNITS = frozenset("条项个点类种")
+_SUMMARY_STRONG = "做法|措施|举措|经验|方法|办法|亮点|特点|步骤|要点|对策|方面"
+_SUMMARY_WEAK = "任务|问题|原因|成效|目标"
+_SUMMARY_MODIFIER = r"(?:(?:主要|重点|具体|基本|重要|突出|关键|核心|有效|典型)的?)*"
+SUMMARY_AFTER_STRONG_RE = re.compile(_SUMMARY_MODIFIER + "(?:" + _SUMMARY_STRONG + ")")
+SUMMARY_AFTER_WEAK_RE = re.compile(_SUMMARY_MODIFIER + "(?:" + _SUMMARY_WEAK + ")")
+# 弱概括词的引导词：数字前紧挨这些词（可再带一个“有”）才算概括
+SUMMARY_WEAK_LEAD_RE = re.compile(r"(?:主要|重点|突出|以下|如下|下面|其中|着重|集中|聚焦|归纳为|概括为|总结为|梳理出|分为|包括)有?$")
+# 数字在后的形式：强概括词（可带修饰语）+连接词，紧挨数字
+SUMMARY_BEFORE_RE = re.compile(
+    "(?:" + _SUMMARY_STRONG + ")(?:主要|重点|大致|大体|基本)?(?:共有|有以下|有如下|可概括为|可归纳为|包括|分为|有|共|为|是)$"
+)
+SUMMARY_END_CHARS = frozenset("。，、；：:,;.！!")
+# 业务动词：数字前面出现这些词，是真实的业务数量，不按概括数放行
+SUMMARY_BUSINESS_RE = re.compile(
+    "新增|新建|新设|新开|新上|新出台|新推出|新制定|增设|增加|减少|压减|取消|精简|推出|出台|制定|印发|发布|"
+    "建立|建成|设立|设置|完成|办结|办理|解决|整改|落实|兑现|发放|开展|举办|组织|培训|实施|投入|收到|受理|"
+    "处理|排查|查处|查出|发现|清理|拆除|落地|上线|入库|签约|立案|约谈|通报|曝光"
+)
+_CLAUSE_BREAKS = "，。；：、,;:.（）()！!？?\n"
 
 
 # ---------------------------------------------------------------------------
@@ -630,7 +670,31 @@ def _number_hint(text: str, start: int, end: int, unit: str, value: Optional[int
         return HINT_ORDINAL  # "三点意见""五项要求""两件事""三个方面"
     if unit == "点" and POINT_LEAD_RE.search(text[max(0, start - 2):start]):
         return HINT_ORDINAL  # "讲三点""以下三点"
+    if _is_summary_count(text, start, end, unit):
+        return HINT_SUMMARY  # "具体做法有三条""采取了三条措施"
     return ""
+
+
+def _is_summary_count(text: str, start: int, end: int, unit: str) -> bool:
+    """是否为做法、措施等的纯概括数，判断标准见 HINT_SUMMARY 处的注释。value 已在调用处限定为十以内整数。"""
+    window = text[max(0, start - 8):start]
+    for brk in _CLAUSE_BREAKS:
+        cut = window.rfind(brk)
+        if cut >= 0:
+            window = window[cut + 1:]
+    if SUMMARY_BUSINESS_RE.search(window):
+        return False
+    if unit == "" and text.startswith("方面", end):
+        return True  # 阿拉伯数字直接接“方面”："3方面"
+    if unit not in SUMMARY_UNITS:
+        return False
+    if SUMMARY_AFTER_STRONG_RE.match(text, end):
+        return True
+    if SUMMARY_AFTER_WEAK_RE.match(text, end) and SUMMARY_WEAK_LEAD_RE.search(window):
+        return True
+    if SUMMARY_BEFORE_RE.search(text[max(0, start - 12):start]):
+        return end >= len(text) or text[end] in SUMMARY_END_CHARS
+    return False
 
 
 def extract_line(line: str, lineno: int) -> List[Fact]:
@@ -826,6 +890,9 @@ def _entry(items: List[Fact], original_count: int, revised_count: int, with_sour
         entry["sources"] = list(OrderedDict.fromkeys(f.source for f in items if f.source))
     if first.hint:  # 比对键含 hint，同一项的各处 hint 相同
         entry["hint"] = first.hint
+    if first.hint == HINT_SUMMARY:
+        entry["level"] = SUMMARY_LEVEL
+        entry["note"] = SUMMARY_NOTE
     return entry
 
 
@@ -992,7 +1059,10 @@ def _render_uncertain(title: str, entries: List[dict], names: Tuple[str, str],
     lines = [f"{title}（{len(entries)} 项）"]
     for index, item in enumerate(entries, start=1):
         side = item.get("list", "added")
-        extra = f"；{sides.get(side, side)}；可能是{item.get('hint', '序数或概数')}"
+        if item.get("hint") == HINT_SUMMARY:
+            extra = f"；{sides.get(side, side)}；{item.get('level', SUMMARY_LEVEL)} 提示：{item.get('note', SUMMARY_NOTE)}"
+        else:
+            extra = f"；{sides.get(side, side)}；可能是{item.get('hint', '序数或概数')}"
         lines += _render_item(index, item, wheres.get(side, ""), names, extra)
     return lines
 
@@ -1001,8 +1071,12 @@ def _uncertain_conclusion(report: dict) -> List[str]:
     count = len(report.get("uncertain") or [])
     if not count:
         return []
-    return [f"另有 {count} 项可能是序数或概数（如“三点意见”“九成”），未计入差异和 --strict，"
-            "请人工判断：属于事实数据的（如“9成患者满意”），按前面的清单同样处理。"]
+    lines = [f"另有 {count} 项可能是序数或概数（如“三点意见”“九成”），未计入差异和 --strict，"
+             "请人工判断：属于事实数据的（如“9成患者满意”），按前面的清单同样处理。"]
+    summary = sum(1 for item in report["uncertain"] if item.get("hint") == HINT_SUMMARY)
+    if summary:
+        lines.append(f"其中 {summary} 项为{SUMMARY_NOTE}（{SUMMARY_LEVEL} 提示，如“具体做法有三条”）。")
+    return lines
 
 
 def _file_label(report: dict) -> str:

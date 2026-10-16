@@ -133,6 +133,8 @@ class StatusTest(unittest.TestCase):
         self.assertEqual(rc.parse_deadline("2026年12月31日前"), dt.date(2026, 12, 31))
         self.assertEqual(rc.parse_deadline("2026年11月底"), dt.date(2026, 11, 30))
         self.assertEqual(rc.parse_deadline("2026年底"), dt.date(2026, 12, 31))
+        self.assertEqual(rc.parse_deadline("2026年年底前"), dt.date(2026, 12, 31))
+        self.assertTrue(rc.has_concrete_date("2026年年底前"))
         self.assertEqual(rc.parse_deadline("2026-09-30"), dt.date(2026, 9, 30))
         self.assertEqual(rc.parse_deadline("1. 2026年11月15日前\n2. 2026年12月31日前"), dt.date(2026, 12, 31))
         self.assertIsNone(rc.parse_deadline("长期坚持"))

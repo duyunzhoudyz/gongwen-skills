@@ -759,6 +759,11 @@ def normalize(text: str) -> str:
     return PUNCT_RE.sub("", MARKER_RE.sub("", text))
 
 
+def count_chars(text: str) -> int:
+    """篇幅口径：含标点（与 Word 字数一致），不计空白和【待补】【待核实】标记。"""
+    return len(re.sub(r"\s", "", MARKER_RE.sub("", text)))
+
+
 def parse_comment_entries(doc: Document) -> List[Entry]:
     lines, _ = cut_at_boundary(doc.lines)
     # 1. 表格：有“评语”列的优先
@@ -984,9 +989,9 @@ def check_comments(path: Path, facts_path: Optional[Path] = None, stage: str = "
         if m:
             add(e, "PY-014", "P1", "承诺升学", "评语对升学结果作出承诺或预测",
                 "改为对学习方法和习惯的具体期望", B_PROMISE, excerpt_of(body, m.start(), m.end()))
-        n_chars = len(normalize(body))
+        n_chars = count_chars(body)
         if (min_chars and n_chars < min_chars) or (max_chars and n_chars > max_chars):
-            add(e, "PY-009", "P2", "篇幅", f"评语 {n_chars} 字，不在 {min_chars}～{max_chars} 字之间",
+            add(e, "PY-009", "P2", "篇幅", f"评语 {n_chars} 字（含标点），不在 {min_chars}～{max_chars} 字之间",
                 "按学校统一要求调整篇幅", B_LOCAL)
         if person == "second" and "你" not in body:
             add(e, "PY-010", "P2", "人称", "评语没有用第二人称“你”",
@@ -1097,7 +1102,7 @@ def check_comments(path: Path, facts_path: Optional[Path] = None, stage: str = "
         "stage": stage,
         "entry_count": len(entries),
         "summary": summarize(issues, marker_text),
-        "entries": [{"label": e.label, "line": e.line, "chars": len(normalize(e.body))} for e in entries],
+        "entries": [{"label": e.label, "line": e.line, "chars": count_chars(e.body)} for e in entries],
         "similar_pairs": pairs,
         "issues": [i.to_dict() for i in issues],
     }
@@ -1395,8 +1400,8 @@ def make_parser() -> argparse.ArgumentParser:
     p.add_argument("file", help="评语文件（.txt、.md、.csv、.docx、.xlsx）")
     p.add_argument("--facts", help="脱敏后的学生事实表，用于对账")
     p.add_argument("--stage", choices=STAGES, default="义务教育", help="学段，默认义务教育")
-    p.add_argument("--min-chars", type=int, default=50, help="每条评语最少字数，默认 50，0 表示不查")
-    p.add_argument("--max-chars", type=int, default=300, help="每条评语最多字数，默认 300，0 表示不查")
+    p.add_argument("--min-chars", type=int, default=50, help="每条评语最少字数（含标点），默认 50，0 表示不查")
+    p.add_argument("--max-chars", type=int, default=300, help="每条评语最多字数（含标点），默认 300，0 表示不查")
     p.add_argument("--similarity", type=_ratio, default=0.6, help="两条评语相似度达到该值即报雷同，默认 0.6")
     p.add_argument("--person", choices=("second", "third", "any"), default="second",
                    help="人称要求：second 第二人称（默认）、third 第三人称、any 不查")
