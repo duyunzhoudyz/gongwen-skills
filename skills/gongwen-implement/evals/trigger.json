@@ -1,0 +1,22 @@
+[
+  {"query": "省里发了个燃气安全专项整治的通知，区里要10天内出实施方案，帮我们局把任务拆一下", "should_trigger": true},
+  {"query": "把这份上级文件的任务分解成表，牵头单位、配合单位、完成时限都列出来", "should_trigger": true},
+  {"query": "上级让报送贯彻落实情况，按之前的任务分解表把各项进展写成报告", "should_trigger": true},
+  {"query": "市卫健委的通知帮我转化成我们医院的贯彻落实方案", "should_trigger": true},
+  {"query": "对照省厅文件帮我看看我们的实施方案有没有漏项", "should_trigger": true},
+  {"query": "领导说我们这个方案跟上级文件太像了，基本是抄的，帮我改成我们自己的措施", "should_trigger": true},
+  {"query": "下周党委会第一议题传达集团工作会议精神，帮我整理一份传达要点", "should_trigger": true},
+  {"query": "区教育局发了校园安全隐患排查的通知，要学校出落实方案，时间节点帮我倒排一下", "should_trigger": true},
+  {"query": "上级文件里的任务帮我对标对表列个清单，看看哪些归我们科室", "should_trigger": true},
+  {"query": "集团发了安全生产治本攻坚的通知，帮公司出个实施方案，看看有没有层层加码的地方", "should_trigger": true},
+  {"query": "市里的通知我们直接转发给下属各单位就行，帮我写个转发通知", "should_trigger": false},
+  {"query": "我们局自己想搞个读书月活动，帮我写个活动实施方案", "should_trigger": false},
+  {"query": "巡察反馈了12个问题，帮我写整改方案和整改台账", "should_trigger": false},
+  {"query": "昨天办公会定了5件事，帮我整理督办清单，列出责任单位和时限", "should_trigger": false},
+  {"query": "我是支部书记，帮我写一篇学习两会精神的心得体会", "should_trigger": false},
+  {"query": "局长要在全市专项整治部署会上讲话，帮我写个讲话稿", "should_trigger": false},
+  {"query": "帮学校写个课后服务方案，每周开几天、开哪些兴趣班我列在下面了", "should_trigger": false},
+  {"query": "这份实施方案帮我核一下标点、格式和错别字", "should_trigger": false},
+  {"query": "这个实施方案8000字太长了，帮我压到3000字以内", "should_trigger": false},
+  {"query": "按督查组的检查清单逐项写一份自查报告", "should_trigger": false}
+]

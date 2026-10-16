@@ -1,0 +1,22 @@
+[
+  {"query": "帮我给区财政局写个函，商请追加今年的学生营养餐补助经费", "should_trigger": true},
+  {"query": "科室想买两台呼吸机，帮我写个签报报分管院长", "should_trigger": true},
+  {"query": "下周三开全院医疗质量安全工作会议，帮我发个会议通知", "should_trigger": true},
+  {"query": "市里转发了省里的通知，我们县也要转发下去，标题怎么写才不啰嗦，帮我起草转发通知", "should_trigger": true},
+  {"query": "帮我写个请示，向县政府申请拨付敬老院改造资金", "should_trigger": true},
+  {"query": "下级报来的请示领导同意了，帮我回个批复", "should_trigger": true},
+  {"query": "街道要表彰一批防汛先进集体和个人，写个表彰通报", "should_trigger": true},
+  {"query": "给县政府写个报告，说明上周仓库起火的经过和处置情况", "should_trigger": true},
+  {"query": "我们医院想请市医保局调整住院结算方式，这事该用请示还是函？", "should_trigger": true},
+  {"query": "把这份《安全生产责任制考核办法》用正式文件印发下去，帮我写印发通知", "should_trigger": true},
+  {"query": "昨天院长办公会的记录发你了，整理一份会议纪要", "should_trigger": false},
+  {"query": "帮我写全院2026年度工作报告，要提交职代会审议", "should_trigger": false},
+  {"query": "省里发了专项行动通知，帮我们区拆成任务分解表，再写个实施方案", "should_trigger": false},
+  {"query": "巡察反馈了12个问题，帮我写整改方案和整改台账", "should_trigger": false},
+  {"query": "局长周五在全市安全生产会上讲15分钟，帮我写个讲话稿", "should_trigger": false},
+  {"query": "这份通知的标题太平了，帮我想几个更好的标题", "should_trigger": false},
+  {"query": "送签前帮我核一下这份请示，看看格式标点有没有问题", "should_trigger": false},
+  {"query": "学院想给分管校领导打个签报申请实验室改造经费，这事学校发还是我们学院自己发？", "should_trigger": false},
+  {"query": "这份通知写了六千多字，帮我压缩到三千字以内", "should_trigger": false},
+  {"query": "暴雨预警来了，镇里要给各村发个防汛应急通知，再给居民写份告知书", "should_trigger": false}
+]

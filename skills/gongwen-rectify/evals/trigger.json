@@ -1,0 +1,22 @@
+[
+  {"query": "区委巡察组反馈了12个问题，帮我们街道写个整改方案", "should_trigger": true},
+  {"query": "审计报告指出的问题要整改，帮我建个整改台账，最好能导出Excel", "should_trigger": true},
+  {"query": "这个月的巡视整改进展要报上去，台账我已经更新好了，帮我写进展报告", "should_trigger": true},
+  {"query": "巡察集中整改期满了，帮我写整改落实情况报告", "should_trigger": true},
+  {"query": "上级发了个财经纪律自查表让我们逐项自查，帮我写自查报告", "should_trigger": true},
+  {"query": "督查通报点了我们镇3个问题，要报整改报告", "should_trigger": true},
+  {"query": "帮我看看这份整改报告和台账的完成情况对不对得上", "should_trigger": true},
+  {"query": "考核反馈的问题在这，帮我弄个问题清单、任务清单、责任清单", "should_trigger": true},
+  {"query": "医保基金检查查出的问题，医院要报整改方案和整改台账", "should_trigger": true},
+  {"query": "整改台账里好几条写着基本完成，帮我按口径重新理一下状态", "should_trigger": true},
+  {"query": "帮我写今年科室的年终工作总结，素材我发你", "should_trigger": false},
+  {"query": "市里领导下周来我们街道检查，帮我准备一个迎检汇报材料", "should_trigger": false},
+  {"query": "巡视整改专题民主生活会要开了，帮我写个人对照检查材料", "should_trigger": false},
+  {"query": "省里发了专项行动通知，帮我们区写实施方案和任务分解表", "should_trigger": false},
+  {"query": "帮我写个通知，把我们的整改方案印发给各科室", "should_trigger": false},
+  {"query": "把昨天党委会的议定事项整理成督办清单", "should_trigger": false},
+  {"query": "这份整改报告帮我排成国标格式的 Word", "should_trigger": false},
+  {"query": "这篇整改报告帮我全面核一下格式、标点和提法", "should_trigger": false},
+  {"query": "30个科室的月报数据帮我汇总一下，算个同比环比", "should_trigger": false},
+  {"query": "医院要迎接三级医院等级评审，自评报告怎么写", "should_trigger": false}
+]

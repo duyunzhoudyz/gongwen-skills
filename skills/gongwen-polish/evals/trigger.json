@@ -1,0 +1,22 @@
+[
+  {"query": "这份汇报8000多字，帮我压到3000字以内，数据别丢", "should_trigger": true},
+  {"query": "领导在稿子上批了“太虚”“数据呢”，帮我按批注改一下", "should_trigger": true},
+  {"query": "这个报告原来是写给区政府的，现在要改成发给各学校的通知，帮我改改口气", "should_trigger": true},
+  {"query": "我们科主任写的总结全是大白话，帮我改成正式的公文语言", "should_trigger": true},
+  {"query": "办公室和分管领导各改了一版，帮我把两稿合成一稿，冲突的标出来", "should_trigger": true},
+  {"query": "这篇讲话稿太书面了，念起来拗口，帮我改得口语一点，控制在10分钟", "should_trigger": true},
+  {"query": "稿子太单薄了，不加新数据的前提下帮我扩到2000字左右", "should_trigger": true},
+  {"query": "按减负规定的篇幅要求，把这个实施方案压一压", "should_trigger": true},
+  {"query": "院长讲话的录音整理稿，帮我改成能印发的书面材料", "should_trigger": true},
+  {"query": "领导在 Word 里加了一堆批注，你照着批注把稿子改一遍", "should_trigger": true},
+  {"query": "帮我把这篇年终总结的 AI 味去掉", "should_trigger": false},
+  {"query": "这份通知像在跟下级商量，满篇“建议”“可以考虑”，改成要求的口气", "should_trigger": false},
+  {"query": "帮我核一下这个通知，看看格式和标点有没有问题", "should_trigger": false},
+  {"query": "帮我给这篇汇报提炼几个对仗的小标题", "should_trigger": false},
+  {"query": "下周要交科室年终总结，这是素材，帮我写一份", "should_trigger": false},
+  {"query": "把这篇3000字的经验材料压成一篇800字的政务信息报送", "should_trigger": false},
+  {"query": "这是我写的原稿和领导改过的稿子，帮我总结一下领导的改稿习惯", "should_trigger": false},
+  {"query": "帮我写一篇局长在安全生产推进会上的讲话，15分钟", "should_trigger": false},
+  {"query": "把这个通知排成国标格式的 Word 文件", "should_trigger": false},
+  {"query": "给医保局的这个请示是不是该用函？帮我看看用什么文种，用错了就改过来", "should_trigger": false}
+]

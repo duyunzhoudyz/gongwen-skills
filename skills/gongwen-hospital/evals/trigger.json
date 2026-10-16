@@ -1,0 +1,22 @@
+[
+  {"query": "医院明年迎接三级医院复审，帮我按2025年版评审标准搭个自评报告的框架", "should_trigger": true},
+  {"query": "国考结果反馈下来了，四级手术比例和CMI都掉了，写个分析报告给院长办公会", "should_trigger": true},
+  {"query": "三季度医疗质量分析报告，质控科的数据表我贴给你", "should_trigger": true},
+  {"query": "上周住院患者跌倒骨折了，护理部要做RCA，上报单和谈话记录都在这", "should_trigger": true},
+  {"query": "我们科降低术后肺部感染的PDCA项目，帮我整理成评比用的成果材料", "should_trigger": true},
+  {"query": "我是骨科主任，年度述职要写DRG和CMI，这是科室数据和我做的几件事", "should_trigger": true},
+  {"query": "新建日间手术中心要提交党委会议研究，帮我写个议题材料", "should_trigger": true},
+  {"query": "纪检要九项准则落实情况自查报告，行风办的素材在这", "should_trigger": true},
+  {"query": "市卫健委院感专项检查反馈了8个问题，帮我出整改台账和整改报告", "should_trigger": true},
+  {"query": "质控科交上来的绩效监测自评材料初稿，帮我看看指标名称、百分点和口径有没有问题", "should_trigger": true},
+  {"query": "帮我写心内科2026年年终工作总结，素材我发你", "should_trigger": false},
+  {"query": "院长在护士节表彰大会上讲10分钟，写个讲话稿", "should_trigger": false},
+  {"query": "昨天院长办公会议的记录发你了，整理一份会议纪要", "should_trigger": false},
+  {"query": "科室要买两台呼吸机，帮我写个签报给分管院长", "should_trigger": false},
+  {"query": "医院党委书记抓基层党建述职报告，帮我起个草", "should_trigger": false},
+  {"query": "巡察组反馈了我们医院12个问题，帮我写整改方案", "should_trigger": false},
+  {"query": "30个科室的月报，帮我合并成全院的表，算一下同比环比", "should_trigger": false},
+  {"query": "医师节活动要在医院公众号发一篇推文", "should_trigger": false},
+  {"query": "根据今年的纠风工作要点，帮我们医院拆解任务、制定实施方案", "should_trigger": false},
+  {"query": "帮我核一下这份发给卫健委的请示，标点和格式有没有问题", "should_trigger": false}
+]

@@ -1,0 +1,2185 @@
+{
+  "version": "0.1.0",
+  "description": "gongwen_lint.py 的规则数据。rules 为正则规则，逐段匹配；procedural 为引擎中以函数实现的检查，只在此登记。检查类别共 12 类，其中 style、defensive 由 style_patterns.json 提供。减负规定的篇幅上限（第2条、第6条）保留在 length 类（LEN-001、LEN-002），jianfu 类只查文风和减负要求，这样已有的 --checks length 调用不受影响。字段约定见 docs/开发规范.md 第 8 节。",
+  "fields": {
+    "check": "所属检查类别，对应 --checks：residue、punct、number、format、structure、privacy、legal、jianfu、marker、length（style、defensive 由 style_patterns.json 提供）",
+    "gate": "对应核稿八关，供 gongwen-review 直接引用",
+    "doc_types": "非空时只在这些文书类型中检查",
+    "exempt_doc_types": "这些文书类型不检查",
+    "yield_to": "同一段内与所列规则的命中区间重叠时，本规则不再报告",
+    "once": "全文只报第一处，并注明总次数",
+    "skip_line": "整段匹配该正则时跳过本规则",
+    "skip_table": "不检查 docx 表格内的段落（表格内的编号写法不按层次序数要求）",
+    "fix": "依次对命中文字执行的替换 [正则, 替换]，结果写入修改建议",
+    "flags": "正则标志，目前只支持 IGNORECASE",
+    "hit_examples": "必错标本：单独成段时必须命中",
+    "miss_examples": "必过标本：单独成段时不得命中",
+    "also_public": "doc_types 之外，面向群众的文书（主送或称呼为居民、家长等，或标题为公示、告知书等）也检查",
+    "public_only": "只在面向群众的文书中检查，不看 doc_types",
+    "zone": "检查范围；first_body 表示只查正文第一段（标题、主送和层次标题之后的第一段）",
+    "skip_if_basis": "同一句中命中位置之前已写明法律依据（依法、依照、《××法》、根据××条例等）时不报",
+    "skip_in_quotes": "命中位置在引号内（举例或引述）时不报"
+  },
+  "rules": [
+    {
+      "id": "RES-001",
+      "check": "residue",
+      "category": "残留",
+      "gate": "格式关",
+      "level": "P1",
+      "pattern": "^\\s{0,3}#{1,6}(?=\\s|[一-鿿])",
+      "message": "Markdown 标题符号残留",
+      "suggestion": "删除“#”，层次用 一、（一）1.（1） 表示",
+      "basis": "references/_shared/guardrails.md 第三条；references/_shared/style/output-format.md 第一部分第 1 条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "## 一、总体要求",
+        "#关于开展安全生产检查的通知"
+      ],
+      "miss_examples": [
+        "#3楼东侧消防通道已清理完毕。",
+        "一、总体要求"
+      ]
+    },
+    {
+      "id": "RES-002",
+      "check": "residue",
+      "category": "残留",
+      "gate": "格式关",
+      "level": "P1",
+      "pattern": "\\*\\*[^*\\n]{1,80}\\*\\*|__[^_\\n]{1,80}__",
+      "message": "Markdown 加粗符号残留",
+      "suggestion": "删除“**”，需要强调的由排版统一处理",
+      "basis": "references/_shared/guardrails.md 第三条；references/_shared/style/output-format.md 第一部分第 1 条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "**强化组织领导**。成立工作专班。"
+      ],
+      "miss_examples": [
+        "计算公式为单价*数量。",
+        "（一）强化组织领导。成立工作专班。"
+      ]
+    },
+    {
+      "id": "RES-003",
+      "check": "residue",
+      "category": "残留",
+      "gate": "格式关",
+      "level": "P1",
+      "pattern": "^\\s*(?:[-*+]\\s+|[•●▪◦■◆]\\s*)\\S",
+      "message": "列表符号残留，公文不用项目符号",
+      "suggestion": "改用层次序数 一、（一）1.（1），或改为“一是……二是……”",
+      "basis": "references/_shared/style/output-format.md 第一部分第 1、2 条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "skip_table": true,
+      "hit_examples": [
+        "- 加强组织领导",
+        "• 压实属地责任"
+      ],
+      "miss_examples": [
+        "-5℃以下停止室外作业。",
+        "——在全市安全生产工作会议上的讲话"
+      ]
+    },
+    {
+      "id": "RES-004",
+      "check": "residue",
+      "category": "残留",
+      "gate": "格式关",
+      "level": "P1",
+      "pattern": "^\\s*>\\s?\\S",
+      "message": "Markdown 引用符号残留",
+      "suggestion": "删除“>”",
+      "basis": "references/_shared/style/output-format.md 第一部分第 1 条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "> 各单位要高度重视。"
+      ],
+      "miss_examples": [
+        "温度>30℃时停止室外作业。"
+      ]
+    },
+    {
+      "id": "RES-005",
+      "check": "residue",
+      "category": "残留",
+      "gate": "格式关",
+      "level": "P1",
+      "pattern": "^\\s*(?:```|~~~)",
+      "message": "代码块符号残留",
+      "suggestion": "删除代码块标记",
+      "basis": "references/_shared/style/output-format.md 第一部分第 1 条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "```text",
+        "~~~"
+      ],
+      "miss_examples": [
+        "2026年10月16日"
+      ]
+    },
+    {
+      "id": "RES-006",
+      "check": "residue",
+      "category": "残留",
+      "gate": "格式关",
+      "level": "P2",
+      "pattern": "^\\s*\\|?\\s*:?-{3,}:?\\s*(?:\\|\\s*:?-{3,}:?\\s*)+\\|?\\s*$|^\\s*\\|(?:[^|\\n]*\\|){2,}\\s*$",
+      "message": "Markdown 表格，粘贴进 Word 会显示为竖线",
+      "suggestion": "确需表格的，交 gongwen-format 转为 Word 表格，或改为文字表述",
+      "basis": "references/_shared/style/output-format.md 第一部分第 1 条（用户明确要求表格时可以给表格）",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "|---|---|",
+        "| 序号 | 单位 | 完成率 |"
+      ],
+      "miss_examples": [
+        "一、总体要求",
+        "附件：1. 汇总表"
+      ]
+    },
+    {
+      "id": "RES-007",
+      "check": "residue",
+      "category": "残留",
+      "gate": "格式关",
+      "level": "P1",
+      "pattern": "!?\\[[^\\]\\n]{1,80}\\]\\([^)\\s\\n]{1,200}\\)",
+      "message": "Markdown 链接或图片语法残留",
+      "suggestion": "删除链接语法，需要引用的写出文件全称和文号",
+      "basis": "references/_shared/style/output-format.md 第一部分第 1 条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "详见[通知原文](https://example.com)。"
+      ],
+      "miss_examples": [
+        "某发[2026]5号",
+        "（一）强化组织领导"
+      ]
+    },
+    {
+      "id": "RES-008",
+      "check": "residue",
+      "category": "残留",
+      "gate": "格式关",
+      "level": "P1",
+      "pattern": "^\\s*(?:-{3,}|\\*{3,}|_{3,}|={3,})\\s*$",
+      "message": "Markdown 分隔线残留",
+      "suggestion": "删除分隔线",
+      "basis": "references/_shared/style/output-format.md 第一部分第 1 条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "---",
+        "***"
+      ],
+      "miss_examples": [
+        "——在全市安全生产工作会议上的讲话"
+      ]
+    },
+    {
+      "id": "RES-009",
+      "check": "residue",
+      "category": "残留",
+      "gate": "文风关",
+      "level": "P1",
+      "pattern": "[\\U0001F300-\\U0001F5FF\\U0001F600-\\U0001F64F\\U0001F680-\\U0001F6FF\\U0001F900-\\U0001F9FF\\U0001FA70-\\U0001FAFF\\U0001F1E6-\\U0001F1FF✅❌❎✨⭐⭕‼⁉⚠⚡❓-❕❗➕-➗➡➰➿☔☕☝☺♿⚓⚪⚫⚽⚾⛄⛅⛔⛪⛲-⛵⛺⛽⬛⬜️]+",
+      "message": "emoji 表情符号残留",
+      "suggestion": "删除表情符号",
+      "basis": "references/_shared/guardrails.md 第三条第 2 款",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "全年办件量创历史新高🎉",
+        "✅ 已完成整改"
+      ],
+      "miss_examples": [
+        "密级：机密★5年",
+        "（1）加强培训"
+      ]
+    },
+    {
+      "id": "RES-010",
+      "check": "residue",
+      "category": "残留",
+      "gate": "文风关",
+      "level": "P0",
+      "pattern": "作为(?:一[个名款种])?\\s*(?:AI|ＡＩ|人工智能|大?语言模型|大模型)(?:\\s*(?:助手|模型|语言模型|写作助手))?[，,]?\\s*我|我是(?:一[个名款种])?\\s*(?:AI|ＡＩ|人工智能|大?语言模型|大模型|智能助手|写作助手)|我的(?:训练数据|知识(?:库)?(?:截止|截至|更新))",
+      "message": "AI 身份自述残留",
+      "suggestion": "删除整句；需要说明的事项写进【起草说明】",
+      "basis": "references/_shared/guardrails.md 第三条第 2 款",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "作为一个AI语言模型，我无法获取贵单位的内部数据。",
+        "我是人工智能助手，以下内容根据您提供的材料整理。",
+        "根据我的训练数据截至2024年，该政策尚未出台。"
+      ],
+      "miss_examples": [
+        "我市作为人工智能创新应用先导区，率先开展试点。"
+      ]
+    },
+    {
+      "id": "RES-011",
+      "check": "residue",
+      "category": "残留",
+      "gate": "文风关",
+      "level": "P0",
+      "pattern": "(?:以下|下面)是(?:我)?(?:为您|为你|根据您|按照您|按您)[^。！？\\n]{0,20}(?:撰写|起草|整理|修改|生成|润色|拟写|优化|改写|提供)的|(?:我)?(?:已经|已)?(?:为您|为你)(?:撰写|起草|整理|修改|生成|润色|拟写|优化|改写)(?:了|好了)",
+      "message": "对话引导语残留",
+      "suggestion": "删除引导语，正文从标题或主送机关开始",
+      "basis": "references/_shared/guardrails.md 第三条第 2 款；references/_shared/style/output-format.md 第三部分",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "以下是为您撰写的通知全文：",
+        "我已为您起草了一份请示。"
+      ],
+      "miss_examples": [
+        "以下是本次检查发现的主要问题：",
+        "竭诚为您服务。"
+      ]
+    },
+    {
+      "id": "RES-012",
+      "check": "residue",
+      "category": "残留",
+      "gate": "文风关",
+      "level": "P0",
+      "pattern": "希望(?:以上|这些|这份|本次|我的)?(?:内容|回答|修改|建议|稿件|文稿)?(?:能)?(?:对您|对你)(?:有所)?(?:帮助|有帮助|有用)|如(?:需|果需要|有需要|您需要)(?:进一步|其他)?(?:调整|修改|补充|完善|润色|帮助)[^。\\n]{0,12}(?:请|欢迎|可以)?(?:随时)?(?:告诉我|告知我|联系我|让我知道)(?!们)|(?:请|欢迎)随时(?:告诉我|告知我|联系我)(?!们)|有任何(?:问题|疑问|需要)[^。\\n]{0,6}随时(?:告诉我|联系我|问我)(?!们)",
+      "message": "对话结束语残留",
+      "suggestion": "删除整句",
+      "basis": "references/_shared/guardrails.md 第三条第 2 款",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "希望以上内容对您有所帮助。",
+        "如需进一步调整，请随时告诉我。"
+      ],
+      "miss_examples": [
+        "如有疑问，请与市卫生健康委办公室联系。",
+        "居民有任何问题可随时联系社区网格员。",
+        "如需帮助，请随时联系我们。"
+      ]
+    },
+    {
+      "id": "RES-013",
+      "check": "residue",
+      "category": "残留",
+      "gate": "文风关",
+      "level": "P1",
+      "pattern": "^\\s*(?:好的|好嘞|没问题|当然可以|明白了|收到)[，,！!。：:]",
+      "message": "对话应答语残留",
+      "suggestion": "删除应答语",
+      "basis": "references/_shared/guardrails.md 第三条第 2 款",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "好的，以下是修改后的稿件。"
+      ],
+      "miss_examples": [
+        "好的做法要及时总结推广。"
+      ]
+    },
+    {
+      "id": "RES-014",
+      "check": "residue",
+      "category": "残留",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "\\{\\{[^{}\\n]{0,30}\\}\\}|[\\[［【](?:此处|在此|这里)?(?:请)?(?:填写|填入|插入|输入)[^\\]］】\\n]{0,20}[\\]］】]",
+      "message": "模板占位符残留",
+      "suggestion": "补全内容；暂缺的改为【待补：说明】",
+      "basis": "references/_shared/guardrails.md 第二条第 2 款",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "联系人：[请填写联系人姓名]",
+        "{{单位名称}}关于开展自查的通知"
+      ],
+      "miss_examples": [
+        "全年开展专项检查【待补：次数】次。"
+      ]
+    },
+    {
+      "id": "RES-015",
+      "check": "residue",
+      "category": "残留",
+      "gate": "文字关",
+      "level": "P2",
+      "pattern": "(?<![A-Za-z])(?:X{3,}|x{3,}|×{3,})(?![A-Za-z])",
+      "message": "疑似占位符（XXX、×××）未替换",
+      "suggestion": "补全内容；暂缺的改为【待补：说明】",
+      "basis": "references/_shared/guardrails.md 第二条第 2 款",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "once": true,
+      "hit_examples": [
+        "XXX同志任组长。",
+        "截至×××年底"
+      ],
+      "miss_examples": [
+        "某某同志任组长。"
+      ]
+    },
+    {
+      "id": "RES-016",
+      "check": "residue",
+      "category": "残留",
+      "gate": "格式关",
+      "level": "P1",
+      "pattern": "</?(?:br|p|div|span|b|strong|em|i|u|font|table|tr|td)\\b[^>\\n]{0,40}>",
+      "message": "HTML 标签残留",
+      "suggestion": "删除标签",
+      "basis": "references/_shared/style/output-format.md 第一部分第 1 条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "flags": "IGNORECASE",
+      "hit_examples": [
+        "成立工作专班。<br>由分管领导任组长。"
+      ],
+      "miss_examples": [
+        "温度<30℃且湿度>80%时停止作业。"
+      ]
+    },
+    {
+      "id": "PUN-001",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "^\\s*[一二三四五六七八九十]{1,3}\\s*[，,.．:：](?!\\d)",
+      "message": "“一、”类序数后应用顿号",
+      "suggestion": "把序数后的标点改为顿号",
+      "basis": "GB/T 15834-2011 4.5.3.3、附录 B.3.2",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "skip_table": true,
+      "fix": [
+        [
+          "^(\\s*[一二三四五六七八九十]{1,3})\\s*[，,.．:：]",
+          "\\1、"
+        ]
+      ],
+      "hit_examples": [
+        "一，总体要求",
+        "二. 主要任务"
+      ],
+      "miss_examples": [
+        "一、总体要求",
+        "一是加强组织领导。"
+      ]
+    },
+    {
+      "id": "PUN-002",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "^\\s*[（(]\\s*[一二三四五六七八九十\\d]{1,3}\\s*[）)]\\s*[、，,.．:：]",
+      "message": "带括号的序数后不加标点",
+      "suggestion": "删除括号后的标点",
+      "basis": "GB/T 15834-2011 附录 B.3.4",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "skip_table": true,
+      "fix": [
+        [
+          "([）)])\\s*[、，,.．:：]$",
+          "\\1"
+        ]
+      ],
+      "hit_examples": [
+        "（一）、工作目标",
+        "（1）.加强培训"
+      ],
+      "miss_examples": [
+        "（一）工作目标",
+        "（一）强化组织领导。成立工作专班。"
+      ]
+    },
+    {
+      "id": "PUN-003",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "^\\s*\\d{1,2}\\s*、(?!\\d)",
+      "message": "阿拉伯数字序数后应用下脚点“.”，不用顿号",
+      "suggestion": "把“1、”改为“1.”",
+      "basis": "GB/T 15834-2011 附录 B.3.3",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "skip_table": true,
+      "fix": [
+        [
+          "(\\d{1,2})\\s*、$",
+          "\\1."
+        ]
+      ],
+      "hit_examples": [
+        "1、加强培训"
+      ],
+      "miss_examples": [
+        "1. 加强培训",
+        "1、2月份全市共受理投诉326件。"
+      ]
+    },
+    {
+      "id": "PUN-004",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "(?<=[^\\s一二两三四五六七八九十第、])[一二两三四五六七八九]、[一二三四五六七八九十](?=[天个人次周名家项件条岁]|年(?!级))",
+      "message": "相邻两数字连用表示概数，中间不加顿号",
+      "suggestion": "删除顿号，如“三五天”",
+      "basis": "GB/T 15834-2011 4.5.3.4；GB/T 15835-2011 5.2.1",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "fix": [
+        [
+          "、",
+          ""
+        ]
+      ],
+      "hit_examples": [
+        "每户走访三、五天后再复核。",
+        "预计需要两、三个月。"
+      ],
+      "miss_examples": [
+        "一、二年级学生",
+        "第三、五条",
+        "二、三产业"
+      ]
+    },
+    {
+      "id": "PUN-005",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "》、《|”、“",
+      "message": "并列的书名号或引号之间不加顿号",
+      "suggestion": "删除顿号",
+      "basis": "GB/T 15834-2011 4.5.3.5",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "fix": [
+        [
+          "、",
+          ""
+        ]
+      ],
+      "hit_examples": [
+        "认真学习《条例》、《规定》。"
+      ],
+      "miss_examples": [
+        "认真学习《条例》《规定》。",
+        "《条例》（2012年）、《规定》"
+      ]
+    },
+    {
+      "id": "PUN-006",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "、\\s*等(?!级|同|效|值|待|候|量|额|比|高|距|分|位|次)",
+      "message": "并列成分末尾的“等”前不加顿号",
+      "suggestion": "删除“等”前的顿号",
+      "basis": "GB/T 15834-2011 附录 B.1.2",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "fix": [
+        [
+          "、\\s*",
+          ""
+        ]
+      ],
+      "hit_examples": [
+        "医院、学校、企业、等单位"
+      ],
+      "miss_examples": [
+        "医院、学校、企业等单位",
+        "数据安全、等级保护"
+      ]
+    },
+    {
+      "id": "PUN-007",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P0",
+      "pattern": "(?:……|…|\\.{3,}|。{3,})\\s*等",
+      "message": "省略号不与“等”“等等”同时使用",
+      "suggestion": "保留其一：删去省略号，或删去“等”",
+      "basis": "GB/T 15834-2011 附录 A.9.2",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "医院、学校、社区……等",
+        "医院、学校...等等"
+      ],
+      "miss_examples": [
+        "医院、学校、社区等",
+        "医院、学校、社区……"
+      ]
+    },
+    {
+      "id": "PUN-008",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "\\.{3,}|。{3,}|(?<!…)(?:…{2})*…(?!…)|…{5,}",
+      "message": "省略号形式不规范，应为六连点“……”",
+      "suggestion": "改为“……”",
+      "basis": "GB/T 15834-2011 4.11.2、附录 A.9.1",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "医院、学校...",
+        "医院、学校。。。",
+        "医院、学校…"
+      ],
+      "miss_examples": [
+        "医院、学校……",
+        "…………"
+      ]
+    },
+    {
+      "id": "PUN-010",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "《[^》\\n]{2,40}(?:会议|大会|座谈会|推进会|研讨会|培训班|论坛|评选|比赛|大赛|博览会|运动会|活动)》",
+      "message": "会议、活动名称不用书名号",
+      "suggestion": "删除书名号，或改用引号",
+      "basis": "GB/T 15834-2011 附录 A.13.1",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "召开《全市安全生产工作会议》。",
+        "举办《第三届职工技能大赛》。"
+      ],
+      "miss_examples": [
+        "印发《关于召开全市安全生产工作会议的通知》。",
+        "《全市安全生产工作会议纪要》"
+      ]
+    },
+    {
+      "id": "PUN-011",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "《[^》\\n]*《",
+      "message": "书名号嵌套时内层应用单书名号〈〉",
+      "suggestion": "内层改为〈〉",
+      "basis": "GB/T 15834-2011 4.15.3.5",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "《关于印发《某某办法》的通知》"
+      ],
+      "miss_examples": [
+        "《关于印发〈某某办法〉的通知》",
+        "《条例》《规定》"
+      ]
+    },
+    {
+      "id": "PUN-012",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "[一-鿿][,;!?]|[,;!?][一-鿿]|[一-鿿]:(?!//)|[一-鿿]\\.(?=[一-鿿]|$)",
+      "message": "中文语境使用了半角标点",
+      "suggestion": "改为全角标点（，；：！？。）",
+      "basis": "GB/T 15834-2011 第 5 章；references/_shared/style/output-format.md 第一部分第 5 条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "yield_to": [
+        "FMT-007",
+        "FMT-008",
+        "FMT-009",
+        "FMT-010"
+      ],
+      "skip_line": "https?://|www\\.",
+      "hit_examples": [
+        "各单位,要按时报送;",
+        "联系人:张某"
+      ],
+      "miss_examples": [
+        "全年完成投资1,200万元。",
+        "上午9:30准时开始。"
+      ]
+    },
+    {
+      "id": "PUN-013",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "\\([^()\\n]{0,40}[一-鿿][^()\\n]{0,40}\\)",
+      "message": "中文语境使用了半角括号",
+      "suggestion": "改为全角括号（）",
+      "basis": "GB/T 15834-2011 4.9；references/_shared/style/output-format.md 第一部分第 5 条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "yield_to": [
+        "FMT-012"
+      ],
+      "hit_examples": [
+        "各单位(含直属单位)要按时报送。"
+      ],
+      "miss_examples": [
+        "各单位（含直属单位）要按时报送。",
+        "型号为A(2)的设备"
+      ]
+    },
+    {
+      "id": "PUN-015",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P2",
+      "pattern": "(?:^|[。！？；])\\s*(?:根据|按照|依据|依照|据)[^。：:\\n]{2,40}(?:规定|要求|精神|部署)：(?!\\s*[“\\\"])",
+      "message": "“根据……规定”后接转述内容属非提示性话语，宜用逗号",
+      "suggestion": "冒号改为逗号；后接直接引文的可保留冒号",
+      "basis": "GB/T 15834-2011 附录 A.6.1",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "根据《条例》规定：各单位应当建立台账。"
+      ],
+      "miss_examples": [
+        "根据《条例》规定，各单位应当建立台账。",
+        "根据会议精神：“要把安全放在首位。”"
+      ]
+    },
+    {
+      "id": "PUN-016",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P2",
+      "pattern": "(?:^|[。！；])\\s*(?:研究|明确|了解|讨论|探讨|分析|弄清|搞清)[^。！？；\\n]{0,40}(?:如何|怎样|怎么|是否|为什么|为何)[^。！？；\\n]{0,30}？",
+      "message": "句中含疑问词但全句不表示疑问，句末不用问号",
+      "suggestion": "问号改为句号",
+      "basis": "GB/T 15834-2011 附录 A.2",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "研究如何解决经费不足问题？"
+      ],
+      "miss_examples": [
+        "研究如何解决经费不足问题。",
+        "如何解决经费不足问题？"
+      ]
+    },
+    {
+      "id": "PUN-017",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P2",
+      "pattern": "(?<![\\d\\-－.A-Za-z/])(?<![A-Za-z/]\\s)[1-9]\\d{0,4}(?:\\.\\d+)?\\s*[-－]\\s*\\d+(?:\\.\\d+)?(?![\\d\\-－.])(?=\\s*[一-鿿%％])",
+      "message": "数值或年份起止范围宜用浪纹线“～”或一字线“—”，不用短横线",
+      "suggestion": "数值范围用“～”，年份起止用“—”，如“25～30份”“2026—2028年”",
+      "basis": "GB/T 15834-2011 4.13.3.2；GB/T 15835-2011 5.1.3",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "yield_to": [
+        "NUM-002",
+        "NUM-003",
+        "NUM-007"
+      ],
+      "fix": [
+        [
+          "\\s*[-－]\\s*",
+          "～"
+        ]
+      ],
+      "hit_examples": [
+        "每批次抽检25-30份。",
+        "2026-2028年"
+      ],
+      "miss_examples": [
+        "联系电话：0571-88888888转2",
+        "请于2026-10-16前报送。",
+        "按照GB/T 9704-2012要求排版。"
+      ]
+    },
+    {
+      "id": "PUN-018",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "[一-鿿]\\s*(?:-{2,}|－{2,})\\s*[一-鿿]",
+      "message": "破折号形式应为“——”",
+      "suggestion": "改为“——”，或改写为不用破折号的句子",
+      "basis": "GB/T 15834-2011 4.10.2",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "抓落实的关键--压实责任。"
+      ],
+      "miss_examples": [
+        "北京—上海",
+        "抓落实的关键是压实责任。"
+      ]
+    },
+    {
+      "id": "PUN-019",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P2",
+      "pattern": "、\\s*以及",
+      "message": "顿号并列的最后一项前用“以及”时，“以及”前用逗号",
+      "suggestion": "把“、以及”改为“，以及”",
+      "basis": "GB/T 15834-2011 附录 A.3",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "fix": [
+        [
+          "、\\s*以及",
+          "，以及"
+        ]
+      ],
+      "hit_examples": [
+        "制度建设、队伍建设、以及经费保障"
+      ],
+      "miss_examples": [
+        "制度建设、队伍建设，以及经费保障"
+      ]
+    },
+    {
+      "id": "PUN-020",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "[，、；：][，。、；：]|。[，、；：。]",
+      "message": "点号重复或连用",
+      "suggestion": "保留一个点号",
+      "basis": "录入差错（点号连用）；参照 GB/T 15834-2011 第 4 章点号用法",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "yield_to": [
+        "PUN-007",
+        "PUN-008"
+      ],
+      "hit_examples": [
+        "各单位要按时报送，。",
+        "加强领导、，压实责任"
+      ],
+      "miss_examples": [
+        "各单位要按时报送。",
+        "时间：2026年10月16日"
+      ]
+    },
+    {
+      "id": "PUN-021",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "[一-鿿，。、；：]\\\"|\\\"[一-鿿]",
+      "message": "中文语境使用了直引号",
+      "suggestion": "改为弯引号“ ”",
+      "basis": "GB/T 15834-2011 4.8.2；references/_shared/style/output-format.md 第一部分第 5 条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "坚持\"短实新\"原则"
+      ],
+      "miss_examples": [
+        "坚持“短实新”原则"
+      ]
+    },
+    {
+      "id": "NUM-001",
+      "check": "number",
+      "category": "数字",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "(?<![\\d.])[’'‘]\\d{2}年|(?<![\\d.０-９A-Za-z〇○零一二三四五六七八九十百千万第近约多这每满逾超余前后共])\\d{2}年(?=\\d{1,2}月|度|[上下]半年|底|初|末|[一二三四五六七八九十]{1,2}月|第?[一二三四]季度)",
+      "message": "年份不能简写为两位",
+      "suggestion": "写全四位年份，如“2026年”",
+      "basis": "GB/T 15835-2011 5.1.4",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "26年度工作计划",
+        "’25年完成验收"
+      ],
+      "miss_examples": [
+        "2026年度工作计划",
+        "近20年来",
+        "从事护理工作15年"
+      ]
+    },
+    {
+      "id": "NUM-002",
+      "check": "number",
+      "category": "数字",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "(?<![\\d.])\\d+(?:\\.\\d+)?\\s*[～~〜—\\-－]\\s*\\d+(?:\\.\\d+)?\\s*[万亿]",
+      "message": "带“万”“亿”的数值范围，两端都要写全",
+      "suggestion": "写成“9亿～16亿”“13万元～17万元”",
+      "basis": "GB/T 15835-2011 5.1.3",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "fix": [
+        [
+          "^(\\d+(?:\\.\\d+)?)\\s*[～~〜—\\-－]\\s*(\\d+(?:\\.\\d+)?)\\s*([万亿])$",
+          "\\1\\3～\\2\\3"
+        ]
+      ],
+      "hit_examples": [
+        "投资规模约9～16亿元",
+        "补助标准为13-17万元"
+      ],
+      "miss_examples": [
+        "投资规模约9亿～16亿元",
+        "补助标准为13万元～17万元"
+      ]
+    },
+    {
+      "id": "NUM-003",
+      "check": "number",
+      "category": "数字",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "(?<![\\d.])\\d+(?:\\.\\d+)?\\s*[～~〜—\\-－]\\s*\\d+(?:\\.\\d+)?\\s*[%％]",
+      "message": "百分数范围两端都要写“%”",
+      "suggestion": "写成“15%～30%”",
+      "basis": "GB/T 15835-2011 5.1.3",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "fix": [
+        [
+          "^(\\d+(?:\\.\\d+)?)\\s*[～~〜—\\-－]\\s*(\\d+(?:\\.\\d+)?)\\s*[%％]$",
+          "\\1%～\\2%"
+        ]
+      ],
+      "hit_examples": [
+        "增幅控制在15～30%",
+        "下降5-8%"
+      ],
+      "miss_examples": [
+        "增幅控制在15%～30%"
+      ]
+    },
+    {
+      "id": "NUM-004",
+      "check": "number",
+      "category": "数字",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "(?<![\\d.])\\d+(?:\\.\\d+)?\\s*[十百千](?![米克瓦伏帕焦赫兆分])",
+      "message": "一个数值混用了阿拉伯数字和汉字数字（“万”“亿”除外）",
+      "suggestion": "统一为阿拉伯数字（如“4000”）或汉字数字（如“四千”）",
+      "basis": "GB/T 15835-2011 5.3",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "全年接待游客4千余人次",
+        "完成投资3百万元"
+      ],
+      "miss_examples": [
+        "全年接待游客4000余人次",
+        "装机容量5千瓦",
+        "惠及3万人"
+      ]
+    },
+    {
+      "id": "NUM-005",
+      "check": "number",
+      "category": "数字",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "(?<![\\dA-Za-z./_\\\\\\-])\\.\\d+",
+      "message": "纯小数要写出小数点前的“0”",
+      "suggestion": "如“0.98”",
+      "basis": "GB/T 15835-2011 5.1.2",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "合格率为.98"
+      ],
+      "miss_examples": [
+        "合格率为0.98",
+        "附件为word文件（.docx格式）",
+        "版本号为V2.0"
+      ]
+    },
+    {
+      "id": "NUM-006",
+      "check": "number",
+      "category": "数字",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "[０-９]+",
+      "message": "阿拉伯数字应用半角",
+      "suggestion": "改为半角数字",
+      "basis": "GB/T 15835-2011 5.1.7.1",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "２０２６年"
+      ],
+      "miss_examples": [
+        "2026年"
+      ]
+    },
+    {
+      "id": "NUM-007",
+      "check": "number",
+      "category": "数字",
+      "gate": "文字关",
+      "level": "P2",
+      "pattern": "(?<![\\d\\-])(?:1[0-2]|0?[1-9])-(?:3[01]|[12]\\d|0?[1-9])(?![\\d\\-])(?=\\s*(?:前|后|起|止|之前|以前|召开|举行|报送|上报))",
+      "message": "年月日不完整时不能用短横线表示日期",
+      "suggestion": "写成“10月20日”",
+      "basis": "GB/T 15835-2011 5.1.4",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "fix": [
+        [
+          "^0?(\\d{1,2})-0?(\\d{1,2})$",
+          "\\1月\\2日"
+        ]
+      ],
+      "hit_examples": [
+        "请于10-20前报送。"
+      ],
+      "miss_examples": [
+        "请于10月20日前报送。",
+        "每批次抽检3-5天。"
+      ]
+    },
+    {
+      "id": "NUM-008",
+      "check": "number",
+      "category": "数字",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "(?<![〇○零O0一二三四五六七八九十])(?=.{1,3}[零O0])[一二][〇○零O0一二三四五六七八九]{3}年",
+      "message": "汉字年份中的“0”应写作“○”（或“〇”），不写“零”或字母O",
+      "suggestion": "如“二○二六年”",
+      "basis": "GB/T 15835-2011 5.2.5",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "fix": [
+        [
+          "[零O0]",
+          "○"
+        ]
+      ],
+      "hit_examples": [
+        "二零二六年十月",
+        "二O二六年"
+      ],
+      "miss_examples": [
+        "二〇二六年",
+        "二○二六年"
+      ]
+    },
+    {
+      "id": "NUM-009",
+      "check": "number",
+      "category": "数字",
+      "gate": "文字关",
+      "level": "P2",
+      "pattern": "第\\d+届[^，。\\n]{0,20}第\\d+次(?:会议|全体会议|大会|全会)",
+      "message": "会议届次等庄重表述宜用汉字数字",
+      "suggestion": "如“第五届职工代表大会第三次会议”",
+      "basis": "GB/T 15835-2011 4.3",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "第5届职代会第3次会议"
+      ],
+      "miss_examples": [
+        "第五届职工代表大会第三次会议"
+      ]
+    },
+    {
+      "id": "NUM-011",
+      "check": "number",
+      "category": "数字",
+      "gate": "文字关",
+      "level": "P2",
+      "pattern": "(?<![节制预签契公违履简婉隐邀特合集])(?:大约|大概|约)\\s*[\\d一二三四五六七八九十百千万几]+[^，。；\\n]{0,8}(?:左右|上下)",
+      "message": "“约”与“左右”“上下”语义重复",
+      "suggestion": "保留其一",
+      "basis": "语义重复（references/_shared/rules/gbt15835.md 第六部分说明，非标准条款）",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "约300人左右参加培训。"
+      ],
+      "miss_examples": [
+        "约300人参加培训。",
+        "300人左右参加培训。"
+      ]
+    },
+    {
+      "id": "NUM-012",
+      "check": "number",
+      "category": "数字",
+      "gate": "文字关",
+      "level": "P2",
+      "pattern": "(?:率|比例|占比|比重)[^。；\\n]{0,20}?(?:较|比|同比|环比)[^。；\\n]{0,8}?(?:提高|提升|增加|增长|上升|下降|降低|减少|回落)了?\\s*\\d+(?:\\.\\d+)?\\s*[%％]",
+      "message": "比率、占比的变化疑似用了百分数，应核对是否为“百分点”",
+      "suggestion": "两个百分比相减用“个百分点”，如“由33%提高到38%”写作“提高5个百分点”",
+      "basis": "统计用语规范（百分比与百分点）；references/_shared/profiles/units/yiyuan.md 第九部分",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "四级手术占比达到38%，较去年提高了5%。"
+      ],
+      "miss_examples": [
+        "四级手术占比达到38%，较去年提高5个百分点。",
+        "出院人次同比增长12%。"
+      ]
+    },
+    {
+      "id": "FMT-001",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P0",
+      "pattern": "[一-鿿]{1,12}[\\[［(（【﹝{｛〖]\\s*(?:19|20)\\d{2}\\s*[\\]］)）】﹞}｝〗]\\s*第?\\s*\\d+\\s*号",
+      "message": "发文字号的年份应用六角括号“〔〕”",
+      "suggestion": "改为六角括号",
+      "basis": "GB/T 9704-2012 7.2.5",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "fix": [
+        [
+          "[\\[［(（【﹝{｛〖〔]\\s*((?:19|20)\\d{2}|\\d{2})\\s*[\\]］)）】﹞}｝〗〕]",
+          "〔\\1〕"
+        ],
+        [
+          "〕\\s*第\\s*",
+          "〕"
+        ],
+        [
+          "〕\\s*0+(\\d)",
+          "〕\\1"
+        ]
+      ],
+      "hit_examples": [
+        "某发[2026]5号",
+        "某卫发（2026）12号",
+        "某发﹝2026﹞3号"
+      ],
+      "miss_examples": [
+        "某发〔2026〕5号"
+      ]
+    },
+    {
+      "id": "FMT-002",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P0",
+      "pattern": "[一-鿿]{1,12}[〔\\[［(（【﹝{｛〖]\\s*\\d{2}\\s*[〕\\]］)）】﹞}｝〗]\\s*第?\\s*\\d+\\s*号",
+      "message": "发文字号的年份应标全称（四位）",
+      "suggestion": "年份写全，如“〔2026〕”",
+      "basis": "GB/T 9704-2012 7.2.5",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "某发〔26〕5号"
+      ],
+      "miss_examples": [
+        "某发〔2026〕5号"
+      ]
+    },
+    {
+      "id": "FMT-003",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P0",
+      "pattern": "[一-鿿]{0,12}[〔\\[［(（【﹝{｛〖]\\s*(?:19|20)\\d{2}\\s*[〕\\]］)）】﹞}｝〗]\\s*第\\s*\\d+\\s*号",
+      "message": "发文字号的顺序号不加“第”字",
+      "suggestion": "删除“第”字",
+      "basis": "GB/T 9704-2012 7.2.5",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "fix": [
+        [
+          "[\\[［(（【﹝{｛〖〔]\\s*((?:19|20)\\d{2}|\\d{2})\\s*[\\]］)）】﹞}｝〗〕]",
+          "〔\\1〕"
+        ],
+        [
+          "〕\\s*第\\s*",
+          "〕"
+        ],
+        [
+          "〕\\s*0+(\\d)",
+          "〕\\1"
+        ]
+      ],
+      "hit_examples": [
+        "某发〔2026〕第5号"
+      ],
+      "miss_examples": [
+        "某发〔2026〕5号",
+        "某某市人民政府令第5号"
+      ]
+    },
+    {
+      "id": "FMT-004",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P0",
+      "pattern": "[一-鿿]{0,12}[〔\\[［(（【﹝{｛〖]\\s*(?:19|20)\\d{2}\\s*[〕\\]］)）】﹞}｝〗]\\s*第?\\s*0\\d*\\s*号",
+      "message": "发文字号的顺序号不编虚位",
+      "suggestion": "删去顺序号前的“0”",
+      "basis": "GB/T 9704-2012 7.2.5",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "fix": [
+        [
+          "[\\[［(（【﹝{｛〖〔]\\s*((?:19|20)\\d{2}|\\d{2})\\s*[\\]］)）】﹞}｝〗〕]",
+          "〔\\1〕"
+        ],
+        [
+          "〕\\s*第\\s*",
+          "〕"
+        ],
+        [
+          "〕\\s*0+(\\d)",
+          "〕\\1"
+        ]
+      ],
+      "hit_examples": [
+        "某发〔2026〕05号",
+        "某发〔2026〕005号"
+      ],
+      "miss_examples": [
+        "某发〔2026〕50号"
+      ]
+    },
+    {
+      "id": "FMT-008",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P1",
+      "pattern": "^\\s*附件\\s*:|^\\s*附件\\s*[：:].*[。；，、.]\\s*$|^\\s*附件\\s*[：:]\\s*\\d{1,2}\\s*[、，]",
+      "message": "附件说明格式不规范：用全角冒号，序号用“1.”，附件名称后不加标点",
+      "suggestion": "写成“附件：1. 某某方案”",
+      "basis": "GB/T 9704-2012 7.3.4",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "附件:某某工作方案",
+        "附件：某某工作方案。",
+        "附件：1、某某工作方案"
+      ],
+      "miss_examples": [
+        "附件：1. 某某工作方案",
+        "附件：某某工作方案"
+      ]
+    },
+    {
+      "id": "FMT-009",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P1",
+      "pattern": "^\\s*抄送\\s*:|^\\s*抄送\\s*：.*[^。\\s]\\s*$",
+      "message": "抄送机关格式不规范：用全角冒号，最后一个机关名称后标句号",
+      "suggestion": "写成“抄送：某某，某某。”",
+      "basis": "GB/T 9704-2012 7.4.2",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "抄送:市委办公室。",
+        "抄送：市委办公室，市政府办公室"
+      ],
+      "miss_examples": [
+        "抄送：市委办公室，市政府办公室。"
+      ]
+    },
+    {
+      "id": "FMT-010",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P1",
+      "pattern": "^\\s*签发人\\s*:",
+      "message": "“签发人”后用全角冒号",
+      "suggestion": "改为“签发人：”",
+      "basis": "GB/T 9704-2012 7.2.6",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "签发人:张某"
+      ],
+      "miss_examples": [
+        "签发人：张某"
+      ]
+    },
+    {
+      "id": "FMT-011",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P1",
+      "pattern": "\\d{4}\\s*[.\\-/．]\\s*\\d{1,2}\\s*[.\\-/．]\\s*\\d{1,2}\\s*日?\\s*印发\\s*$",
+      "message": "印发日期应写作“2026年10月16日印发”",
+      "suggestion": "年月日用汉字“年”“月”“日”连接，月日不编虚位",
+      "basis": "GB/T 9704-2012 7.4.3",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "某市卫生健康委员会办公室　　2026.10.16印发"
+      ],
+      "miss_examples": [
+        "某市卫生健康委员会办公室　　2026年10月16日印发"
+      ]
+    },
+    {
+      "id": "FMT-012",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P1",
+      "pattern": "^\\s*(?:\\(\\s*(?:\\d{1,2}|[一二三四五六七八九十]{1,3})\\s*[)）]|（\\s*(?:\\d{1,2}|[一二三四五六七八九十]{1,3})\\s*\\))",
+      "message": "层次序数应用全角括号",
+      "suggestion": "改为“（一）”“（1）”",
+      "basis": "GB/T 9704-2012 7.3.3；references/_shared/style/output-format.md 第一部分第 2 条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "skip_table": true,
+      "fix": [
+        [
+          "\\(",
+          "（"
+        ],
+        [
+          "\\)",
+          "）"
+        ]
+      ],
+      "hit_examples": [
+        "(1)加强培训",
+        "(一)工作目标"
+      ],
+      "miss_examples": [
+        "（1）加强培训"
+      ]
+    },
+    {
+      "id": "FMT-013",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P1",
+      "pattern": "^\\s*\\d{1,2}(?:\\.\\d{1,2}){1,3}[\\s　]+[一-鿿]",
+      "message": "公文层次序数不用“1.1”式多级编号",
+      "suggestion": "改为 一、（一）1.（1）",
+      "basis": "GB/T 9704-2012 7.3.3",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "skip_table": true,
+      "hit_examples": [
+        "1.1 总体要求"
+      ],
+      "miss_examples": [
+        "1. 总体要求",
+        "1.5亿元专项资金已拨付。"
+      ]
+    },
+    {
+      "id": "FMT-014",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P2",
+      "pattern": "^\\s*此件(?:公开发布|发至|不公开|依申请公开|主动公开)[^（）()\\n]*$",
+      "message": "附注应加圆括号",
+      "suggestion": "写成“（此件公开发布）”",
+      "basis": "GB/T 9704-2012 7.3.6",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "此件公开发布"
+      ],
+      "miss_examples": [
+        "（此件公开发布）"
+      ]
+    },
+    {
+      "id": "FMT-015",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P2",
+      "pattern": "^\\s*抄报\\s*[：:]",
+      "message": "《条例》和 GB/T 9704 只规定“抄送”，不用“抄报”",
+      "suggestion": "改为“抄送”",
+      "basis": "GB/T 9704-2012 7.4.2；《党政机关公文处理工作条例》第九条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "抄报：市委办公室。"
+      ],
+      "miss_examples": [
+        "抄送：市委办公室。"
+      ]
+    },
+    {
+      "id": "PRI-005",
+      "check": "privacy",
+      "category": "隐私与保密",
+      "gate": "法规关",
+      "level": "P0",
+      "pattern": "(?:绝密|机密|秘密)\\s*★|^\\s*(?:绝密|机密|秘密)\\s*$|密级\\s*[：:]\\s*(?:绝密|机密|秘密)|^\\s*(?:绝密|机密|秘密)\\s*[（(]?\\s*\\d+\\s*年\\s*[）)]?\\s*$",
+      "message": "出现密级标识。涉密材料不得输入联网 AI 工具",
+      "suggestion": "立即停止处理并告知用户；改用内网模型，或删除涉密内容后再处理",
+      "basis": "references/_shared/guardrails.md 第一条第 2 款；《中华人民共和国保守国家秘密法》",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "机密★1年",
+        "秘密",
+        "密级：秘密"
+      ],
+      "miss_examples": [
+        "严格遵守保守国家秘密法。",
+        "不得泄露商业秘密。",
+        "规范标注“秘密★1年”等密级标识。",
+        "全年开展保密工作检查4次，加强涉密人员管理。"
+      ],
+      "skip_in_quotes": true
+    },
+    {
+      "id": "PRI-006",
+      "check": "privacy",
+      "category": "隐私与保密",
+      "gate": "法规关",
+      "level": "P0",
+      "pattern": "^\\s*[（(【\\[]?\\s*(?:内部资料|内部文件|内部材料|内部参阅|工作秘密|内部使用|不得外传|注意保密|仅限内部(?:使用|传阅)?|内部传阅)\\s*[，,、　\\s]*(?:注意保存|妥善保管|不得外传|请勿外传|注意保密)?\\s*[）)】\\]]?\\s*$|(?:本|此|该)(?:材料|文件|稿件|稿|资料|报告|件)[^。\\n]{0,6}(?:内部资料|工作秘密|内部文件|内部材料|内部使用|不得外传|仅供内部)",
+      "message": "出现“内部资料”“工作秘密”“不得外传”等标注。此类材料不宜输入联网 AI 工具",
+      "suggestion": "暂停处理并提醒用户：改用内网模型，或删除相关内容后再处理",
+      "basis": "references/_shared/guardrails.md 第一条第 2 款",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "内部资料",
+        "（内部资料　注意保存）",
+        "工作秘密　不得外传",
+        "本材料属工作秘密，不得外传。"
+      ],
+      "miss_examples": [
+        "严守工作秘密，不在非涉密计算机上处理工作秘密。",
+        "编印《保密知识读本》（内部资料）2000册，发放到各科室。",
+        "加强内部资料管理，规范标注“内部资料”字样。"
+      ],
+      "skip_in_quotes": true
+    },
+    {
+      "id": "PRI-007",
+      "check": "privacy",
+      "category": "隐私与保密",
+      "gate": "法规关",
+      "level": "P2",
+      "pattern": "(?:上述|以上|本|该|这些|此)[^。；！？\\n]{0,12}(?:为|系|属于?|均为|均系)(?:未公开|未披露|尚未公开|尚未披露)",
+      "message": "稿件自述含有未公开、未披露的信息，对外材料不得使用",
+      "suggestion": "确认稿件用途：对外发布、报送的版本删去未公开信息；内部使用的按本单位保密规定处理",
+      "basis": "references/_shared/guardrails.md 第一条；references/_shared/profiles/units/guoqi.md 第六部分第 2、3 条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "yield_to": [
+        "PRI-005",
+        "PRI-006"
+      ],
+      "hit_examples": [
+        "上述经营数据为未公开的财务数据，请注意保密。",
+        "以上指标均系尚未披露的季度数据。"
+      ],
+      "miss_examples": [
+        "严守工作秘密，不在非涉密计算机上处理工作秘密。",
+        "防止内幕信息泄露。",
+        "加强保密工作，严格涉密人员管理。"
+      ]
+    },
+    {
+      "id": "MRK-001",
+      "check": "marker",
+      "category": "待补标记",
+      "gate": "文字关",
+      "level": "P2",
+      "pattern": "【待补：[^】\\n]*】",
+      "message": "正文有待补事项",
+      "suggestion": "定稿前补齐，并在【起草说明】中逐条汇总",
+      "basis": "references/_shared/guardrails.md 第二条第 2 款、第三条第 4 款",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "全年开展专项检查【待补：次数】次。"
+      ],
+      "miss_examples": [
+        "全年开展专项检查12次。"
+      ]
+    },
+    {
+      "id": "MRK-002",
+      "check": "marker",
+      "category": "待补标记",
+      "gate": "文字关",
+      "level": "P2",
+      "pattern": "【待核实：[^】\\n]*】",
+      "message": "正文有待核实事项",
+      "suggestion": "定稿前对照原始材料核实，并在【起草说明】中逐条汇总",
+      "basis": "references/_shared/guardrails.md 第二条第 2 款、第三条第 4 款",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "项目计划于【待核实：完工时间】完工。"
+      ],
+      "miss_examples": [
+        "项目计划于12月底完工。"
+      ]
+    },
+    {
+      "id": "MRK-003",
+      "check": "marker",
+      "category": "待补标记",
+      "gate": "文字关",
+      "level": "P1",
+      "pattern": "【(?:待补|待核实)】|【(?:待补|待核实):[^】\\n]*】|【(?:待补充|待定|待确认|待填|待查)[：:]?[^】\\n]{0,30}】|[\\[［(（〔](?:待补充?|待核实|待定|待确认|待填)[：:]?[^\\]］)）〕\\n]{0,30}[\\]］)）〕]",
+      "message": "待补、待核实标记格式不规范",
+      "suggestion": "统一写成【待补：说明】或【待核实：说明】（全角方括号、全角冒号，冒号后写清缺什么）",
+      "basis": "references/_shared/style/output-format.md 第一部分第 8 条",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "【待补】",
+        "[待核实：完工时间]",
+        "地点（待定）",
+        "【待定】"
+      ],
+      "miss_examples": [
+        "【待补：完工时间】",
+        "【待核实：完工时间】"
+      ]
+    },
+    {
+      "id": "LEG-001",
+      "check": "legal",
+      "category": "法规",
+      "gate": "法规关",
+      "level": "P1",
+      "pattern": "(?<![乱不])罚款|(?:行政|司法)?拘留(?!所)|没收(?![到齐])|吊销|暂扣|责令停(?:产|业)|停业整顿",
+      "message": "出现罚款、拘留等处罚表述：核对法律依据和发文权限（行政处罚只能由有处罚权的机关依法作出）",
+      "suggestion": "核对法律依据和发文权限：有依据的写明执法主体和法律依据（由用户提供）；发文机关无此权限的，删去，改为提醒、引导",
+      "basis": "《中华人民共和国行政处罚法》《中华人民共和国行政强制法》；references/_shared/profiles/units/jiceng.md、shequ.md 第六部分",
+      "doc_types": [
+        "通知",
+        "通告",
+        "公告"
+      ],
+      "exempt_doc_types": [
+        "函",
+        "报告",
+        "总结"
+      ],
+      "also_public": true,
+      "skip_if_basis": true,
+      "hit_examples": [
+        "对不配合整治的农户处以200元罚款。",
+        "情节严重的直接拘留。"
+      ],
+      "miss_examples": [
+        "严禁乱罚款、乱收费。",
+        "对没收到通知的住户，由网格员上门告知。",
+        "依据《中华人民共和国道路交通安全法》，对违法停车行为处以罚款。",
+        "做好拘留所消防安全工作。"
+      ]
+    },
+    {
+      "id": "LEG-002",
+      "check": "legal",
+      "category": "法规",
+      "gate": "法规关",
+      "level": "P1",
+      "pattern": "强制(?:执行|拆除|清除|清理|搬离|搬迁|带离|收回|隔离|措施)|强行(?:拆除|清除|带离|进入|收回)|断水断电|断电断水|(?:予以|采取|实施)(?:停水|停电|停气|断水|断电)",
+      "message": "出现强制拆除、断水断电等强制措施：核对法律依据和发文权限",
+      "suggestion": "核对法律依据和发文权限：有依据的写明执法主体和法律依据（由用户提供）；发文机关无此权限的，删去，改为提醒、引导",
+      "basis": "《中华人民共和国行政处罚法》《中华人民共和国行政强制法》；references/_shared/profiles/units/jiceng.md、shequ.md 第六部分",
+      "doc_types": [
+        "通知",
+        "通告",
+        "公告"
+      ],
+      "exempt_doc_types": [
+        "函",
+        "报告",
+        "总结"
+      ],
+      "also_public": true,
+      "skip_if_basis": true,
+      "hit_examples": [
+        "逾期未清理的，将强制拆除。",
+        "对拒不整改的商户采取断水断电措施。"
+      ],
+      "miss_examples": [
+        "因线路检修，10月16日8时至12时停电。",
+        "执行强制性国家标准。",
+        "依法强制拆除违法建筑。"
+      ]
+    },
+    {
+      "id": "LEG-003",
+      "check": "legal",
+      "category": "法规",
+      "gate": "法规关",
+      "level": "P1",
+      "pattern": "取消(?:其|该户|该生|该村|该单位)?[^，。；！？\\n]{0,6}(?:资格|待遇|低保|补贴|补助|救助)|停发(?![车货布售运行])|扣发|暂停发放",
+      "message": "出现取消资格、停发待遇等表述：核对法律依据和发文权限",
+      "suggestion": "核对法律依据和发文权限：有依据的写明执法主体和法律依据（由用户提供）；发文机关无此权限的，删去，改为提醒、引导",
+      "basis": "《中华人民共和国行政处罚法》《中华人民共和国行政强制法》；references/_shared/profiles/units/jiceng.md、shequ.md 第六部分",
+      "doc_types": [
+        "通知",
+        "通告",
+        "公告"
+      ],
+      "exempt_doc_types": [
+        "函",
+        "报告",
+        "总结"
+      ],
+      "also_public": true,
+      "skip_if_basis": true,
+      "hit_examples": [
+        "拒不整改的，取消其低保资格。",
+        "停发当月生活补贴。"
+      ],
+      "miss_examples": [
+        "按规定发放生活补贴。",
+        "取消原定于周五的会议。",
+        "受道路施工影响，12路公交暂停发车。"
+      ]
+    },
+    {
+      "id": "LEG-004",
+      "check": "legal",
+      "category": "法规",
+      "gate": "法规关",
+      "level": "P1",
+      "pattern": "(?:纳入|列入|拉入)[^，。；！？\\n]{0,8}(?:黑名单|失信名单)|(?:予以|进行|公开)曝光|在[^，。；！？\\n]{1,10}曝光|曝光(?:其|当事人|姓名)",
+      "message": "出现纳入黑名单、公开曝光等惩戒表述：核对法律依据和发文权限，注意个人信息保护",
+      "suggestion": "核对法律依据和发文权限：有依据的写明执法主体和法律依据（由用户提供）；发文机关无此权限的，删去，改为提醒、引导",
+      "basis": "《中华人民共和国行政处罚法》《中华人民共和国行政强制法》；references/_shared/profiles/units/jiceng.md、shequ.md 第六部分；《中华人民共和国个人信息保护法》",
+      "doc_types": [
+        "通知",
+        "通告",
+        "公告"
+      ],
+      "exempt_doc_types": [
+        "函",
+        "报告",
+        "总结"
+      ],
+      "also_public": true,
+      "skip_if_basis": true,
+      "hit_examples": [
+        "屡次违规的纳入黑名单管理。",
+        "并在小区公示栏曝光。"
+      ],
+      "miss_examples": [
+        "对媒体曝光的问题，要立行立改。"
+      ]
+    },
+    {
+      "id": "LEG-005",
+      "check": "legal",
+      "category": "法规",
+      "gate": "法规关",
+      "level": "P1",
+      "pattern": "追究(?:其)?(?:法律|刑事|相关)?责任|后果自负|一律不得|一律不予|一律从严",
+      "message": "面向群众的文书出现追责、“一律”等强硬表述：核对法律依据和发文权限，语气改为服务和提醒",
+      "suggestion": "核对法律依据和发文权限：有依据的写明执法主体和法律依据（由用户提供）；发文机关无此权限的，删去，改为提醒、引导",
+      "basis": "references/_shared/profiles/units/shequ.md 第六部分第 1 条、第九部分第 2 条",
+      "doc_types": [],
+      "exempt_doc_types": [
+        "函",
+        "报告",
+        "总结"
+      ],
+      "public_only": true,
+      "skip_if_basis": true,
+      "hit_examples": [
+        "各位居民：\n\n不配合整改的，将追究法律责任。",
+        "各位居民：\n\n逾期未登记的，后果自负。"
+      ],
+      "miss_examples": [
+        "各区卫生健康局：\n\n对工作不力的，严肃追究相关人员责任。",
+        "各位居民：\n\n请于11月1日前到社区服务中心登记。"
+      ]
+    },
+    {
+      "id": "JFU-001",
+      "check": "jianfu",
+      "category": "减负",
+      "gate": "文风关",
+      "level": "P1",
+      "pattern": "具有(?:十分|非常|极其|极为)?重要(?:的)?(?:现实|历史|战略|深远)?意义|充分认识[^。；\\n]{0,20}(?:重要性|必要性|紧迫性)|^当前[，,][^。\\n]{0,40}形势",
+      "message": "部署文件首段铺垫形势背景、重要意义，没有开门见山",
+      "suggestion": "删去铺垫，首段直接写目的、依据或任务",
+      "basis": "《整治形式主义为基层减负若干规定》第2条（references/_shared/rules/jianfu.md JF-02）",
+      "doc_types": [
+        "通知",
+        "意见",
+        "决定",
+        "实施方案",
+        "工作要点",
+        "计划"
+      ],
+      "exempt_doc_types": [],
+      "zone": "first_body",
+      "once": true,
+      "hit_examples": [
+        "当前，安全生产形势依然严峻复杂，做好四季度工作具有十分重要的意义。",
+        "各地要充分认识做好秋冬季疫病防控工作的重要性和紧迫性。"
+      ],
+      "miss_examples": [
+        "为落实市委部署，现将有关事项通知如下：",
+        "根据《某市2026年安全生产工作要点》，决定开展专项检查。"
+      ]
+    },
+    {
+      "id": "JFU-002",
+      "check": "jianfu",
+      "category": "减负",
+      "gate": "文风关",
+      "level": "P2",
+      "pattern": "报送[^，。；！？\\n]{0,6}(?:贯彻)?落实情况|制定(?:配套文件|实施细则|具体方案)",
+      "message": "要求下级报送落实情况或制定配套文件",
+      "suggestion": "文件一般不提出报送贯彻落实情况、制定配套文件的要求；确有必要的，在起草说明中说明理由",
+      "basis": "《整治形式主义为基层减负若干规定》第3条（jianfu.md JF-05）",
+      "doc_types": [
+        "通知",
+        "意见",
+        "决定",
+        "实施方案",
+        "工作要点",
+        "计划"
+      ],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "请于12月底前报送贯彻落实情况。",
+        "各地要制定配套文件。"
+      ],
+      "miss_examples": [
+        "各区卫生健康局汇总本辖区检查情况。"
+      ]
+    },
+    {
+      "id": "JFU-003",
+      "check": "jianfu",
+      "category": "减负",
+      "gate": "文风关",
+      "level": "P2",
+      "pattern": "一票否决|创建示范|达标(?:活动|创建|评比|验收|考核)",
+      "message": "提出一票否决、创建示范、达标活动等附加要求",
+      "suggestion": "非专门文件不提这类要求；确需开展的，核对是否已经批准",
+      "basis": "《整治形式主义为基层减负若干规定》第3条、第19条、第21条（jianfu.md JF-06、JF-17）",
+      "doc_types": [],
+      "exempt_doc_types": [
+        "总结",
+        "汇报材料",
+        "述职报告",
+        "报告",
+        "经验材料",
+        "信息"
+      ],
+      "hit_examples": [
+        "排名靠后的乡镇实行一票否决。",
+        "开展卫生达标创建活动。"
+      ],
+      "miss_examples": [
+        "污水排放达标率达到95%。"
+      ]
+    },
+    {
+      "id": "JFU-004",
+      "check": "jianfu",
+      "category": "减负",
+      "gate": "文风关",
+      "level": "P2",
+      "pattern": "纳入[^，。；！？\\n]{0,8}考核|(?:专项|定期)督查",
+      "message": "部门文件或讲话稿中设定督查考核事项",
+      "suggestion": "核对是否已列入督查检查考核计划；未列入的删去",
+      "basis": "《整治形式主义为基层减负若干规定》第7条（jianfu.md JF-07）",
+      "doc_types": [
+        "通知",
+        "意见",
+        "决定",
+        "实施方案",
+        "工作要点",
+        "计划",
+        "讲话稿"
+      ],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "该项工作纳入年度绩效考核。",
+        "市里将开展专项督查。"
+      ],
+      "miss_examples": [
+        "各单位要按时报送检查情况。"
+      ]
+    },
+    {
+      "id": "JFU-005",
+      "check": "jianfu",
+      "category": "减负",
+      "gate": "文风关",
+      "level": "P2",
+      "pattern": "拍照留痕|拍照上传|上传[^，。；！？\\n]{0,6}(?:照片|视频|轨迹)|学习笔记[^，。；！？\\n]{0,10}(?:检查|考核|评比)",
+      "message": "要求拍照上传、留痕，或把学习笔记作为考核依据",
+      "suggestion": "删去留痕要求；确需佐证材料的，限定为必要的少量材料",
+      "basis": "《整治形式主义为基层减负若干规定》第8条、第14条（jianfu.md JF-08）",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "物业公司每天拍照上传投放情况。",
+        "以学习笔记作为考核依据。"
+      ],
+      "miss_examples": [
+        "每周汇总一次检查记录。"
+      ]
+    },
+    {
+      "id": "JFU-006",
+      "check": "jianfu",
+      "category": "减负",
+      "gate": "文风关",
+      "level": "P2",
+      "pattern": "纸质(?:(?!不再|无需|不需|不用|免)[^。；！？\\n]){0,10}(?:电子|扫描)|(?:电子|扫描)(?:(?!不再|无需|不需|不用|免)[^。；！？\\n]){0,10}纸质",
+      "message": "要求同时报送纸质版和电子版",
+      "suggestion": "写明一种报送渠道；能从系统获取的不再要求报送",
+      "basis": "《整治形式主义为基层减负若干规定》第12条（jianfu.md JF-09）",
+      "doc_types": [
+        "通知",
+        "意见",
+        "决定",
+        "实施方案",
+        "工作要点",
+        "计划"
+      ],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "同时报送纸质版和电子版。"
+      ],
+      "miss_examples": [
+        "通过系统报送电子版，不再报送纸质材料。"
+      ]
+    },
+    {
+      "id": "JFU-007",
+      "check": "jianfu",
+      "category": "减负",
+      "gate": "文风关",
+      "level": "P2",
+      "pattern": "(?:每月|按月|逐月|每季度|按季度)[^，。；！？\\n]{0,10}排名",
+      "message": "按月、按季排名通报",
+      "suggestion": "删去频繁排名通报的要求",
+      "basis": "《整治形式主义为基层减负若干规定》第8条（jianfu.md JF-11）",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "县农业农村局每月通报一次排名。"
+      ],
+      "miss_examples": [
+        "每月调度一次进度。"
+      ]
+    },
+    {
+      "id": "JFU-008",
+      "check": "jianfu",
+      "category": "减负",
+      "gate": "文风关",
+      "level": "P1",
+      "pattern": "千分制",
+      "message": "考核采用“千分制”",
+      "suggestion": "改为简化的等次评价；考核不搞“千分制”",
+      "basis": "《整治形式主义为基层减负若干规定》第8条（jianfu.md JF-11）",
+      "doc_types": [],
+      "exempt_doc_types": [],
+      "hit_examples": [
+        "考核实行千分制。"
+      ],
+      "miss_examples": [
+        "考核结果分为优秀、良好、一般三个等次。"
+      ]
+    },
+    {
+      "id": "JFU-009",
+      "check": "jianfu",
+      "category": "减负",
+      "gate": "文风关",
+      "level": "P2",
+      "pattern": "制度上墙|签订[^，。；！？\\n]{0,6}责任(?:状|书)|分解下达[^，。；！？\\n]{0,4}指标",
+      "message": "要求签订责任状、制度上墙或向基层分解下达指标",
+      "suggestion": "面向乡镇（街道）、村（社区）的文件不转嫁责任；确需明确责任的，写清职责分工",
+      "basis": "《整治形式主义为基层减负若干规定》第16条（jianfu.md JF-12）",
+      "doc_types": [],
+      "exempt_doc_types": [
+        "总结",
+        "汇报材料",
+        "述职报告",
+        "报告",
+        "经验材料",
+        "信息"
+      ],
+      "hit_examples": [
+        "与各村签订目标责任状。",
+        "各项制度上墙公示。"
+      ],
+      "miss_examples": [
+        "明确各村联系人。"
+      ]
+    }
+  ],
+  "procedural": [
+    {
+      "id": "PUN-009",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P1",
+      "description": "逐段扫描双引号配对：前引号未闭合又遇前引号时，判为引号嵌套未改用单引号",
+      "message": "引号嵌套时内层应用单引号‘ ’",
+      "suggestion": "内层改为单引号",
+      "basis": "GB/T 15834-2011 4.8.3.4"
+    },
+    {
+      "id": "PUN-014",
+      "check": "punct",
+      "category": "标点",
+      "gate": "文字关",
+      "level": "P2",
+      "description": "同一句内出现两个以上提示性冒号（时刻和“联系人：”“时间：”等字段冒号除外）",
+      "message": "一个句子内部一般不套用冒号",
+      "suggestion": "拆成两句，或另起段落显示层次",
+      "basis": "GB/T 15834-2011 4.7.3.5"
+    },
+    {
+      "id": "NUM-010",
+      "check": "number",
+      "category": "数字",
+      "gate": "文字关",
+      "level": "P2",
+      "description": "统计正文中“2026年10月16日”“2026-10-16”“2026.10.16”“2026/10/16”的使用情况：混用时提示统一；点号、斜线分隔单独提示（版记行除外）",
+      "message": "同一文件日期写法不统一",
+      "suggestion": "全文统一为“2026年10月16日”",
+      "basis": "GB/T 15835-2011 4.3、5.1.4"
+    },
+    {
+      "id": "FMT-005",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P1",
+      "description": "年月日中月、日编了虚位（如“01月05日”）：成文日期行、印发日期行为 P0，正文其他位置为 P1",
+      "message": "日期的月、日不编虚位",
+      "suggestion": "如“2026年1月5日”",
+      "basis": "GB/T 9704-2012 7.3.5.4、7.4.3"
+    },
+    {
+      "id": "FMT-006",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P1",
+      "description": "落款区单独成行的成文日期使用了汉字数字",
+      "message": "成文日期用阿拉伯数字",
+      "suggestion": "如“2026年10月16日”",
+      "basis": "GB/T 9704-2012 7.3.5.4"
+    },
+    {
+      "id": "FMT-007",
+      "check": "format",
+      "category": "格式要素",
+      "gate": "格式关",
+      "level": "P1",
+      "description": "标题后第一行为主送机关时：以半角冒号结尾，或（通知、请示、报告、函等文种）以机关名称结尾而缺冒号",
+      "message": "主送机关最后一个名称后标全角冒号",
+      "suggestion": "在主送机关末尾加全角冒号“：”",
+      "basis": "GB/T 9704-2012 7.3.2"
+    },
+    {
+      "id": "STR-001",
+      "check": "structure",
+      "category": "结构",
+      "gate": "格式关",
+      "level": "P1",
+      "description": "按行首序数建层级：同级序号重复、回退或跳号为 P1；用了上层序数后越级使用下层（如“一、”后直接用“1.”）为 P2，全文只报第一处",
+      "message": "层次序号跳号、重复或乱序",
+      "suggestion": "核对序号，确保同级连续、逐级使用",
+      "basis": "GB/T 9704-2012 7.3.3；GB/T 15834-2011 附录 B.3.8"
+    },
+    {
+      "id": "STR-002",
+      "check": "structure",
+      "category": "结构",
+      "gate": "文字关",
+      "level": "P2",
+      "description": "“三个方面”“四项措施”等数字概括与其后实际列出的条数（同段“一是……”或下一级标题）不一致；启发式判断",
+      "message": "数字概括与实际条数不一致",
+      "suggestion": "核对条数，改正概括数字或补删条目",
+      "basis": "《党政机关公文处理工作条例》第二十条（四）"
+    },
+    {
+      "id": "STR-003",
+      "check": "structure",
+      "category": "结构",
+      "gate": "程序关",
+      "level": "P1",
+      "description": "请示全文没有“妥否，请批示”“请予审批”一类请求批复的结尾",
+      "message": "请示缺少请求批复的结束语",
+      "suggestion": "结尾写“妥否，请批示。”或“以上请示，请予审批。”",
+      "basis": "《党政机关公文处理工作条例》第八条（十一）；references/_shared/rules/doc-types.md 2.11",
+      "doc_types": [
+        "请示"
+      ]
+    },
+    {
+      "id": "STR-004",
+      "check": "structure",
+      "category": "结构",
+      "gate": "程序关",
+      "level": "P0",
+      "description": "报告中出现“妥否，请批示”“请审批”“请批准”等请求性语句（P0），或“恳请……批准、拨付”等疑似请示事项（P1）",
+      "message": "报告中夹带请示事项",
+      "suggestion": "删去请求性语句；需要上级批准的事项另行请示",
+      "basis": "《党政机关公文处理工作条例》第十五条（四）",
+      "doc_types": [
+        "报告"
+      ]
+    },
+    {
+      "id": "STR-005",
+      "check": "structure",
+      "category": "结构",
+      "gate": "文字关",
+      "level": "P1",
+      "description": "识别出的公文标题行以标点结尾",
+      "message": "标题末尾不加标点",
+      "suggestion": "删除标题末尾的标点",
+      "basis": "GB/T 15834-2011 附录 B.4"
+    },
+    {
+      "id": "STR-006",
+      "check": "structure",
+      "category": "结构",
+      "gate": "程序关",
+      "level": "P1",
+      "description": "请示、报告的主送机关多于一个，或主送领导个人",
+      "message": "请示原则上主送一个上级机关，不向领导个人报送",
+      "suggestion": "只主送一个上级机关，其他机关用抄送；主送机关而不是领导个人",
+      "basis": "《党政机关公文处理工作条例》第十五条（一）（五）",
+      "doc_types": [
+        "请示",
+        "报告"
+      ]
+    },
+    {
+      "id": "STR-007",
+      "check": "structure",
+      "category": "结构",
+      "gate": "程序关",
+      "level": "P1",
+      "description": "请示以“特此报告”结尾",
+      "message": "请示结尾误用“特此报告”",
+      "suggestion": "改为“妥否，请批示。”",
+      "basis": "references/_shared/rules/doc-types.md 2.11（常见错误）",
+      "doc_types": [
+        "请示"
+      ]
+    },
+    {
+      "id": "STR-008",
+      "check": "structure",
+      "category": "结构",
+      "gate": "程序关",
+      "level": "P1",
+      "description": "函（平行文）中出现“请批示”“请批复”",
+      "message": "函用于不相隶属机关之间，不用“请批示”",
+      "suggestion": "改为“请予函复”“请予支持”；向上级请求批准的改用请示",
+      "basis": "《党政机关公文处理工作条例》第八条（十四）；references/_shared/rules/doc-types.md 7.2",
+      "doc_types": [
+        "函"
+      ]
+    },
+    {
+      "id": "STR-011",
+      "check": "structure",
+      "category": "结构",
+      "gate": "程序关",
+      "level": "P1",
+      "description": "下行文（通知、通报、批复、决定、意见、通告、公告）中出现“妥否，请批示”“请批示”等请示结束语",
+      "message": "下行文使用了请示的结束语",
+      "suggestion": "删去请求性语句；通知可用“特此通知。”结尾",
+      "basis": "《党政机关公文处理工作条例》第八条；references/_shared/rules/doc-types.md 2.8、2.11",
+      "doc_types": [
+        "通知",
+        "通报",
+        "批复",
+        "决定",
+        "意见",
+        "通告",
+        "公告"
+      ]
+    },
+    {
+      "id": "STR-009",
+      "check": "structure",
+      "category": "结构",
+      "gate": "格式关",
+      "level": "P2",
+      "description": "请示、报告有发文字号但没有“签发人”",
+      "message": "上行文应标注签发人",
+      "suggestion": "在发文字号同一行右侧标注“签发人：姓名”",
+      "basis": "GB/T 9704-2012 7.2.6；《党政机关公文处理工作条例》第九条（六）",
+      "doc_types": [
+        "请示",
+        "报告"
+      ]
+    },
+    {
+      "id": "STR-010",
+      "check": "structure",
+      "category": "结构",
+      "gate": "程序关",
+      "level": "P1",
+      "description": "标题文种写作“请示报告”，或标题文种与 --doc-type 指定的文种不一致（P2）",
+      "message": "文种混用",
+      "suggestion": "请求批准的用“请示”，汇报工作的用“报告”，二者不合用",
+      "basis": "references/_shared/rules/doc-types.md 2.11、7.1"
+    },
+    {
+      "id": "PRI-001",
+      "check": "privacy",
+      "category": "隐私与保密",
+      "gate": "法规关",
+      "level": "P0",
+      "description": "18 位身份证号：校验位正确为 P0，结构正确但校验位不符为 P1。输出时脱敏",
+      "message": "出现身份证号",
+      "suggestion": "删除或脱敏，如“330102********1234”",
+      "basis": "references/_shared/guardrails.md 第一条第 3 款；《中华人民共和国个人信息保护法》"
+    },
+    {
+      "id": "PRI-002",
+      "check": "privacy",
+      "category": "隐私与保密",
+      "gate": "法规关",
+      "level": "P0",
+      "description": "11 位手机号：前后 20 字内有“联系、电话、热线”等字样的视为工作联系方式（P2），否则 P0。输出时脱敏",
+      "message": "出现个人手机号",
+      "suggestion": "删除或脱敏，如“138****0000”；对外张贴的改用工作电话",
+      "basis": "references/_shared/guardrails.md 第一条第 3 款"
+    },
+    {
+      "id": "PRI-003",
+      "check": "privacy",
+      "category": "隐私与保密",
+      "gate": "法规关",
+      "level": "P0",
+      "description": "16～19 位银行卡号：前有“银行卡、卡号”标签为 P0；前有“账号、账户”标签为 P2（可能是单位对公账户）；无标签的仅在 Luhn 校验通过且以 62、4、5 开头时报 P1。输出时脱敏",
+      "message": "出现银行卡号",
+      "suggestion": "删除或脱敏，如“6222 **** **** 1234”",
+      "basis": "references/_shared/guardrails.md 第一条第 3 款；《中华人民共和国个人信息保护法》第二十八条"
+    },
+    {
+      "id": "PRI-004",
+      "check": "privacy",
+      "category": "隐私与保密",
+      "gate": "法规关",
+      "level": "P0",
+      "description": "带标签的个人编号：病案号、住院号、门诊号、学号、学籍号、考生号、准考证号、医保卡号、社保卡号、护照号等为 P0；工号、员工号为 P1。已用 * 脱敏的不报",
+      "message": "出现可识别个人的编号",
+      "suggestion": "删除或脱敏",
+      "basis": "references/_shared/guardrails.md 第一条第 3 款"
+    },
+    {
+      "id": "PRI-008",
+      "check": "privacy",
+      "category": "隐私与保密",
+      "gate": "法规关",
+      "level": "P0",
+      "description": "“家庭住址”“住址”“户籍地址”等标签后跟具体门牌信息",
+      "message": "出现家庭住址",
+      "suggestion": "删除或只保留到社区（村）一级",
+      "basis": "references/_shared/guardrails.md 第一条第 3 款"
+    },
+    {
+      "id": "PRI-009",
+      "check": "privacy",
+      "category": "隐私与保密",
+      "gate": "法规关",
+      "level": "P0",
+      "description": "常见姓氏开头的 2～3 字姓名后紧跟性别和年龄（如“王建国，男，56岁”），姓名未用“某”替代",
+      "message": "疑似真实姓名与性别、年龄组合",
+      "suggestion": "改为“张某，男，56岁”",
+      "basis": "references/_shared/guardrails.md 第一条第 3 款"
+    },
+    {
+      "id": "PRI-010",
+      "check": "privacy",
+      "category": "隐私与保密",
+      "gate": "法规关",
+      "level": "P1",
+      "description": "床号与真实姓名组合（如“12床王建国”）",
+      "message": "床号与姓名组合可识别患者",
+      "suggestion": "改为“12床患者”或“患者张某”",
+      "basis": "references/_shared/guardrails.md 第一条第 3 款；references/_shared/profiles/units/yiyuan.md 第六部分"
+    },
+    {
+      "id": "LEN-001",
+      "check": "length",
+      "category": "篇幅",
+      "gate": "文风关",
+      "level": "P2",
+      "description": "下行文件（通知、意见、决定、通报、实施方案、工作要点、计划等）正文超过 4000 字或 5000 字时提示。统计口径：标题之后、【起草说明】之前，不含空白和版记。属减负规定第2条要求，保留在 length 类，不并入 jianfu",
+      "message": "篇幅超过减负规定的一般上限",
+      "suggestion": "压缩篇幅：删去背景、意义铺垫，合并重复要求",
+      "basis": "《整治形式主义为基层减负若干规定》第2条（工具约定见 references/_shared/rules/jianfu.md 第三部分）"
+    },
+    {
+      "id": "LEN-002",
+      "check": "length",
+      "category": "篇幅",
+      "gate": "文风关",
+      "level": "P2",
+      "description": "讲话稿超过 12000 字（按每分钟约 200 字估算超过 1 小时）。属减负规定第6条要求，保留在 length 类",
+      "message": "讲话稿预计超过 1 小时",
+      "suggestion": "压缩到 1 小时以内",
+      "basis": "《整治形式主义为基层减负若干规定》第6条；references/_shared/profiles/units/dangzheng.md 第九部分"
+    }
+  ]
+}

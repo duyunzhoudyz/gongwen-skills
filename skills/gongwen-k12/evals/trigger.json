@@ -1,0 +1,22 @@
+[
+  {"query": "期末了，帮我给班上42个孩子写评语，每个人的情况我列在表里了", "should_trigger": true},
+  {"query": "下周开家长会，我是初二班主任，帮我弄个发言稿", "should_trigger": true},
+  {"query": "区里下个月来督导评估，学校要交自评报告，指标表发你", "should_trigger": true},
+  {"query": "帮我写一份这学期的班主任工作总结，班级记录都在这", "should_trigger": true},
+  {"query": "寒假快到了，以学校名义给家长写一封信，提醒假期安全", "should_trigger": true},
+  {"query": "德育处要交下学期的工作计划，按周排个行事历", "should_trigger": true},
+  {"query": "这是昨天数学组集体备课的录音转写，整理成教研活动记录", "should_trigger": true},
+  {"query": "学校要制定课后服务实施方案，区里的通知在附件", "should_trigger": true},
+  {"query": "把这周三安全教育班会的情况整理成学校要的记录", "should_trigger": true},
+  {"query": "学校这学期的工作总结，按德育、教学、安全几块写，要报教育局", "should_trigger": true},
+  {"query": "开学典礼上校长要讲10分钟，帮我写个讲话稿", "should_trigger": false},
+  {"query": "给区教育局写个请示，申请维修教学楼屋顶", "should_trigger": false},
+  {"query": "我是校长，年底要述职，帮我写述职报告", "should_trigger": false},
+  {"query": "学校运动会开完了，写篇新闻稿发公众号", "should_trigger": false},
+  {"query": "督导反馈了8个问题，帮我写整改方案和整改台账", "should_trigger": false},
+  {"query": "支部要开组织生活会，帮我写对照检查材料", "should_trigger": false},
+  {"query": "期中考试各班成绩表发你，帮我算平均分和优秀率，做个图", "should_trigger": false},
+  {"query": "教代会上校长要做学校年度工作报告，帮我起草", "should_trigger": false},
+  {"query": "这篇班主任工作总结是AI写的，AI味太重了，帮我改改", "should_trigger": false},
+  {"query": "昨天校务会的记录发你，整理成会议纪要", "should_trigger": false}
+]

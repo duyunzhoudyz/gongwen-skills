@@ -1,0 +1,22 @@
+[
+  {"query": "下个月开民主生活会，帮我弄个个人发言提纲，组织反馈给我的意见我贴给你", "should_trigger": true},
+  {"query": "组织生活会要交个人对照检查材料，我把今年的几件事列出来了", "should_trigger": true},
+  {"query": "帮我起草领导班子民主生活会对照检查材料，征求意见汇总在这", "should_trigger": true},
+  {"query": "七一要给支部讲党课，题目定了，帮我备个讲稿", "should_trigger": true},
+  {"query": "支部这个月的主题党日还没想好，帮我出个方案", "should_trigger": true},
+  {"query": "年底书记要抓基层党建述职，素材党建办整理好了", "should_trigger": true},
+  {"query": "中心组研讨我要发言，帮我把这几点体会理成发言提纲", "should_trigger": true},
+  {"query": "把这几次支委会的手写记录理成规范的会议记录", "should_trigger": true},
+  {"query": "组织生活会前要跟支部委员谈心谈话，帮我拟个谈话提纲", "should_trigger": true},
+  {"query": "党支部年度工作总结和明年计划怎么写，记录我发你", "should_trigger": true},
+  {"query": "七一表彰大会上书记要讲话，帮我写个讲话稿", "should_trigger": false},
+  {"query": "帮我写一份我们国企党建和生产经营深度融合的经验材料", "should_trigger": false},
+  {"query": "年底了，帮我写个人年度述职述责述廉报告", "should_trigger": false},
+  {"query": "帮我起草一份关于召开2026年度民主生活会的通知", "should_trigger": false},
+  {"query": "巡察反馈了12个问题，帮我写整改方案和整改台账", "should_trigger": false},
+  {"query": "把今天党委会的议定事项整理成会议纪要", "should_trigger": false},
+  {"query": "支部主题党日搞完了，写一篇发公众号的新闻稿", "should_trigger": false},
+  {"query": "这篇对照检查材料AI味太重了，帮我把AI腔去掉，别的不动", "should_trigger": false},
+  {"query": "辅导员要和挂科的学生谈心谈话，帮我拟个谈话提纲", "should_trigger": false},
+  {"query": "上级关于开展专题学习教育的通知来了，帮我出个本单位的学习贯彻落实方案", "should_trigger": false}
+]

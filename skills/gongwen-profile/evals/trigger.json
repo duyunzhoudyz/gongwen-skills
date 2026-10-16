@@ -1,0 +1,22 @@
+[
+  {"query": "帮我把我们医院的单位画像建完整，公文处理办法和议事规则我发你", "should_trigger": true},
+  {"query": "这几篇是我们局这两年的总结和汇报，你学学我们单位的文风", "should_trigger": true},
+  {"query": "这是领导改过的花脸稿，原稿也在，你帮我看看他喜欢怎么改，记下来", "should_trigger": true},
+  {"query": "这份Word开了修订，是书记改的，帮我归纳一下书记的改稿习惯", "should_trigger": true},
+  {"query": "记一下，以后“赋能”“抓手”这种词别用了，加到禁用词里", "should_trigger": true},
+  {"query": "我们的单位画像是去年建的，帮我体检一下，看看有没有过时的地方", "should_trigger": true},
+  {"query": "我从党政办调到宣传办了，帮我把画像里的写作角色改一下，别的别动", "should_trigger": true},
+  {"query": "把我们学校的发文字号格式和党政两套代字记进画像，以后起草都按这个来", "should_trigger": true},
+  {"query": "领导偏好卡里给院长加一条：讲话不引用古诗词，数据要放在前面", "should_trigger": true},
+  {"query": "领导这半年改过的五份讲话稿都在这，帮我总结一下他的用词习惯和忌讳", "should_trigger": true},
+  {"query": "第一次用这个，你先简单问我几个问题建个简版画像，然后帮我写个通知", "should_trigger": false},
+  {"query": "照我们单位以前那几篇的风格，帮我写今年的年终总结", "should_trigger": false},
+  {"query": "领导在稿子上批了“太虚”“数据呢”，帮我按批注改一版", "should_trigger": false},
+  {"query": "把这两稿合并成一稿，取长补短，冲突的地方标出来", "should_trigger": false},
+  {"query": "帮我核一下这个通知，看有没有用到禁用词、有没有错别字", "should_trigger": false},
+  {"query": "按我们画像里的发文字号，帮我把这个通知的版头写好", "should_trigger": false},
+  {"query": "院长周五在护士节表彰会上讲10分钟，帮我写个讲话稿，他喜欢短句", "should_trigger": false},
+  {"query": "把这几篇历史稿合成今年的年终总结", "should_trigger": false},
+  {"query": "领导改完了，帮我核一下改后的稿子还有没有错", "should_trigger": false},
+  {"query": "按领导偏好卡里的习惯，把这篇讲话稿改一版", "should_trigger": false}
+]

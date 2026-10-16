@@ -1,0 +1,22 @@
+[
+  {"query": "局长周三在全市安全生产推进会上讲15分钟，帮我写个讲话稿", "should_trigger": true},
+  {"query": "校长开学典礼要讲话，面向新生，十分钟左右，素材我发你", "should_trigger": true},
+  {"query": "明天的推进会我来主持，议程在这，帮我写个主持词", "should_trigger": true},
+  {"query": "镇长要在全县防汛会上表态发言，三分钟，写得实在点", "should_trigger": true},
+  {"query": "下周全院经验交流会，我们科要发言8分钟，介绍日间手术的做法", "should_trigger": true},
+  {"query": "书记在七一表彰大会上要讲话，帮我起草一下", "should_trigger": true},
+  {"query": "兄弟单位来考察交流，帮我写一篇三分钟的欢迎致辞", "should_trigger": true},
+  {"query": "职代会闭幕的时候董事长要讲几句，帮我准备个闭幕讲话", "should_trigger": true},
+  {"query": "期中表彰会上有个学生代表要发言，帮这位同学准备一篇发言稿", "should_trigger": true},
+  {"query": "区委书记参加青年干部座谈会要讲话，帮我弄个稿子", "should_trigger": true},
+  {"query": "下周给支部党员讲一堂党课，帮我写党课讲稿", "should_trigger": false},
+  {"query": "民主生活会上的对照检查发言材料帮我准备一下", "should_trigger": false},
+  {"query": "职代会上院长要作工作报告，帮我写报告", "should_trigger": false},
+  {"query": "市领导来调研，给我们局长准备一份10分钟的汇报材料", "should_trigger": false},
+  {"query": "帮我写个召开全市安全生产工作会议的通知", "should_trigger": false},
+  {"query": "把昨天推进会的录音转写稿整理成会议纪要", "should_trigger": false},
+  {"query": "这篇讲话稿太长了，帮我从6000字压到3000字", "should_trigger": false},
+  {"query": "帮我核一下这篇讲话稿的提法、标点和数字", "should_trigger": false},
+  {"query": "这篇讲话稿是 AI 写的，AI 味太重，帮我改改", "should_trigger": false},
+  {"query": "给这篇讲话的三个部分起几个对仗的小标题", "should_trigger": false}
+]

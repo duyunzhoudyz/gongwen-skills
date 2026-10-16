@@ -1,0 +1,22 @@
+[
+  {"query": "30个科室的月报都交上来了，帮我合并一下，算算全院的同比环比", "should_trigger": true},
+  {"query": "这张表的合计好像对不上，帮我查查是哪里出了问题", "should_trigger": true},
+  {"query": "占比从35%涨到38.2%，到底是提高了3.2%还是3.2个百分点？帮我写成一句话", "should_trigger": true},
+  {"query": "把这几组数据写成一段能直接放进总结里的话，同比环比都带上", "should_trigger": true},
+  {"query": "帮我把1到9月的办件量做个折线图，打印是黑白的", "should_trigger": true},
+  {"query": "年度目标完成了多少、比时间进度快还是慢，帮我算一下", "should_trigger": true},
+  {"query": "下面几个乡镇报的表有的填元有的填万元，帮我统一单位再汇总", "should_trigger": true},
+  {"query": "算一下各科室出院人次的占比，再出个柱状图放汇报里", "should_trigger": true},
+  {"query": "利润从去年亏500万到今年盈利300万，同比增长该怎么写", "should_trigger": true},
+  {"query": "这个Excel里的经营数据帮我体检一下，看看有没有空值、重复和单位不统一", "should_trigger": true},
+  {"query": "帮我写一份9月份医疗质量分析报告，有分析有建议，科室数据都在附件", "should_trigger": false},
+  {"query": "年终总结的素材都在这，帮我写个3000字的科室总结", "should_trigger": false},
+  {"query": "这篇总结写好了，帮我核一下里面的数字和百分点前后对不对得上", "should_trigger": false},
+  {"query": "巡察反馈的12个问题整理成整改台账，转成Excel", "should_trigger": false},
+  {"query": "上级文件里的任务帮我拆成任务分解表，带牵头单位和时限", "should_trigger": false},
+  {"query": "昨天党委会定的几件事整理成督办清单", "should_trigger": false},
+  {"query": "把这篇活动材料改成一条500字的政务信息，数据要实", "should_trigger": false},
+  {"query": "把这份带表格的汇报排成国标格式的Word文档", "should_trigger": false},
+  {"query": "帮我写子公司三季度经营分析报告，按集团模板来", "should_trigger": false},
+  {"query": "这篇汇报材料太长了，帮我压到2000字，数字别动", "should_trigger": false}
+]

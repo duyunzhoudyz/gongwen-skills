@@ -1,0 +1,22 @@
+[
+  {"query": "集团要给子公司增资2个亿，下周上党委会，帮我弄个三重一大的上会材料", "should_trigger": true},
+  {"query": "董事会开完了，按会议记录出个董事会决议，票数帮我核一下", "should_trigger": true},
+  {"query": "帮我写个提交董事会审议的议案，关于修订投资管理办法的", "should_trigger": true},
+  {"query": "昨天总经理办公会的转写稿发你，出个纪要，再列个督办表", "should_trigger": true},
+  {"query": "这是公司9月的财务快报，帮我写份月度经营分析报告", "should_trigger": true},
+  {"query": "把集团改革任务台账按三季度进展更新一下，顺便写个改革进展报告", "should_trigger": true},
+  {"query": "公司是深证100样本股，今年的可持续发展报告怎么搭框架、披露口径怎么写", "should_trigger": true},
+  {"query": "写一篇党建和生产经营融合的经验材料，就写党员突击队抢修机组那件事", "should_trigger": true},
+  {"query": "起草集团2025年度合规管理工作报告，要提交董事会审议", "should_trigger": true},
+  {"query": "这个对外担保事项要不要走党委前置研究？帮我对照前置研究清单判断一下", "should_trigger": true},
+  {"query": "帮我起草集团年度工作会上的总经理工作报告", "should_trigger": false},
+  {"query": "董事长在年中工作会上的讲话稿，帮我写一下", "should_trigger": false},
+  {"query": "给省国资委写个请示，申请追加国有资本经营预算", "should_trigger": false},
+  {"query": "公司党委民主生活会的班子对照检查材料怎么写", "should_trigger": false},
+  {"query": "把公司中标地铁项目的消息写成新闻稿发公众号", "should_trigger": false},
+  {"query": "巡察反馈了15个问题，帮我写整改方案和整改台账", "should_trigger": false},
+  {"query": "省国资委发了安全生产专项整治通知，帮我拆成任务分解表", "should_trigger": false},
+  {"query": "三家子公司的经营快报合并一下，算算同比环比，再出个图", "should_trigger": false},
+  {"query": "把这次党委会的会议记录整理成党委会纪要", "should_trigger": false},
+  {"query": "这份经营分析报告写得太长了，帮我压缩到2000字", "should_trigger": false}
+]

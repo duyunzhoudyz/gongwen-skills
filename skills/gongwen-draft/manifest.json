@@ -1,0 +1,37 @@
+{
+  "name": "gongwen-draft",
+  "version": "1.0.0",
+  "status": "beta",
+  "shared": [
+    {"src": "guardrails.md"},
+    {"src": "style/output-format.md"},
+    {"src": "style/ai-tone.md"},
+    {"src": "style/defensive.md"},
+    {"src": "rules/tiaoli.md"},
+    {"src": "rules/doc-types.md"},
+    {"src": "rules/gbt9704.md"},
+    {"src": "rules/gbt15834.md"},
+    {"src": "rules/gbt15835.md"},
+    {"src": "rules/jianfu.md"},
+    {"src": "profiles/roles.md"},
+    {"src": "profiles/units/dangzheng.md"},
+    {"src": "profiles/units/jiceng.md"},
+    {"src": "profiles/units/shequ.md"},
+    {"src": "profiles/units/yiyuan.md"},
+    {"src": "profiles/units/gaoxiao.md"},
+    {"src": "profiles/units/zhongxiaoxue.md"},
+    {"src": "profiles/units/guoqi.md"},
+    {"src": "scripts/gongwen_lint.py", "dest": "scripts/gongwen_lint.py"},
+    {"src": "scripts/lint_rules.json", "dest": "scripts/lint_rules.json"},
+    {"src": "scripts/style_patterns.json", "dest": "scripts/style_patterns.json"},
+    {"src": "scripts/fact_diff.py", "dest": "scripts/fact_diff.py"}
+  ],
+  "prompt_bundle": [
+    "references/_shared/guardrails.md",
+    "references/_shared/style/output-format.md",
+    "references/decision.md",
+    "references/rules-check.md",
+    "references/quick-ref.md",
+    "references/checklist.md"
+  ]
+}

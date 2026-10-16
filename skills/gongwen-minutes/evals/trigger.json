@@ -1,0 +1,22 @@
+[
+  {"query": "昨天院长办公会的录音我转成文字了，帮我整理成会议纪要，议定事项写清谁负责、什么时候完成", "should_trigger": true},
+  {"query": "上午开了个协调会，这是我的笔记，出个纪要发给相关科室", "should_trigger": true},
+  {"query": "党委会下周要研究食堂外包，帮我准备上会的议题材料", "should_trigger": true},
+  {"query": "这事属于三重一大，要上局党组会议，帮我把议题材料弄一下，两个方案比一比", "should_trigger": true},
+  {"query": "把这份纪要里定的事列个督办清单，导成Excel", "should_trigger": true},
+  {"query": "局务会的转写稿帮我整理成会议记录存档，按发言顺序，谁说的要对得上", "should_trigger": true},
+  {"query": "专题会议纪要里会议指出、会议强调、会议要求老分不清，这份记录你帮我出个纪要", "should_trigger": true},
+  {"query": "校长办公会的转写稿太口语了，出一份纪要，原则同意和同意别弄混", "should_trigger": true},
+  {"query": "社区两委会讨论了加装电梯的事，帮我把会议记录整理一下", "should_trigger": true},
+  {"query": "局务会纪要里的议定事项，帮我做成督办台账，各科室报了进展再更新状态", "should_trigger": true},
+  {"query": "帮我写个通知，下周三下午召开院长办公会，请各科室主任参加", "should_trigger": false},
+  {"query": "局长周五在全市安全生产推进会上讲15分钟，帮我写讲话稿", "should_trigger": false},
+  {"query": "把昨天局务会的情况写成一篇新闻稿发公众号", "should_trigger": false},
+  {"query": "上周支部开了组织生活会，帮我把三会一课记录整理一下", "should_trigger": false},
+  {"query": "省里发了个专项行动通知，帮我拆成任务分解表，列清牵头单位和时限", "should_trigger": false},
+  {"query": "巡察反馈了12个问题，帮我建个整改台账", "should_trigger": false},
+  {"query": "这份会议纪要帮我核一下标点、数字和格式有没有问题", "should_trigger": false},
+  {"query": "会议纪要已经定稿了，帮我排成纪要格式的 Word", "should_trigger": false},
+  {"query": "党委会定了调整科室设置，帮我根据会议决定起草一份通知印发全院", "should_trigger": false},
+  {"query": "下周院长办公会上我要代表科室做个表态发言，帮我写一下", "should_trigger": false}
+]

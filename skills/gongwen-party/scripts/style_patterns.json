@@ -1,0 +1,1621 @@
+{
+  "version": "0.1.0",
+  "patterns": [
+    {
+      "id": "AI-001",
+      "group": "style",
+      "category": "段首评论语",
+      "pattern": "(^|[。！？；])\\s*值得(注意|一提|关注|一说|警惕)的是",
+      "level": "P1",
+      "message": "句首评论语，属于典型 AI 句式（实测 AI 段首零主语评论约为人类的 4.4 倍）",
+      "suggestion": "删除评论语，直接陈述事实；确需提醒的，写成“要特别注意……”",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "lieflat-less-ai-tone (MIT)；stop-slop-zh (MIT)",
+      "hit_examples": [
+        "值得注意的是，部分乡镇台账更新不及时。",
+        "全年共受理投诉326件。值得一提的是，网上办理占比首次过半。"
+      ],
+      "miss_examples": [
+        "要特别注意汛期地质灾害隐患排查。",
+        "这一做法值得推广。"
+      ]
+    },
+    {
+      "id": "AI-002",
+      "group": "style",
+      "category": "段首评论语",
+      "pattern": "(^|[。！？；])\\s*(显而易见|毋庸置疑|毫无疑问|不可否认|众所周知|不言而喻|诚然)[，,]",
+      "level": "P1",
+      "message": "用断言式评论语开头，替代了论据",
+      "suggestion": "删除评论语，用事实或数据支撑判断",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "stop-slop-zh (MIT)",
+      "hit_examples": [
+        "毋庸置疑，数字化转型是大势所趋。",
+        "众所周知，基层治理任务繁重。"
+      ],
+      "miss_examples": [
+        "群众满意度连续三年提升，改革成效有目共睹。"
+      ]
+    },
+    {
+      "id": "AI-003",
+      "group": "style",
+      "category": "段首评论语",
+      "pattern": "^\\s*(听起来|看起来|看上去|更重要的是|关键在于|问题在于|真正的(问题|关键|难点)在于|有意思的是|有趣的是|不难(看出|发现))",
+      "level": "P1",
+      "message": "段落以零主语评论开头，缺少回指对象",
+      "suggestion": "删去评论语直接陈述，或补出评论对象（如“这一问题的关键在于……”）",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "lieflat-less-ai-tone (MIT)",
+      "hit_examples": [
+        "更重要的是，群众的获得感明显增强。",
+        "不难看出，基层减负仍有较大空间。"
+      ],
+      "miss_examples": [
+        "抓落实，关键在于压实责任。",
+        "这一问题的关键在于部门协同。"
+      ]
+    },
+    {
+      "id": "AI-004",
+      "group": "style",
+      "category": "段首评论语",
+      "pattern": "先说结论|划重点|敲黑板|一句话(总结|概括|来说|讲清)",
+      "level": "P1",
+      "message": "网络化起手式或总结标签，不符合公文语体",
+      "suggestion": "删除标签，直接写结论",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "talk-normal (MIT)；lieflat-less-ai-tone (MIT)",
+      "hit_examples": [
+        "先说结论：今年目标任务全面完成。",
+        "划重点，三项改革都要在年底前落地。"
+      ],
+      "miss_examples": [
+        "会议听取了重点工作推进情况汇报。"
+      ]
+    },
+    {
+      "id": "AI-005",
+      "group": "style",
+      "category": "段首评论语",
+      "pattern": "说白了|说穿了|说到底|讲白了",
+      "level": "P1",
+      "message": "口语起手式，书面公文中显得随意",
+      "suggestion": "删除起手式，直接给出判断",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "lieflat-less-ai-tone (MIT)",
+      "hit_examples": [
+        "说白了，就是责任没有压实。",
+        "这个问题说到底是机制问题。"
+      ],
+      "miss_examples": [
+        "要把政策讲明白、说清楚。"
+      ]
+    },
+    {
+      "id": "AI-006",
+      "group": "style",
+      "category": "不是A而是B对举",
+      "pattern": "不是[^，。；！？\\n]{1,20}[，,]?而是",
+      "level": "P1",
+      "message": "“不是……而是……”翻案句式，先立一个无人持有的误解再推翻（实测 AI 用量约为人类的 3.4 倍）",
+      "suggestion": "删去被否定的一端，从正面直接下判断",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "lieflat-less-ai-tone (MIT)；talk-normal (MIT)",
+      "hit_examples": [
+        "基层减负不是减责任，而是减形式。",
+        "这不是一个技术问题，而是一个管理问题。"
+      ],
+      "miss_examples": [
+        "是不是存在形式主义问题，要看实际效果。",
+        "该同志不是党员。"
+      ]
+    },
+    {
+      "id": "AI-007",
+      "group": "style",
+      "category": "不是A而是B对举",
+      "pattern": "并非[^，。；！？\\n]{1,20}[，,]?而是|不在于[^，。；！？\\n]{1,20}[，,]?而在于|与其说?[^，。；！？\\n]{1,20}[，,]?不如说?|看似[^，。；！？\\n]{1,20}[，,]?(实则|实际上|其实)|表面上[^，。；！？\\n]{1,20}[，,]?(实际上|本质上|其实)",
+      "level": "P1",
+      "message": "翻案句式变体（并非……而是、看似……实则、与其……不如）",
+      "suggestion": "直接写结论和依据，不用先抑后扬的外壳",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "lieflat-less-ai-tone (MIT)；qu-ai-wei (MIT)",
+      "hit_examples": [
+        "看似是数据问题，实则是责任问题。",
+        "关键并非资金不足，而是统筹不够。"
+      ],
+      "miss_examples": [
+        "该项目并非财政投资项目。"
+      ]
+    },
+    {
+      "id": "AI-008",
+      "group": "style",
+      "category": "不是A而是B对举",
+      "pattern": "[，,]而(不是|非)[^，。；！？\\n]{2,20}[。；！]",
+      "level": "P2",
+      "message": "句尾追加“而不是……”的否定对举",
+      "suggestion": "只保留正面要求；确需排除的，写成“不搞……”“不得……”",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "talk-normal (MIT)",
+      "hit_examples": [
+        "重点是解决实际问题，而不是追求形式上的完美。",
+        "要以结果为导向，而非以过程为导向。"
+      ],
+      "miss_examples": [
+        "要以结果为导向，不搞形式主义。"
+      ]
+    },
+    {
+      "id": "AI-009",
+      "group": "style",
+      "category": "不是A而是B对举",
+      "pattern": "不仅仅是|不只是[^，。；！？\\n]{1,20}[，,]?(更是|还是)",
+      "level": "P2",
+      "message": "“不仅仅是……更是……”拔高句式",
+      "suggestion": "写清这件事实际做了什么，删去拔高的后半句",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "Humanizer-zh (MIT)；stop-slop-zh (MIT)",
+      "hit_examples": [
+        "这不仅仅是一次检查，更是一次体检。",
+        "智慧平台不只是一个系统，更是治理理念的转变。"
+      ],
+      "miss_examples": [
+        "这不仅是一次检查，也是一次指导。"
+      ]
+    },
+    {
+      "id": "AI-010",
+      "group": "style",
+      "category": "破折号过密",
+      "pattern": "——",
+      "level": "P1",
+      "message": "破折号过密（规范公文正文每千字通常不足 0.3 个，副标题除外）",
+      "suggestion": "改为逗号、句号或完整句子；副标题中的破折号保留",
+      "density_per_1000": 1.5,
+      "exempt_doc_types": [],
+      "source": "lieflat-less-ai-tone (MIT)；阈值参考 lieflat-gongwen 语料统计（仅思路）",
+      "hit_examples": [
+        "答案其实很简单——落实。关键一招——压实责任。",
+        "他们找到了一条路——一条别人没走过的路——并坚持走了下去。"
+      ],
+      "miss_examples": [
+        "——在全市安全生产工作会议上的讲话",
+        "要坚持问题导向，聚焦群众急难愁盼。"
+      ]
+    },
+    {
+      "id": "AI-011",
+      "group": "style",
+      "category": "提示性冒号",
+      "pattern": "(^|[。！？；，])\\s*(核心|关键|本质|重点|要害|根本|答案|结论|问题|原因|道理)就?(是|在于|上)[：:]|换句话说[：:]|简单来?说[：:]|具体来说[：:]|也就是说[：:]",
+      "level": "P1",
+      "message": "提示语加冒号引出内容（实测 AI 用量约为人类的 3.8 倍）",
+      "suggestion": "删去提示语直接写内容；提示语承接上文时，只把冒号改为逗号",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "lieflat-less-ai-tone (MIT)",
+      "hit_examples": [
+        "核心是：先把台账建起来。",
+        "一句话，关键在于：责任要落到人。"
+      ],
+      "miss_examples": [
+        "存在的主要问题是：一是统筹不够，二是投入不足。"
+      ]
+    },
+    {
+      "id": "AI-012",
+      "group": "style",
+      "category": "空话引出列表",
+      "pattern": "(主要|具体)?(包括|涉及|涵盖|体现在|表现在|分为|有)(以下|如下)(几|[两三四五六七八九十])(个|点|类|种)(方面|内容|要点|问题|特点|场景|原因)?[：:]",
+      "level": "P2",
+      "message": "用一句不含信息的话宣布下面有列表",
+      "suggestion": "删去这句，让“一是……二是……”直接承接上文；或把这句写成有内容的判断",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "lieflat-less-ai-tone (MIT)",
+      "hit_examples": [
+        "当前问题主要表现在以下几个方面：",
+        "具体包括以下三类场景："
+      ],
+      "miss_examples": [
+        "现将有关情况报告如下：",
+        "主要做法如下："
+      ]
+    },
+    {
+      "id": "AI-013",
+      "group": "style",
+      "category": "冒号过密",
+      "pattern": "：",
+      "level": "P2",
+      "message": "冒号过密，靠标点分层代替句法（格式要素、“如下：”、引语冒号已排除）",
+      "suggestion": "把“标签：解释”式短句改写成完整句子",
+      "density_per_1000": 3,
+      "exempt_doc_types": ["实施方案", "工作要点", "纪要"],
+      "source": "lieflat-less-ai-tone (MIT)；白名单自研",
+      "hit_examples": [
+        "目标：三年见效。路径：先试点再推广。保障：专班推进。",
+        "核心问题：机制不顺。主要原因：协调不够。"
+      ],
+      "miss_examples": [
+        "各区县人民政府，市政府各部门：",
+        "现将有关事项通知如下：",
+        "会议指出：要压实责任。工作中也存在一些不足：部分科室床位偏紧。联系人：张某，联系电话：0571-12345678。时间：上午9：00。"
+      ]
+    },
+    {
+      "id": "AI-014",
+      "group": "style",
+      "category": "译文腔",
+      "pattern": "对于?[^，。；！？\\n]{2,15}(来说|而言)",
+      "level": "P1",
+      "message": "前置话题壳“对于……来说”，属英文 For/As for 直译",
+      "suggestion": "把对象直接放到主语位置，删去外壳",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "lieflat-less-ai-tone (MIT)",
+      "hit_examples": [
+        "对于基层干部来说，减负是最迫切的期盼。",
+        "对中小企业而言，融资难问题依然突出。"
+      ],
+      "miss_examples": [
+        "相对而言，东部片区进展较快。",
+        "对于违反规定的，依法依规严肃处理。"
+      ]
+    },
+    {
+      "id": "AI-015",
+      "group": "style",
+      "category": "译文腔",
+      "pattern": "(^|[。！？；，])\\s*当(?!事人|地|前|日|年|天|场|面|即|选|然|好|成|作|中|众|局|班|代|心|务|晚|初|今)[^，。；！？\\n]{2,20}时[，,]",
+      "level": "P2",
+      "message": "句首“当……时，”前置时间从句，属英文 When 从句直译",
+      "suggestion": "删去“当”和“时”，或改为“……后，”；应急预案中的触发条件保留",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "lieflat-less-ai-tone (MIT)",
+      "hit_examples": [
+        "当所有部门都能共享数据时，审批效率自然会提高。",
+        "当编写材料的成本趋近于零时，形式主义的风险就会上升。"
+      ],
+      "miss_examples": [
+        "当发生较大以上突发事件时，立即启动应急响应。",
+        "当事人提出复议申请时，应当书面告知。"
+      ]
+    },
+    {
+      "id": "AI-016",
+      "group": "style",
+      "category": "译文腔",
+      "pattern": "这(也|就)?意味着",
+      "level": "P1",
+      "message": "“这意味着”复述句，属英文 This means 直译，常重复上一句",
+      "suggestion": "并入前一句，或删去提示语只留新结论",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "lieflat-less-ai-tone (MIT)",
+      "hit_examples": [
+        "网上办件量同比增长30%。这意味着群众认可度在提高。",
+        "这也意味着改革进入深水区。"
+      ],
+      "miss_examples": [
+        "网上办件量同比增长30%，群众认可度持续提高。"
+      ]
+    },
+    {
+      "id": "AI-017",
+      "group": "style",
+      "category": "译文腔",
+      "pattern": "^\\s*(然而|不仅如此|除此之外|换言之|换句话说)[，,]",
+      "level": "P2",
+      "message": "段首连接词当路标，属英文句首连接词习惯",
+      "suggestion": "删去连接词，或移到主语之后",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "lieflat-less-ai-tone (MIT)",
+      "hit_examples": [
+        "然而，部分单位仍存在等靠要思想。",
+        "不仅如此，平台还实现了跨部门数据共享。"
+      ],
+      "miss_examples": [
+        "此外，各单位要于10月底前报送总结。"
+      ]
+    },
+    {
+      "id": "AI-018",
+      "group": "style",
+      "category": "译文腔",
+      "pattern": "(一个|一种|一套|一项|一批)[^，。、；：！？\\n]{15,40}的[\\u4e00-\\u9fff]{2,6}",
+      "level": "P2",
+      "message": "名词前堆了十五字以上的长定语，读者要回头找中心词",
+      "suggestion": "拆成两个分句，先说是什么，再说有什么作用；公文固定表述可保留",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "lieflat-less-ai-tone (MIT)",
+      "hit_examples": [
+        "这是一个能够让基层在不增加人手的情况下显著提升办事效率的工具。",
+        "我们需要一套能够满足不同群体在多种场景下办事需求的服务机制。"
+      ],
+      "miss_examples": [
+        "建立一套工作机制。",
+        "这是一项系统工程。"
+      ]
+    },
+    {
+      "id": "AI-019",
+      "group": "style",
+      "category": "译文腔",
+      "pattern": "(完成|实现|进行|开展|做出|作出)了?对[^，。；！？\\n]{1,15}的[\\u4e00-\\u9fff]{0,4}(优化|提升|调整|改进|分析|研究|梳理|完善|升级|改造|整合|规范)",
+      "level": "P2",
+      "message": "“完成了对……的……”名词化结构，动作被埋在名词里",
+      "suggestion": "恢复动词，如“完成了对流程的优化”改为“优化了流程”；“对……进行……”属公文常规写法，不在此列",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "lieflat-less-ai-tone (MIT)；stop-slop-zh (MIT)",
+      "hit_examples": [
+        "今年完成了对全市养老机构的全面梳理。",
+        "系统实现了对审批流程的优化。"
+      ],
+      "miss_examples": [
+        "对全市养老机构进行了全面梳理。"
+      ]
+    },
+    {
+      "id": "AI-020",
+      "group": "style",
+      "category": "译文腔",
+      "pattern": "扮演着?[^，。；！？\\n]{0,10}角色|以一种[^，。；！？\\n]{1,12}的方式|使得[^，。；！？\\n]{1,15}能够",
+      "level": "P2",
+      "message": "译文腔固定搭配（扮演……角色、以一种……的方式、使得……能够）",
+      "suggestion": "改用“发挥……作用”或直接写动作",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "lieflat-less-ai-tone (MIT)（RESEARCH 中低于收录门槛，公文场景降为 P2）",
+      "hit_examples": [
+        "社区网格员在基层治理中扮演着越来越重要的角色。",
+        "以一种更加开放的方式推进政务公开。"
+      ],
+      "miss_examples": [
+        "网格员在基层治理中发挥着重要作用。"
+      ]
+    },
+    {
+      "id": "AI-021",
+      "group": "style",
+      "category": "拟人化喻体",
+      "pattern": "(像|如同|好比|相当于|犹如|宛如|仿佛)[^，。；！？\\n]{0,10}(一个|一位|一名|一台)[^，。；！？\\n]{0,10}(导师|秘书|助手|管家|顾问|守护者|引路人|大脑|伙伴|保姆|哨兵|卫士|向导|教练|医生|侦探|指挥官|审查员|裁判)",
+      "level": "P1",
+      "message": "把系统或工具比作理想化的人，没有说明实际作用（实测 AI 用量约为人类的 7.3 倍）",
+      "suggestion": "改写为它实际做了什么，如“全天候受理群众诉求”",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "lieflat-less-ai-tone (MIT)",
+      "hit_examples": [
+        "这个平台就像一位永不疲倦的智能管家，时刻守护着群众的办事需求。",
+        "大数据系统相当于为监管部门配备了一个全天候的审查员。"
+      ],
+      "miss_examples": [
+        "要当好群众的贴心人和服务企业的店小二。",
+        "像对待亲人一样对待群众。"
+      ]
+    },
+    {
+      "id": "AI-022",
+      "group": "style",
+      "category": "拟人化喻体",
+      "pattern": "双刃剑|一面镜子|催化剂|灯塔|一场马拉松|(不是|并非)百米冲刺",
+      "level": "P2",
+      "message": "用滥的套路比喻",
+      "suggestion": "直接说明利弊或作用；“压舱石”“主心骨”等公文惯用比喻不在此列",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "stop-slop-zh (MIT)",
+      "hit_examples": [
+        "数字化是一把双刃剑。",
+        "这次督查就像一面镜子，照出了工作中的短板。"
+      ],
+      "miss_examples": [
+        "要发挥考核指挥棒作用。"
+      ]
+    },
+    {
+      "id": "AI-023",
+      "group": "style",
+      "category": "概括代替数据",
+      "pattern": "(^|[。！？；])[^0-9０-９%％【。！？；\\n]{0,60}(显著|明显|大幅|极大|长足)地?(提升|提高|增长|改善|增强|下降|降低|减少|缩短|进展|成效|改观)[^0-9０-９%％【。！？；\\n]{0,60}(?=[。！？；]|$)",
+      "level": "P2",
+      "message": "整句只有“明显提升”“显著改善”之类的概括，没有数据或事例（实测人类文章数字密度约为 AI 的 2.8 倍）",
+      "suggestion": "素材有数据的，把数据提到概括词的位置；没有的标【待补：具体数据】，不得编造",
+      "density_per_1000": null,
+      "exempt_doc_types": ["通知", "意见", "决定", "命令", "通告", "公告", "决议", "实施方案", "工作要点", "计划"],
+      "source": "lieflat-less-ai-tone (MIT)",
+      "hit_examples": [
+        "通过一年来的努力，群众办事效率明显提升，营商环境显著改善。",
+        "全年工作取得明显成效。"
+      ],
+      "miss_examples": [
+        "群众办事平均时长由3.5天缩短至1.2天，效率明显提升。",
+        "办事效率明显提升【待补：办理时限压缩比例】。"
+      ]
+    },
+    {
+      "id": "AI-024",
+      "group": "style",
+      "category": "概括代替数据",
+      "pattern": "(做了|开展了|付出了|倾注了)(大量|许多|诸多|巨大)(卓有成效的|富有成效的|艰苦细致的)?(工作|努力|心血)",
+      "level": "P2",
+      "message": "“做了大量工作”式空泛概括",
+      "suggestion": "写出具体做了哪几件事、数量多少；没有素材的标【待补】",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "自研",
+      "hit_examples": [
+        "各科室做了大量卓有成效的工作。",
+        "全体干部职工付出了大量心血。"
+      ],
+      "miss_examples": [
+        "全年开展专项检查12次，整改问题86个。"
+      ]
+    },
+    {
+      "id": "AI-025",
+      "group": "style",
+      "category": "新八股词",
+      "pattern": "底层逻辑|颗粒度|用户心智|占领心智|心智模型|拉通|拉齐|增长飞轮|护城河|破圈|出圈|降维打击|第一性原理|生态位|认知差|信息差",
+      "level": "P1",
+      "message": "互联网黑话，不属于公文用语",
+      "suggestion": "换成公文通用说法，如“拉通数据”改为“推进数据共享”",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "stop-slop-zh (MIT)",
+      "hit_examples": [
+        "要找准基层治理的底层逻辑。",
+        "进一步拉通各部门数据，对齐工作颗粒度。"
+      ],
+      "miss_examples": [
+        "要加强部门间数据共享。",
+        "促进学生心智健康发展。"
+      ]
+    },
+    {
+      "id": "AI-026",
+      "group": "style",
+      "category": "新八股词",
+      "pattern": "赋能|助力|打造|闭环|链路|矩阵|迭代|多维度|全场景|无缝(衔接|对接)?|深度融合|新范式|新生态",
+      "level": "P2",
+      "message": "“赋能、助力、打造、闭环”等新八股词过密",
+      "suggestion": "保留一两处，其余换成具体动作（建设、支持、推进、形成）",
+      "density_per_1000": 2,
+      "exempt_doc_types": [],
+      "source": "Humanizer-zh (MIT)；stop-slop-zh (MIT)",
+      "hit_examples": [
+        "以数字赋能基层治理，助力打造全场景服务闭环。",
+        "要打造数字政府新生态，构建全链路服务矩阵。"
+      ],
+      "miss_examples": [
+        "加快推进政务服务标准化规范化便利化。"
+      ]
+    },
+    {
+      "id": "AI-027",
+      "group": "style",
+      "category": "机关套话堆砌",
+      "pattern": "抓手|落实落细|走深走实|见行见效|做深做实|做细做实|提质增效|多点发力|同向发力|形成合力|压实责任|久久为功|靶向(施策|发力)|精准滴灌|最后一公里|全链条|全周期|一盘棋",
+      "level": "P2",
+      "message": "机关常用语堆砌（单独使用属正常，过密才提示）",
+      "suggestion": "每段保留最贴切的一个，其余落到具体措施上",
+      "density_per_1000": 4,
+      "exempt_doc_types": [],
+      "source": "自研",
+      "hit_examples": [
+        "要以项目为抓手，压实责任，落实落细，推动工作走深走实、见行见效。",
+        "坚持全市一盘棋，多点发力、同向发力，形成合力。"
+      ],
+      "miss_examples": [
+        "要压实属地责任，确保各项措施落到实处。"
+      ]
+    },
+    {
+      "id": "AI-028",
+      "group": "style",
+      "category": "新八股词",
+      "pattern": "里程碑|划时代|新纪元|颠覆性|革命性|史诗级|前所未有的(突破|高度|成就)",
+      "level": "P2",
+      "message": "把普通工作拔高到时代意义，缺少事实支撑",
+      "suggestion": "删去拔高，写清做成了什么；上级文件原文表述不改",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "Humanizer-zh (MIT)；qu-ai-wei (MIT)",
+      "hit_examples": [
+        "智慧食堂的上线标志着我院后勤管理进入新纪元。",
+        "这是一次革命性的突破。"
+      ],
+      "miss_examples": [
+        "该系统上线后，就餐排队时间缩短一半。"
+      ]
+    },
+    {
+      "id": "AI-029",
+      "group": "style",
+      "category": "新八股词",
+      "pattern": "至关重要|不可或缺|举足轻重|意义深远|深远意义|不可替代",
+      "level": "P2",
+      "message": "价值判断词过密，只说重要不说为什么",
+      "suggestion": "保留最关键的一处，其余改为具体作用或删去",
+      "density_per_1000": 2,
+      "exempt_doc_types": [],
+      "source": "stop-slop-zh (MIT)",
+      "hit_examples": [
+        "人才队伍建设至关重要，制度保障不可或缺。",
+        "数据共享举足轻重，具有深远意义。"
+      ],
+      "miss_examples": [
+        "人才是第一资源。"
+      ]
+    },
+    {
+      "id": "AI-030",
+      "group": "style",
+      "category": "新八股词",
+      "pattern": "非常|极其|极为|十分|格外|尤为|特别(?!是)",
+      "level": "P2",
+      "message": "程度副词过密",
+      "suggestion": "删去多余的程度副词；“特别是”不在此列",
+      "density_per_1000": 5,
+      "exempt_doc_types": [],
+      "source": "stop-slop-zh (MIT)",
+      "hit_examples": [
+        "这项工作非常重要，任务十分艰巨，时间特别紧迫。",
+        "此次检查极其严格，标准极为细致。"
+      ],
+      "miss_examples": [
+        "特别是要加强对重点人群的关心关爱。"
+      ]
+    },
+    {
+      "id": "AI-031",
+      "group": "style",
+      "category": "宏大开头",
+      "pattern": "在当今(社会|时代|世界)|在这个[^，。；！？\\n]{1,12}的时代|日新月异的今天|信息爆炸",
+      "level": "P1",
+      "message": "空泛的时代背景开头",
+      "suggestion": "删去背景铺垫，直接写本单位情况或任务（《整治形式主义为基层减负若干规定》要求开门见山）",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "stop-slop-zh (MIT)",
+      "hit_examples": [
+        "在当今社会，数字化转型已成为必然趋势。",
+        "在这个信息高速发展的时代，政务服务也要与时俱进。"
+      ],
+      "miss_examples": [
+        "当前，我市正处于转型发展的关键期。"
+      ]
+    },
+    {
+      "id": "AI-032",
+      "group": "style",
+      "category": "宏大开头",
+      "pattern": "^\\s*随着[^，。；！？\\n]{2,30}的(不断|快速|深入|持续|日益)?(发展|推进|深入|普及|进步|变化)",
+      "level": "P2",
+      "message": "段首“随着……的发展”式背景铺垫",
+      "suggestion": "背景不含本单位信息的，删去；确有因果关系的保留",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "Humanizer-zh (MIT)",
+      "hit_examples": [
+        "随着信息技术的快速发展，政务服务面临新的机遇和挑战。",
+        "随着改革的不断深入，各类矛盾日益凸显。"
+      ],
+      "miss_examples": [
+        "工作中，随着项目推进的深入，问题逐步显现。"
+      ]
+    },
+    {
+      "id": "AI-033",
+      "group": "style",
+      "category": "结尾总结标签",
+      "pattern": "未来可期|未来已来|奔赴山海|向阳而生|星辰大海|诗和远方|拭目以待|值得期待",
+      "level": "P1",
+      "message": "鸡汤式收尾，不属于公文用语",
+      "suggestion": "删去，结尾停在最后一项具体安排上",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "stop-slop-zh (MIT)",
+      "hit_examples": [
+        "智慧社区建设未来可期。",
+        "让我们一起奔赴山海。"
+      ],
+      "miss_examples": [
+        "下一步，将重点推进三项工作。"
+      ]
+    },
+    {
+      "id": "AI-034",
+      "group": "style",
+      "category": "结尾总结标签",
+      "pattern": "让我们(携手|一起|共同|齐心)|携手共创|共创美好(未来|明天)",
+      "level": "P1",
+      "message": "号召式收尾，非讲话类文书不宜使用",
+      "suggestion": "删去号召，写明下一步工作要求",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "stop-slop-zh (MIT)",
+      "hit_examples": [
+        "让我们携手共创更加美好的明天！",
+        "让我们一起为基层治理贡献力量。"
+      ],
+      "miss_examples": [
+        "各单位要密切配合、协同推进。"
+      ]
+    },
+    {
+      "id": "AI-035",
+      "group": "style",
+      "category": "结尾总结标签",
+      "pattern": "这[，,]?就是[^，。；！？\\n]{1,10}的(力量|意义|答案|魅力|温度|底气)|唯有[^，。；！？\\n]{1,12}[，,]?方能",
+      "level": "P1",
+      "message": "金句式升华收尾",
+      "suggestion": "删去升华句，让段落停在事实上",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "stop-slop-zh (MIT)",
+      "hit_examples": [
+        "这，就是基层干部的力量。",
+        "唯有坚持不懈，方能久久为功。"
+      ],
+      "miss_examples": [
+        "这是我们工作的出发点和落脚点。"
+      ]
+    },
+    {
+      "id": "AI-036",
+      "group": "style",
+      "category": "元话术",
+      "pattern": "本文(?!件)(将|旨在|主要|拟)?[^，。；！？\\n]{0,12}(探讨|分析|阐述|介绍|论述)|接下来(让我们|我们将|我们来|将从|将就)|让我们(来|一起)?(看看|探讨|分析|深入)|下面(将|我们来|就来|让我们)|在开始之前|言归正传|回到正题",
+      "level": "P1",
+      "message": "元话术：预告自己要写什么，而不是直接写",
+      "suggestion": "删去预告，直接进入内容；讲话稿“下面，我讲三点意见”属正常过渡",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "stop-slop-zh (MIT)；Humanizer-zh (MIT)",
+      "hit_examples": [
+        "本文将从三个方面分析基层减负的成效。",
+        "下面让我们看看具体做法。"
+      ],
+      "miss_examples": [
+        "下面将近期工作情况汇报如下。",
+        "本文件自印发之日起施行。"
+      ]
+    },
+    {
+      "id": "AI-037",
+      "group": "style",
+      "category": "元话术",
+      "pattern": "如前所述|如上所述|正如前文(所述|提到)|前文(已经)?提到",
+      "level": "P2",
+      "message": "回指前文的元话术",
+      "suggestion": "删去，直接陈述；确需回指的写明“第二部分所列问题”",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "自研",
+      "hit_examples": [
+        "如前所述，资金缺口较大。",
+        "正如前文提到的，审批环节仍然偏多。"
+      ],
+      "miss_examples": [
+        "具体数据如上表所示。"
+      ]
+    },
+    {
+      "id": "AI-038",
+      "group": "style",
+      "category": "结尾总结标签",
+      "pattern": "(总而言之|一言以蔽之|概括来说|概而言之|简而言之)[，,：:]",
+      "level": "P1",
+      "message": "总结标签，后面多是对前文的复述",
+      "suggestion": "删去标签和复述；确有新判断的，用“总的来看”引出",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "talk-normal (MIT)",
+      "hit_examples": [
+        "总而言之，今年各项工作稳中有进。",
+        "简而言之，就是要把责任压实。"
+      ],
+      "miss_examples": [
+        "总的来看，全年工作呈现稳中有进的良好态势。"
+      ]
+    },
+    {
+      "id": "AI-039",
+      "group": "style",
+      "category": "结尾总结标签",
+      "pattern": "综上所述",
+      "level": "P2",
+      "message": "“综上所述”收束，常引出复述",
+      "suggestion": "下行文删去；请示、报告结论段可改为“综上”并直接写结论",
+      "density_per_1000": null,
+      "exempt_doc_types": ["请示", "报告", "调研报告", "签报"],
+      "source": "talk-normal (MIT)",
+      "hit_examples": [
+        "综上所述，我们要进一步加强队伍建设。",
+        "综上所述，该项目建设条件已经成熟。"
+      ],
+      "miss_examples": [
+        "综上，建议采用第二种方案。"
+      ]
+    },
+    {
+      "id": "AI-040",
+      "group": "style",
+      "category": "段首评论语",
+      "pattern": "答案(是肯定的|很简单|显而易见|不言而喻)|原因很简单|道理很简单|结果不言而喻",
+      "level": "P1",
+      "message": "设问揭晓式表达，制造悬念",
+      "suggestion": "直接写原因或结论",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "qu-ai-wei (MIT)",
+      "hit_examples": [
+        "答案是肯定的。",
+        "原因很简单，资金没有到位。"
+      ],
+      "miss_examples": [
+        "调查结果已经形成书面报告。"
+      ]
+    },
+    {
+      "id": "AI-041",
+      "group": "style",
+      "category": "段首评论语",
+      "pattern": "难道不是[^？?\\n]{1,20}吗|谁不希望|你是否也曾|如果我告诉你",
+      "level": "P1",
+      "message": "反问空转，没有增加信息",
+      "suggestion": "改为陈述句",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "stop-slop-zh (MIT)",
+      "hit_examples": [
+        "这难道不是群众最期盼的吗？",
+        "谁不希望办事少跑腿？"
+      ],
+      "miss_examples": [
+        "群众期盼办事少跑腿。"
+      ]
+    },
+    {
+      "id": "AI-042",
+      "group": "style",
+      "category": "语体失配",
+      "pattern": "亲爱的(读者|朋友)",
+      "level": "P1",
+      "message": "自媒体式亲切称呼，不符合公文语体",
+      "suggestion": "删去称呼；讲话稿用“同志们”等规范称呼",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "stop-slop-zh (MIT)",
+      "hit_examples": [
+        "亲爱的读者，今天我们聊聊政务服务。",
+        "亲爱的朋友，这项新政策一定要了解。"
+      ],
+      "miss_examples": [
+        "同志们，今天召开全市安全生产工作会议。"
+      ]
+    },
+    {
+      "id": "AI-043",
+      "group": "style",
+      "category": "语体失配",
+      "pattern": "仅此而已|就这么简单|这就是答案",
+      "level": "P1",
+      "message": "戏剧性短句收尾",
+      "suggestion": "删去，或与前句合并",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "Humanizer-zh (MIT)；stop-slop-zh (MIT)",
+      "hit_examples": [
+        "抓落实，靠的是实干。仅此而已。",
+        "把群众的事当自己的事，就这么简单。"
+      ],
+      "miss_examples": [
+        "抓落实要靠实干。"
+      ]
+    },
+    {
+      "id": "AI-044",
+      "group": "style",
+      "category": "相邻句结构雷同",
+      "pattern": "(^|[。！？；])([\\u4e00-\\u9fff]{2})[^。！？；\\n]{4,40}[。！？；]\\2[^。！？；\\n]{4,40}[。！？；]\\2",
+      "level": "P2",
+      "message": "连续三句以相同词语开头，叙述像在填表",
+      "suggestion": "合并或换序打散句式；部署性排比（坚持……坚持……、要……要……）不在此列",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "lieflat-less-ai-tone (MIT)；Humanizer-zh (MIT)",
+      "hit_examples": [
+        "我们优化了审批流程，压缩了办理时限。我们完善了考核办法，强化了结果运用。我们加强了队伍培训，提升了服务能力。",
+        "该系统提升了效率。该系统降低了成本。该系统改善了体验。"
+      ],
+      "miss_examples": [
+        "坚持党建引领，把好正确方向。坚持问题导向，抓住关键环节。坚持系统观念，强化统筹协调。",
+        "我们要坚持人民至上。我们要坚持系统观念。我们要坚持守正创新。"
+      ]
+    },
+    {
+      "id": "AI-045",
+      "group": "style",
+      "category": "相邻句结构雷同",
+      "pattern": "(^|[。！？])[^，。！？；：\\n]{4,14}，[^，。！？；：\\n]{4,14}。[^，。！？；：\\n]{4,14}，[^，。！？；：\\n]{4,14}。[^，。！？；：\\n]{4,14}，[^，。！？；：\\n]{4,14}。",
+      "level": "P2",
+      "message": "连续三句长度相近、逗号位置相同（实测 AI 相邻句同构约为人类的 2 倍）",
+      "suggestion": "合并、拆分或调换其中一句的语序；“一是……二是……”等列举不在此列",
+      "density_per_1000": 2,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "lieflat-less-ai-tone (MIT)",
+      "hit_examples": [
+        "这个功能上线后反馈很好，用户满意度明显提高。团队开发效率提升明显，交付周期大幅缩短。下一步优化方向已经明确，工作计划正在制定。系统运行总体平稳，故障次数逐月下降。数据接口全部打通，部门共享更加顺畅。培训覆盖全部窗口，业务流程更加熟练。考核办法已经修订，奖惩措施同步落实。",
+        "我们走访了企业，收集了问题清单。我们召开了座谈会，形成了解决方案。我们建立了台账，明确了办结时限。我们落实了专人，跟踪了整改进度。我们开展了回访，听取了企业意见。我们完善了制度，固化了经验做法。我们总结了经验，形成了工作规范。"
+      ],
+      "miss_examples": [
+        "一是强化组织领导，成立工作专班。二是完善工作机制，建立任务台账。三是加强督查考核，定期通报进展。",
+        "要加强组织领导，成立工作专班。要完善工作机制，建立任务台账。要加强督查考核，定期通报进展。"
+      ]
+    },
+    {
+      "id": "AI-046",
+      "group": "style",
+      "category": "相邻句结构雷同",
+      "pattern": "是[^，。；！？\\n]{1,12}[，,](也|还)?是[^，。；！？\\n]{1,12}[，,]更是",
+      "level": "P2",
+      "message": "“是……是……更是……”三连递进",
+      "suggestion": "保留最有信息量的一项，其余删去或改写",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "stop-slop-zh (MIT)",
+      "hit_examples": [
+        "这是一项民生工程，是一项民心工程，更是一项德政工程。",
+        "党建是方向，是保障，更是动力。"
+      ],
+      "miss_examples": [
+        "这是一项民生工程，也是一项民心工程。"
+      ]
+    },
+    {
+      "id": "AI-047",
+      "group": "style",
+      "category": "结尾总结标签",
+      "pattern": "(充分)?(彰显|诠释|展现)了[^，。；！？\\n]{0,20}(担当|情怀|精神|力量|决心|温度|智慧|风采|初心)",
+      "level": "P2",
+      "message": "句尾追加价值拔高",
+      "suggestion": "事实已经说明问题的，删去拔高；信息、经验材料可适度保留",
+      "density_per_1000": null,
+      "exempt_doc_types": ["信息", "经验材料", "讲话稿"],
+      "source": "Humanizer-zh (MIT)",
+      "hit_examples": [
+        "社区工作者连续奋战72小时，充分彰显了基层干部的担当。",
+        "这一举措诠释了为民服务的初心。"
+      ],
+      "miss_examples": [
+        "社区工作者连续奋战72小时，完成全部转移任务。"
+      ]
+    },
+    {
+      "id": "AI-048",
+      "group": "style",
+      "category": "语体失配",
+      "pattern": "干货满满|硬核|天花板|绝绝子|yyds|打call|拉满|拿捏",
+      "level": "P2",
+      "message": "网络流行语，不符合公文语体",
+      "suggestion": "换成规范表述，如“位居全省前列”",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "自研",
+      "hit_examples": [
+        "这套服务组合拳太硬核了，群众幸福感拉满。",
+        "我市政务服务水平堪称全省天花板。"
+      ],
+      "miss_examples": [
+        "我市政务服务水平位居全省前列。"
+      ]
+    },
+    {
+      "id": "AI-049",
+      "group": "style",
+      "category": "相邻句结构雷同",
+      "pattern": "无论是[^。；！？\\n]{2,30}还是[^。；！？\\n]{2,20}[，,]都(能|可以|会)",
+      "level": "P2",
+      "message": "“无论是……还是……都能……”式全覆盖宣传句",
+      "suggestion": "写明实际适用对象和条件",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "unslop (MIT)；lieflat-less-ai-tone (MIT)",
+      "hit_examples": [
+        "无论是企业还是个人，都能享受到便捷服务。",
+        "无论是初创企业、中型企业，还是大型集团，都可以从中受益。"
+      ],
+      "miss_examples": [
+        "无论是领导干部还是普通党员，都要严守纪律规矩。"
+      ]
+    },
+    {
+      "id": "AI-050",
+      "group": "style",
+      "category": "段首评论语",
+      "pattern": "不得不(说|承认|提)|必须承认|坦白地?(说|讲)|老实说|说实话|客观地?(来讲|来说)|客观地说",
+      "level": "P1",
+      "message": "强调虚壳，删去后意思不变",
+      "suggestion": "删去虚壳，直接陈述",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "stop-slop-zh (MIT)",
+      "hit_examples": [
+        "不得不说，这项改革确实减轻了基层负担。",
+        "客观地说，目前的考核办法还不够科学。"
+      ],
+      "miss_examples": [
+        "实事求是地讲，考核办法还需完善。",
+        "要客观说明问题成因。"
+      ]
+    },
+    {
+      "id": "AI-051",
+      "group": "style",
+      "category": "顿号罗列过密",
+      "pattern": "、",
+      "level": "P2",
+      "message": "顿号并列过密，超出规范公文常见范围（每千字约 15 至 30 个）",
+      "suggestion": "能概括的概括，必须列全的拆成两句；实施方案、工作要点的任务分工不受此限",
+      "density_per_1000": 35,
+      "exempt_doc_types": ["实施方案", "工作要点", "计划"],
+      "source": "lieflat-less-ai-tone (MIT)；阈值参考 lieflat-gongwen 语料统计（仅思路）",
+      "hit_examples": [
+        "教育、卫生、民政、人社、住建、交通、水利、应急、市场监管等部门要按职责分工抓好落实。",
+        "要统筹推进教育、医疗、养老、托育、就业、住房、交通、文化、体育等民生事项。"
+      ],
+      "miss_examples": [
+        "一、总体要求"
+      ]
+    },
+    {
+      "id": "AI-052",
+      "group": "style",
+      "category": "网络称呼",
+      "pattern": "家人们|宝子们|兄弟们|小伙伴们|各位老铁|老铁们|铁子们|集美们",
+      "level": "P1",
+      "message": "网络用语式称呼，任何公文和讲话稿都不用",
+      "suggestion": "删去称呼；讲话稿用“同志们”“各位同事”等规范称呼",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "stop-slop-zh (MIT)；从 AI-042 拆出，讲话稿不豁免",
+      "hit_examples": [
+        "家人们，这项新政策一定要了解。",
+        "兄弟们，四季度任务很重，大家再加把劲。"
+      ],
+      "miss_examples": [
+        "同志们，今天召开全市安全生产工作会议。",
+        "加强与兄弟单位的交流合作。"
+      ]
+    },
+    {
+      "id": "AI-053",
+      "group": "style",
+      "category": "空泛问题表述",
+      "pattern": "(还|仍|尚)?不够(全面|完善|深入|到位|扎实|细致|有力|及时|规范)(?![^。；！？\\n]*([0-9０-９]|表现在|表现为|体现在|例如|比如))",
+      "level": "P2",
+      "message": "问题只写“不够深入”“不够完善”，没有具体事实，读者不知道差在哪里",
+      "suggestion": "问题要具体：写明哪项工作、差多少、造成什么影响；素材没有的标【待补】",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "doc_types": ["总结", "述职报告"],
+      "source": "自研（依据 references/_shared/style/ai-tone.md 第三部分“问题部分写实”）",
+      "hit_examples": [
+        "理论学习不够深入，工作作风不够扎实。",
+        "制度建设还不够完善。"
+      ],
+      "miss_examples": [
+        "制度不够完善，3个科室尚未建立交接班制度。",
+        "调研不够深入，主要表现在走访企业偏少、问题清单没有更新。",
+        "全面完成年度目标任务。"
+      ]
+    },
+    {
+      "id": "DEF-001",
+      "group": "defensive",
+      "category": "免责声明",
+      "pattern": "(以上|上述|本文|本稿|此稿|该稿|本方案|本材料|本报告|本文件)(内容|文稿|稿件|文字|回答|回复|范文|模板|初稿|方案|材料|数据)?(仅|只)(供|作)(领导|决策|各位|您)?(决策)?参考|(^|[。！？；，,])\\s*(仅|只)供(领导|决策)(决策)?参考",
+      "level": "P0",
+      "message": "正文中出现对话式免责声明（红线三：正文干净，提示外置）",
+      "suggestion": "删除；需要提示的内容写入【起草说明】；请示结尾用“妥否，请批示”",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "chinese-natural-reply (MIT)；blader/humanizer §22 (MIT)；变体由 gongwen-direct 补充",
+      "hit_examples": [
+        "以上内容仅供参考。",
+        "本稿仅供参考，请以正式文件为准。",
+        "本方案仅供参考，各单位可自行把握。",
+        "以上内容可能不够全面，仅供领导参考。",
+        "仅供决策参考。"
+      ],
+      "miss_examples": [
+        "附件中的格式模板仅供参考，各单位可结合实际调整。",
+        "以上意见，供领导决策参考。",
+        "以上建议供领导决策参考。"
+      ]
+    },
+    {
+      "id": "DEF-002",
+      "group": "defensive",
+      "category": "免责声明",
+      "pattern": "(?<![申邀提报呈聘延])请[^，。；！？\\n]{0,8}?(根据|结合)(贵单位|您单位|本单位|自身|实际|具体)的?(实际)?情况(进行)?(适当|酌情)?(调整|修改|修订|增删|参考)(后使用|使用)?(?=[。；！？，,）)\\s]|$)",
+      "level": "P0",
+      "message": "正文中出现“请根据实际情况调整”式免责提示",
+      "suggestion": "删除；假设和待补事项写入【起草说明】",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "自研（依据 shared/guardrails.md 第三条）",
+      "hit_examples": [
+        "请根据实际情况进行调整。",
+        "（请结合本单位实际情况修改后使用）",
+        "以上内容仅供参考，请各学校结合实际情况调整。"
+      ],
+      "miss_examples": [
+        "请各区结合实际情况调整实施细则。",
+        "各地可根据实际情况适当调整时间安排。",
+        "请各学校结合实际制定实施方案。",
+        "申请人可根据实际情况调整。"
+      ]
+    },
+    {
+      "id": "DEF-003",
+      "group": "defensive",
+      "category": "免责声明",
+      "pattern": "不构成(任何)?(正式|法律|专业|投资|医疗|决策)?(意见|建议)",
+      "level": "P0",
+      "message": "正文中出现“不构成意见”式免责声明",
+      "suggestion": "删除",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "blader/humanizer §23 (MIT)；unslop (MIT)",
+      "hit_examples": [
+        "本文内容不构成任何法律意见。",
+        "以上分析不构成正式建议。"
+      ],
+      "miss_examples": [
+        "该行为不构成违法。"
+      ]
+    },
+    {
+      "id": "DEF-004",
+      "group": "defensive",
+      "category": "免责声明",
+      "pattern": "建议您?(咨询|请教|联系)(专业人士|专业律师|律师|相关专家)",
+      "level": "P0",
+      "message": "正文中出现“建议咨询专业人士”式对话免责",
+      "suggestion": "删除；确需专业审核的，在【起草说明】中提示用户",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "chinese-natural-reply (MIT)",
+      "hit_examples": [
+        "具体操作建议咨询专业律师。",
+        "如有疑问，建议您咨询专业人士。"
+      ],
+      "miss_examples": [
+        "可拨打12345政务服务热线咨询。"
+      ]
+    },
+    {
+      "id": "DEF-005",
+      "group": "defensive",
+      "category": "免责声明",
+      "pattern": "(数据|数字|案例|人名|单位名称|事例)(均|仅|全部)?(为|系)(示例|虚构|假设|编造)",
+      "level": "P0",
+      "message": "正文中出现“数据为虚构/示例”的说明",
+      "suggestion": "移入【起草说明】（示范稿注明“本稿数据均为虚构”）；正文中缺的数据标【待补】",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "自研（依据 shared/guardrails.md 第二条第 6 款）",
+      "hit_examples": [
+        "以上数据均为虚构。",
+        "文中案例为示例，请替换为本单位实际情况。"
+      ],
+      "miss_examples": [
+        "本次演练情景均为模拟。"
+      ]
+    },
+    {
+      "id": "DEF-006",
+      "group": "defensive",
+      "category": "免责声明",
+      "pattern": "(请|一切|具体|最终)?以(官方|官网|权威部门|权威机构)(正式)?(发布|公布|公开)?的?(信息|文件|口径|数据|通知|内容)?为准",
+      "level": "P1",
+      "message": "预设免责（以官方为准），公文自身即正式文件",
+      "suggestion": "删除；需要对照上级文件的，正文标【待核实】",
+      "density_per_1000": null,
+      "exempt_doc_types": ["函"],
+      "source": "blader/humanizer §23 (MIT)；变体由 gongwen-direct 补充",
+      "hit_examples": [
+        "具体政策以官方发布为准。",
+        "相关数据请以权威部门公布为准。",
+        "具体以官方发布信息为准。",
+        "最终以官网公布的数据为准。"
+      ],
+      "miss_examples": [
+        "具体以市财政局核定金额为准。",
+        "补贴标准以财政部门正式下达的文件为准。"
+      ]
+    },
+    {
+      "id": "DEF-007",
+      "group": "defensive",
+      "category": "免责声明",
+      "pattern": "(我|本人|笔者)(无法|不能|难以)(保证|确保|核实|确认)",
+      "level": "P0",
+      "message": "正文中出现起草者的自我免责",
+      "suggestion": "删除；无法核实的事实标【待核实】并写入【起草说明】",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "chinese-natural-reply (MIT)",
+      "hit_examples": [
+        "我无法保证上述数据完全准确。",
+        "笔者难以核实相关信息。"
+      ],
+      "miss_examples": [
+        "本人对报告内容的真实性负责。"
+      ]
+    },
+    {
+      "id": "DEF-008",
+      "group": "defensive",
+      "category": "免责声明",
+      "pattern": "由于(缺乏|没有|未获得|未提供|未掌握)(具体|相关|详细|足够|准确)?的?(信息|资料|数据|材料)[，,]?(以下|本文|此处|文中|上述)",
+      "level": "P0",
+      "message": "正文中出现“信息不足”说明",
+      "suggestion": "删除；缺的事实在正文标【待补】，并在【起草说明】汇总",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "blader/humanizer §23 (MIT)",
+      "hit_examples": [
+        "由于缺乏具体数据，以下内容采用一般性表述。",
+        "由于未提供相关材料，此处暂按通用情况撰写。"
+      ],
+      "miss_examples": [
+        "由于缺乏专业技术人员，项目推进较慢。"
+      ]
+    },
+    {
+      "id": "DEF-009",
+      "group": "defensive",
+      "category": "对冲语气",
+      "pattern": "能够?确认的是|可以确定的是|仅凭[^，。；！？\\n]{1,15}(无法|不能|难以)(确定|判断|认定|得出)",
+      "level": "P1",
+      "message": "划边界式防御表述",
+      "suggestion": "确定的直接写；不确定的标【待核实】，说明写入【起草说明】",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "chinese-natural-reply (MIT)",
+      "hit_examples": [
+        "能确认的是，项目已于9月开工。",
+        "仅凭现有材料还不能判断责任主体。"
+      ],
+      "miss_examples": [
+        "经核查，项目已于9月开工。"
+      ]
+    },
+    {
+      "id": "DEF-010",
+      "group": "defensive",
+      "category": "对冲语气",
+      "pattern": "在?(一定|某种)程度上|某种意义上",
+      "level": "P2",
+      "message": "程度限定语削弱判断",
+      "suggestion": "有数据写数据；确属部分见效的，写明范围（如“在3个试点街道”）",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "lieflat-less-ai-tone (MIT)；blader/humanizer §9 (MIT)",
+      "hit_examples": [
+        "新机制在一定程度上缓解了人手紧张问题。",
+        "这在某种意义上反映了基层的普遍诉求。"
+      ],
+      "miss_examples": [
+        "部分党员一定程度上存在重业务轻党建的问题。"
+      ]
+    },
+    {
+      "id": "DEF-011",
+      "group": "defensive",
+      "category": "对冲语气",
+      "pattern": "或许|也许|似乎|恐怕|大概率|多半",
+      "level": "P1",
+      "message": "对冲语气词，使判断不明确",
+      "suggestion": "删去对冲词明确表态；确属未定事实的，标【待核实】",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿", "调研报告"],
+      "source": "talk-normal (MIT)；unslop (MIT)",
+      "hit_examples": [
+        "这一举措或许能够缓解停车难问题。",
+        "群众满意度似乎有所提升。"
+      ],
+      "miss_examples": [
+        "力争年底前全面完成改造任务。"
+      ]
+    },
+    {
+      "id": "DEF-012",
+      "group": "defensive",
+      "category": "对冲语气",
+      "pattern": "可能会?(有助于|有利于|取得|实现|促进|改善|推动|带动|提升|提高)(?![^，。；！？\\n]{0,10}(风险|隐患|概率|难度|成本))",
+      "level": "P1",
+      "message": "用“可能”给工作成效打折扣",
+      "suggestion": "预期成效写成目标（“力争……”），已有成效写事实；风险提示中的“可能”不在此列",
+      "density_per_1000": null,
+      "exempt_doc_types": ["调研报告"],
+      "source": "自研；talk-normal (MIT)",
+      "hit_examples": [
+        "该措施实施后可能会提升审批效率。",
+        "这一做法可能有助于减轻基层负担。"
+      ],
+      "miss_examples": [
+        "超载运输可能提高事故发生风险。"
+      ]
+    },
+    {
+      "id": "DEF-013",
+      "group": "defensive",
+      "category": "对冲语气",
+      "pattern": "(可能|或许|也许|大概|似乎)[^，。；！？\\n]{0,8}(一定程度|某种程度|相对|较为|有所|部分|或多或少)",
+      "level": "P1",
+      "message": "限定词叠用，同一判断被打两次折扣",
+      "suggestion": "最多保留一个最准确的限定，其余删去；安全提示不在此列",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "blader/humanizer §9 (MIT)；qu-ai-wei (MIT)",
+      "hit_examples": [
+        "这项改革可能在一定程度上提升效率。",
+        "群众满意度或许会有所提高。"
+      ],
+      "miss_examples": [
+        "强降雨可能造成部分路段积水，请提前做好防范。"
+      ]
+    },
+    {
+      "id": "DEF-014",
+      "group": "defensive",
+      "category": "建议性措辞",
+      "pattern": "可以考虑|建议考虑|不妨|或可考虑|可考虑",
+      "level": "P1",
+      "message": "“可以考虑”“不妨”式商量口吻，态度不明确",
+      "suggestion": "部署性文件改为“要”；上行文改为明确的建议方案",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "自研（依据《顶层设计》4.14）",
+      "hit_examples": [
+        "各单位可以考虑建立周调度机制。",
+        "不妨先在两个街道开展试点。"
+      ],
+      "miss_examples": [
+        "各单位要建立周调度机制。"
+      ]
+    },
+    {
+      "id": "DEF-015",
+      "group": "defensive",
+      "category": "建议性措辞",
+      "pattern": "建议(各|有关|相关|全市|全县|全区|全省|各级)[^，。；！？\\n]{0,10}(单位|部门|地区|学校|医院|乡镇|街道|科室|县|区|市)",
+      "level": "P1",
+      "message": "部署性文件对下级用“建议”，要求不明确",
+      "suggestion": "改为“各单位要……”；请示、报告、函、调研报告中的建议不在此列",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "doc_types": ["通知", "意见", "决定", "实施方案", "工作要点", "计划", "讲话稿"],
+      "source": "自研（依据《顶层设计》4.14）；改为只在部署性文件中检查",
+      "hit_examples": [
+        "建议各单位于月底前完成自查。",
+        "建议各级各部门高度重视安全生产工作。"
+      ],
+      "miss_examples": [
+        "各单位要于月底前完成自查。"
+      ]
+    },
+    {
+      "id": "DEF-016",
+      "group": "defensive",
+      "category": "平衡腔",
+      "pattern": "各有(利弊|优劣|千秋|长短)|利弊兼有|有利有弊|不能一概而论|见仁见智|(需要|应当|要)辩证地?看待|视(具体)?情况而定",
+      "level": "P1",
+      "message": "平衡腔：两头都说，不下结论",
+      "suggestion": "比较后亮明倾向，如“方案二投入少、见效快，建议采用方案二”",
+      "density_per_1000": null,
+      "exempt_doc_types": ["纪要", "调研报告"],
+      "source": "talk-normal (MIT)；chinese-natural-reply (MIT)",
+      "hit_examples": [
+        "两种方案各有利弊，需要综合权衡。",
+        "是否延长开放时间，视具体情况而定。"
+      ],
+      "miss_examples": [
+        "经比较，建议采用第二种方案。"
+      ]
+    },
+    {
+      "id": "DEF-017",
+      "group": "defensive",
+      "category": "模糊指代",
+      "pattern": "(?<!各)(相关|有关)(部门|单位|方面|人员)",
+      "level": "P2",
+      "message": "“相关部门”“有关单位”过密，责任主体不明",
+      "suggestion": "能点名的写明具体单位，如“市卫生健康委”",
+      "density_per_1000": 3,
+      "exempt_doc_types": [],
+      "source": "自研（依据《顶层设计》4.14）",
+      "hit_examples": [
+        "相关部门要加强配合，有关单位要抓好落实。",
+        "请有关部门牵头，相关单位配合，有关人员按时参会。"
+      ],
+      "miss_examples": [
+        "各有关单位："
+      ]
+    },
+    {
+      "id": "DEF-018",
+      "group": "defensive",
+      "category": "模糊指代",
+      "pattern": "适当|酌情|视情",
+      "level": "P2",
+      "message": "“适当”“酌情”过密，标准不清",
+      "suggestion": "写明标准或幅度；确需授权下级把握的保留",
+      "density_per_1000": 2,
+      "exempt_doc_types": [],
+      "source": "自研（依据《顶层设计》4.14）",
+      "hit_examples": [
+        "适当增加检查频次，酌情调整工作安排。",
+        "视情增加抽查比例，适当延长检查时间。"
+      ],
+      "miss_examples": [
+        "每季度开展一次专项检查。"
+      ]
+    },
+    {
+      "id": "DEF-019",
+      "group": "defensive",
+      "category": "模糊指代",
+      "pattern": "进一步",
+      "level": "P2",
+      "message": "“进一步”过密（公文高频词，单独使用属正常）",
+      "suggestion": "保留确有递进含义的几处，其余删去或写明比现在进到哪一步",
+      "density_per_1000": 3,
+      "exempt_doc_types": [],
+      "source": "自研；阈值参考 lieflat-gongwen 语料统计（仅思路）",
+      "hit_examples": [
+        "进一步加强组织领导，进一步压实工作责任，进一步强化督查考核。",
+        "要进一步提高认识，进一步强化措施。"
+      ],
+      "miss_examples": [
+        "今年以来，我局围绕优化营商环境目标，全面梳理行政审批事项，共取消证明材料46项，合并办理环节31个，企业开办时间压缩至1个工作日。同时，依托政务服务平台推行“一件事一次办”，全年网上办件量达到12.6万件，网办占比较上年提高18个百分点。在监管方面，建立信用分级分类监管制度，对守信企业减少抽查频次，对失信企业实施重点监管，全年开展“双随机、一公开”抽查236次，发现并督促整改问题87个。在服务方面，设立企业服务专员86名，实行重点项目“一对一”跟踪服务，帮助企业解决用地、用工、融资等问题142个。在队伍建设方面，组织窗口人员业务培训12期，开展岗位练兵和业务竞赛4次，窗口服务好差评好评率达到99.6%，全年未发生有效投诉。下一步，我局将进一步完善企业诉求快速响应机制，健全问题办理台账，做到件件有回音、事事有着落，持续提升市场主体满意度。"
+      ]
+    },
+    {
+      "id": "DEF-020",
+      "group": "defensive",
+      "category": "确定性措辞",
+      "pattern": "应该",
+      "level": "P2",
+      "message": "口语“应该”用于规范性要求",
+      "suggestion": "规范性义务用“应当”，工作要求用“要”",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "自研",
+      "hit_examples": [
+        "各单位应该于10月底前报送材料。",
+        "应该进一步完善考核办法。"
+      ],
+      "miss_examples": [
+        "各单位应当于10月底前报送材料。"
+      ]
+    },
+    {
+      "id": "DEF-021",
+      "group": "defensive",
+      "category": "确定性措辞",
+      "pattern": "希望(各|有关|相关|大家|全体)?[^，。；！？\\n]{0,8}(能够|能|可以)",
+      "level": "P2",
+      "message": "部署内容用“希望……能够”，要求被弱化为期望",
+      "suggestion": "改为“各单位要……”；讲话稿结尾的“希望大家……”不在此列",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "doc_types": ["通知", "意见", "决定", "实施方案", "工作要点", "计划"],
+      "source": "自研；改为只在部署性文件中检查",
+      "hit_examples": [
+        "希望各单位能够高度重视。",
+        "希望有关部门可以加强配合。"
+      ],
+      "miss_examples": [
+        "各单位要高度重视。"
+      ]
+    },
+    {
+      "id": "DEF-022",
+      "group": "defensive",
+      "category": "确定性措辞",
+      "pattern": "尽量|尽可能",
+      "level": "P2",
+      "message": "“尽量”使时限或标准失去约束",
+      "suggestion": "写明时限和标准；确属尽力而为的（如减少对群众影响）可保留",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "自研",
+      "hit_examples": [
+        "请各单位尽量按时报送。",
+        "尽量在本月内完成整改。"
+      ],
+      "miss_examples": [
+        "请各单位于10月20日前报送。"
+      ]
+    },
+    {
+      "id": "DEF-023",
+      "group": "defensive",
+      "category": "请示批复表态",
+      "pattern": "如果(可以|方便|可能)的话|如果?有?(可能|方便)的话|若条件允许(的话)?",
+      "level": "P1",
+      "message": "条件式请求，请求事项不明确",
+      "suggestion": "直接写请求事项，请示以“妥否，请批示”结尾",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "talk-normal (MIT)",
+      "hit_examples": [
+        "如果可以的话，请于本周内回复。",
+        "如方便的话，请贵单位提供相关资料。"
+      ],
+      "miss_examples": [
+        "如无不妥，请批转各地执行。"
+      ]
+    },
+    {
+      "id": "DEF-024",
+      "group": "defensive",
+      "category": "请示批复表态",
+      "pattern": "(研究|考虑|商议)后(再行|再)(答复|决定|研究|定夺)|原则上可(行|以考虑)|待条件成熟[时后]?再(议|定|研究)",
+      "level": "P2",
+      "message": "批复或答复不明确表态",
+      "suggestion": "批复写明“同意”“原则同意”或“不同意”及理由",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "自研（依据《顶层设计》4.14）",
+      "hit_examples": [
+        "此事待研究后再行答复。",
+        "该方案原则上可行，待条件成熟后再议。"
+      ],
+      "miss_examples": [
+        "原则同意你局关于调整办公用房的请示。"
+      ]
+    },
+    {
+      "id": "DEF-025",
+      "group": "defensive",
+      "category": "免责声明",
+      "pattern": "欢迎(大家)?(批评)?指正|如有(疏漏|错误|不足|不妥|不当)(之处)?[，,]?(欢迎|敬请|请|恳请)(批评)?指正",
+      "level": "P1",
+      "message": "对话式“欢迎指正”结尾",
+      "suggestion": "删除；汇报材料、述职报告结尾的“不妥之处，请批评指正”可保留",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "blader/humanizer §22 (MIT)",
+      "hit_examples": [
+        "如有疏漏，欢迎指正。",
+        "以上内容如有错误之处，请指正。"
+      ],
+      "miss_examples": [
+        "如有不妥之处，敬请批评指正。"
+      ]
+    },
+    {
+      "id": "DEF-026",
+      "group": "defensive",
+      "category": "自我说明",
+      "pattern": "(未|没有|并未|均未)对?(原文|原稿|原有内容|事实|数据|结构)[^，。；！？\\n]{0,6}(作|做|进行)?(任何)?(改动|修改|调整|删减)",
+      "level": "P1",
+      "message": "修改说明混入正文",
+      "suggestion": "移入【起草说明】的“修改说明”",
+      "density_per_1000": null,
+      "exempt_doc_types": [],
+      "source": "chinese-natural-reply (MIT)",
+      "hit_examples": [
+        "本稿未对原文数据作任何改动。",
+        "以下修改没有对事实进行调整。"
+      ],
+      "miss_examples": [
+        "将第三条修改为“每季度报送一次”，其余内容保持不变。"
+      ]
+    },
+    {
+      "id": "DEF-027",
+      "group": "defensive",
+      "category": "自我说明",
+      "pattern": "这并不(意味着|代表|等于|是说)|这不(代表|意味着|等于)|并不等于",
+      "level": "P2",
+      "message": "预先纠正读者并未产生的误解",
+      "suggestion": "直接写正面要求；确有常见误读需要澄清的，保留一句",
+      "density_per_1000": null,
+      "exempt_doc_types": ["讲话稿"],
+      "source": "chinese-natural-reply (MIT)",
+      "hit_examples": [
+        "这并不意味着可以放松监管。",
+        "减负并不等于减责任。"
+      ],
+      "miss_examples": [
+        "要坚持减负与增效相统一。"
+      ]
+    },
+    {
+      "id": "DEF-028",
+      "group": "defensive",
+      "category": "确定性措辞",
+      "pattern": "必须|务必|一律|严禁",
+      "level": "P2",
+      "message": "强制性措辞过密，“必须”“严禁”用多了就失去分量",
+      "suggestion": "红线和法定义务保留强制词，一般工作要求改用“要”",
+      "density_per_1000": 3,
+      "exempt_doc_types": ["通告"],
+      "source": "自研；参考 lieflat-gongwen 力度词统计（仅思路）",
+      "hit_examples": [
+        "必须高度重视，务必按时完成，严禁弄虚作假，一律从严追责。",
+        "严禁迟报漏报，一律实行倒查追责，务必于今日18时前上报。"
+      ],
+      "miss_examples": [
+        "各单位要按时报送。"
+      ]
+    },
+    {
+      "id": "DEF-029",
+      "group": "defensive",
+      "category": "模糊时间",
+      "pattern": "适时|择机|择期|适当时(候|机)",
+      "level": "P2",
+      "message": "部署内容多处用“适时”“择机”，时间要求不明确",
+      "suggestion": "能定时间的写明日期或时限，如“11月底前召开推进会”；确需授权下级把握的保留",
+      "density_per_1000": 1,
+      "exempt_doc_types": [],
+      "doc_types": ["通知", "意见", "决定", "实施方案", "工作要点", "计划"],
+      "source": "自研（依据 references/_shared/style/defensive.md 第五部分）",
+      "hit_examples": [
+        "适时召开推进会，择机开展专项督查。",
+        "择期组织验收，适当时候通报进展情况。"
+      ],
+      "miss_examples": [
+        "于11月15日前召开推进会。",
+        "各地可结合实际确定具体时间。"
+      ]
+    }
+  ],
+  "whitelist": [
+    {"id": "WL-001", "pattern": "[一二三四五六七八九十]是", "note": "“一是……二是……”为公文正当列举方式"},
+    {"id": "WL-002", "pattern": "^\\s*([一二三四五六七八九十]+、|（[一二三四五六七八九十]+）|[0-9]+\\.|（[0-9]+）)", "note": "层次序号 一、（一）1.（1）（GB/T 9704-2012 7.3.3）"},
+    {"id": "WL-003", "pattern": "现将[^，。；！？\\n]{0,30}(通知|报告|函告|通报|公告|通告|批复|印发|转发|答复|说明|汇报)如下[：:]?|特此(通知|报告|函告|函复|函达|通告|公告|批复|说明|证明)|(妥否|当否|可否)[，,]?请(批示|批复|审批|示)|请予(审批|批准|批复|审定)|此复|此致", "note": "公文惯用语：现将……通知如下、特此通知、妥否，请批示"},
+    {"id": "WL-004", "pattern": "(^|[\\s，,；;。（(])(主送机关|主送|抄送|附件|联系人|联系电话|电话|传真|电子邮箱|邮箱|签发人|主题词|发文机关|时间|地点|主持人?|出席|列席|参加人员|参会人员|记录人?|请假人员|会议议题|议题|牵头单位|责任单位|配合单位|责任人|完成时限|时间节点)[：:]", "note": "格式要素和字段标签中的冒号"},
+    {"id": "WL-005", "pattern": "^[^。！？：；\\n]{1,80}(单位|部门|政府|委员会|党委|党组|机关|学校|医院|公司|集团|办公室|办事处|局|厅|委|办|处|科|室|院|校|中心|街道|乡镇|社区|村)[：:]$", "note": "主送机关行末尾的冒号"},
+    {"id": "WL-006", "pattern": "(通知|报告|请示|安排|规定|意见|说明|汇报|要求|部署|事项|情况|做法|措施|内容|方案|标准|办法|分工)如下[：:]", "note": "“如下：”引出分项"},
+    {"id": "WL-007", "pattern": "(?<![来单话句是就也])说[：:]|(指出|强调|要求|表示|讲|提出|批示|指示|写道|号召|宣布|认为|同意|决定|明确|议定)[：:]", "note": "引语和会议纪要中“会议指出：”“会议要求：”的冒号"},
+    {"id": "WL-008", "pattern": "^\\s*——|——[^。！？\\n]{2,40}(讲话|发言|致辞|报告|讲稿|经验|做法|纪实|调查|调研)$", "note": "副标题和讲话稿署名行中的破折号"},
+    {"id": "WL-009", "pattern": "(^|[。；！])(坚持|着力|注重|聚焦|围绕|强化|深化|加强|推进|健全|完善|严格|持续|切实|扎实|狠抓|抓好|突出|提升|优化|建立|构建|推动|做好|加快|筑牢|压实|守牢|统筹|深入)[^。；！\\n]{2,60}[。；！]\\2", "note": "排比式并列（坚持……坚持……、强化……强化……）"},
+    {"id": "WL-010", "pattern": "(^|[。；！])(我们|各级|各地|各单位|各部门|大家)?要[^。；！\\n]{2,60}[。；！](我们|各级|各地|各单位|各部门|大家)?要|[，；]要[^，。；！\\n]{2,30}[，；]要", "note": "“要……要……”部署性并列"},
+    {"id": "WL-011", "pattern": "不同程度地?存在|在?一定程度上(还|仍|也)?存在", "note": "问题查摆惯用语“不同程度存在”"},
+    {"id": "WL-012", "pattern": "下面[，,]?(我|就|将)[^，。；！？\\n]{0,20}(讲|谈|汇报|报告|说明|通报|强调|部署)", "note": "讲话稿、汇报材料的过渡语“下面，我讲几点意见”"},
+    {"id": "WL-013", "pattern": "当(发生|出现|接到|收到|遇到|监测到|达到|超过)[^，。；！？\\n]{1,20}时", "note": "应急预案、实施方案中的触发条件"},
+    {"id": "WL-014", "pattern": "(如有)?不妥之处[，,]?(请|敬请|恳请)(批评)?指正", "note": "汇报材料、述职报告结尾的谦辞"},
+    {"id": "WL-015", "pattern": "可能(发生|出现|引发|造成|导致|存在|构成|危及|影响|涉及)", "note": "风险提示和法律后果中的“可能”属于必要谨慎"},
+    {"id": "WL-016", "pattern": "[0-9０-９][：:][0-9０-９]", "note": "时刻中的冒号"},
+    {"id": "WL-017", "pattern": "(存在|还有|仍有|面临)[^，。；：！？\n]{0,8}(问题|不足|差距|短板|困难|挑战)(主要)?(有|是|表现为|表现在)?[：:]|[：:](?=\\s*一是)", "note": "总说后引出分说的冒号，如“存在的主要问题是：”“需要立即维修：一是……”（GB/T 15834-2011 冒号用法）"},
+    {"id": "WL-018", "pattern": "【(待补|待核实)[：:][^】\\n]*】", "note": "【待补：……】【待核实：……】是正文唯一允许的提示标记，其中的冒号和文字不参与文风检查"},
+    {"id": "WL-019", "pattern": "特别(困难|重大|严重)", "note": "“特别困难”“特别重大”“特别严重”是困难认定、事故等级等规范用语，不按程度副词计"}
+  ]
+}

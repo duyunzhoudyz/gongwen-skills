@@ -1,0 +1,31 @@
+{
+  "name": "gongwen-profile",
+  "version": "1.0.0",
+  "status": "beta",
+  "shared": [
+    {"src": "guardrails.md"},
+    {"src": "style/output-format.md"},
+    {"src": "style/ai-tone.md"},
+    {"src": "style/defensive.md"},
+    {"src": "rules/jianfu.md"},
+    {"src": "profiles/profile-template.md"},
+    {"src": "profiles/roles.md"},
+    {"src": "profiles/units/dangzheng.md"},
+    {"src": "profiles/units/jiceng.md"},
+    {"src": "profiles/units/shequ.md"},
+    {"src": "profiles/units/yiyuan.md"},
+    {"src": "profiles/units/gaoxiao.md"},
+    {"src": "profiles/units/zhongxiaoxue.md"},
+    {"src": "profiles/units/guoqi.md"},
+    {"src": "scripts/gongwen_lint.py", "dest": "scripts/gongwen_lint.py"},
+    {"src": "scripts/lint_rules.json", "dest": "scripts/lint_rules.json"},
+    {"src": "scripts/style_patterns.json", "dest": "scripts/style_patterns.json"}
+  ],
+  "prompt_bundle": [
+    "references/_shared/guardrails.md",
+    "references/_shared/profiles/profile-template.md",
+    "references/intake.md",
+    "references/style-params.md",
+    "references/edit-patterns.md"
+  ]
+}

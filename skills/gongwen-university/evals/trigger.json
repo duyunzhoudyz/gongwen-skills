@@ -1,0 +1,22 @@
+[
+  {"query": "明年学校迎本科审核评估，学院版自评报告怎么写？材料我发你", "should_trigger": true},
+  {"query": "第二类审核评估自评报告里'教学成效'这一章帮我起草，数据从状态数据分析报告里来", "should_trigger": true},
+  {"query": "学科评估要填5个社会服务典型案例，帮我把这个案例整理成稿", "should_trigger": true},
+  {"query": "国社科活页写完了，帮我查查有没有暴露身份的地方，字数超没超", "should_trigger": true},
+  {"query": "帮我对照今年的申报通知，给这份国自然申请书做个形式审查", "should_trigger": true},
+  {"query": "学院年终总结要交学校考核，数据要和学校核定的对上，流水账发你", "should_trigger": true},
+  {"query": "我是辅导员，下周要和学业预警的学生谈话，帮我列个谈心谈话提纲", "should_trigger": true},
+  {"query": "这是我这个月的辅导员工作记录，帮我整理成工作写实", "should_trigger": true},
+  {"query": "学院想申请学校经费改造实验室，要给分管副校长打个签报", "should_trigger": true},
+  {"query": "下个月开教代会，校长的学校工作报告先帮我拟个提纲", "should_trigger": true},
+  {"query": "校长开学典礼上要讲15分钟，帮我写个讲话稿", "should_trigger": false},
+  {"query": "帮我起草学校2027年党政工作要点", "should_trigger": false},
+  {"query": "以学校名义给市政府写个函，商请支持新校区建设", "should_trigger": false},
+  {"query": "昨天党委常委会的记录发你了，整理成会议纪要", "should_trigger": false},
+  {"query": "学院党支部组织生活会的对照检查材料怎么写", "should_trigger": false},
+  {"query": "巡视反馈了12个问题，帮学校写整改方案和整改台账", "should_trigger": false},
+  {"query": "教育部刚发了文件，帮学校转化成贯彻落实的实施方案", "should_trigger": false},
+  {"query": "学校今年的本科教学质量报告要发布了，帮我把全文写出来", "should_trigger": false},
+  {"query": "这篇学院总结已经写好了，帮我核一下标点、数字和格式", "should_trigger": false},
+  {"query": "我是学院党委书记，给支部党员列个谈心谈话提纲", "should_trigger": false}
+]

@@ -1,0 +1,22 @@
+[
+  {"query": "镇里搞了个积分超市，想写篇政务信息报县里，争取被市里采用", "should_trigger": true},
+  {"query": "下周县里来检查安全生产，按检查表帮我准备自查报告和现场汇报", "should_trigger": true},
+  {"query": "社区下周二停水，帮我写个贴单元门口的通知，再弄一条发业主群", "should_trigger": true},
+  {"query": "帮我写个文明养犬倡议书，社区和业委会一起发", "should_trigger": true},
+  {"query": "县气象台发了暴雨橙色预警，镇里要马上给各村发防汛紧急通知", "should_trigger": true},
+  {"query": "给排查出隐患的经营性自建房户主写一份安全隐患告知书", "should_trigger": true},
+  {"query": "网格员入户走访该问些什么，帮我设计个走访提纲和记录表", "should_trigger": true},
+  {"query": "把网格员这个月的走访流水账整理成独居老人关爱台账，迎检要用", "should_trigger": true},
+  {"query": "村里三季度的村务公开要贴了，财务收支和低保名单怎么公开", "should_trigger": true},
+  {"query": "区里让各街道报社区准入清单执行和一表通报表减负情况，帮我写报告", "should_trigger": true},
+  {"query": "镇里要交全镇年终总结和明年工作计划，素材我整理好了", "should_trigger": false},
+  {"query": "街道党工委书记在全街道安全生产大会上讲15分钟，帮我写讲话稿", "should_trigger": false},
+  {"query": "帮我写个请示，向县政府申请村道水毁修复资金", "should_trigger": false},
+  {"query": "镇里召开防汛工作会议，帮我起草会议通知发给各村和站所", "should_trigger": false},
+  {"query": "社区党支部要开组织生活会，帮我准备对照检查材料", "should_trigger": false},
+  {"query": "昨天镇党委会的记录发你了，整理一份会议纪要", "should_trigger": false},
+  {"query": "县里巡察反馈了我们镇8个问题，帮我写整改方案和整改台账", "should_trigger": false},
+  {"query": "市里印发了乡村振兴实施意见，我们镇要出贯彻落实方案和任务分解表", "should_trigger": false},
+  {"query": "县民政局要给县委办报一篇本局养老服务工作的政务信息，帮我写", "should_trigger": false},
+  {"query": "12个社区报上来的月报表，帮我合并汇总，算一下环比", "should_trigger": false}
+]
