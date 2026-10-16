@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "1.0.0",
   "patterns": [
     {
       "id": "AI-001",
@@ -30,7 +30,7 @@
       "message": "用断言式评论语开头，替代了论据",
       "suggestion": "删除评论语，用事实或数据支撑判断",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "stop-slop-zh (MIT)",
       "hit_examples": [
         "毋庸置疑，数字化转型是大势所趋。",
@@ -49,7 +49,7 @@
       "message": "段落以零主语评论开头，缺少回指对象",
       "suggestion": "删去评论语直接陈述，或补出评论对象（如“这一问题的关键在于……”）",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "lieflat-less-ai-tone (MIT)",
       "hit_examples": [
         "更重要的是，群众的获得感明显增强。",
@@ -88,7 +88,7 @@
       "message": "口语起手式，书面公文中显得随意",
       "suggestion": "删除起手式，直接给出判断",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "lieflat-less-ai-tone (MIT)",
       "hit_examples": [
         "说白了，就是责任没有压实。",
@@ -107,7 +107,7 @@
       "message": "“不是……而是……”翻案句式，先立一个无人持有的误解再推翻（实测 AI 用量约为人类的 3.4 倍）",
       "suggestion": "删去被否定的一端，从正面直接下判断",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "lieflat-less-ai-tone (MIT)；talk-normal (MIT)",
       "hit_examples": [
         "基层减负不是减责任，而是减形式。",
@@ -127,7 +127,7 @@
       "message": "翻案句式变体（并非……而是、看似……实则、与其……不如）",
       "suggestion": "直接写结论和依据，不用先抑后扬的外壳",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "lieflat-less-ai-tone (MIT)；qu-ai-wei (MIT)",
       "hit_examples": [
         "看似是数据问题，实则是责任问题。",
@@ -165,7 +165,7 @@
       "message": "“不仅仅是……更是……”拔高句式",
       "suggestion": "写清这件事实际做了什么，删去拔高的后半句",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "Humanizer-zh (MIT)；stop-slop-zh (MIT)",
       "hit_examples": [
         "这不仅仅是一次检查，更是一次体检。",
@@ -239,11 +239,16 @@
       "group": "style",
       "category": "冒号过密",
       "pattern": "：",
+      "exclude": [
+        "(?:^\\s*|(?<=[^。！？!?][ 　\\t]))[^\\s：:，,。；;！？!?、“”（）()]{1,8}[：:](?=[^。！？!?\\n]*。?\\s*$)",
+        "^\\s*(?:尊敬的|敬爱的|亲爱的|各位|全体)[^。！？!?：:\\n]{0,30}[：:]\\s*$",
+        "^\\s*[A-Za-z]{1,3}[-－]?\\d{1,4}[：:]"
+      ],
       "level": "P2",
-      "message": "冒号过密，靠标点分层代替句法（格式要素、“如下：”、引语冒号已排除）",
+      "message": "冒号过密，靠标点分层代替句法（格式要素、字段标签、称呼、“如下：”、引语冒号已排除）",
       "suggestion": "把“标签：解释”式短句改写成完整句子",
       "density_per_1000": 3,
-      "exempt_doc_types": ["实施方案", "工作要点", "纪要"],
+      "exempt_doc_types": ["实施方案", "工作要点", "纪要", "贯彻落实方案", "整改方案", "议题材料", "会议记录", "整改报告", "自查报告"],
       "source": "lieflat-less-ai-tone (MIT)；白名单自研",
       "hit_examples": [
         "目标：三年见效。路径：先试点再推广。保障：专班推进。",
@@ -252,7 +257,9 @@
       "miss_examples": [
         "各区县人民政府，市政府各部门：",
         "现将有关事项通知如下：",
-        "会议指出：要压实责任。工作中也存在一些不足：部分科室床位偏紧。联系人：张某，联系电话：0571-12345678。时间：上午9：00。"
+        "会议指出：要压实责任。工作中也存在一些不足：部分科室床位偏紧。联系人：张某，联系电话：0571-12345678。时间：上午9：00。",
+        "责任领导：王某　责任部门：教务处",
+        "提交部门：财务科　汇报人：李某"
       ]
     },
     {
@@ -264,7 +271,7 @@
       "message": "前置话题壳“对于……来说”，属英文 For/As for 直译",
       "suggestion": "把对象直接放到主语位置，删去外壳",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "lieflat-less-ai-tone (MIT)",
       "hit_examples": [
         "对于基层干部来说，减负是最迫切的期盼。",
@@ -304,7 +311,7 @@
       "message": "“这意味着”复述句，属英文 This means 直译，常重复上一句",
       "suggestion": "并入前一句，或删去提示语只留新结论",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "lieflat-less-ai-tone (MIT)",
       "hit_examples": [
         "网上办件量同比增长30%。这意味着群众认可度在提高。",
@@ -439,7 +446,7 @@
       "message": "整句只有“明显提升”“显著改善”之类的概括，没有数据或事例（实测人类文章数字密度约为 AI 的 2.8 倍）",
       "suggestion": "素材有数据的，把数据提到概括词的位置；没有的标【待补：具体数据】，不得编造",
       "density_per_1000": null,
-      "exempt_doc_types": ["通知", "意见", "决定", "命令", "通告", "公告", "决议", "实施方案", "工作要点", "计划"],
+      "exempt_doc_types": ["通知", "意见", "决定", "命令", "通告", "公告", "决议", "实施方案", "工作要点", "计划", "贯彻落实方案", "整改方案"],
       "source": "lieflat-less-ai-tone (MIT)",
       "hit_examples": [
         "通过一年来的努力，群众办事效率明显提升，营商环境显著改善。",
@@ -459,7 +466,7 @@
       "message": "“做了大量工作”式空泛概括",
       "suggestion": "写出具体做了哪几件事、数量多少；没有素材的标【待补】",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "自研",
       "hit_examples": [
         "各科室做了大量卓有成效的工作。",
@@ -473,7 +480,11 @@
       "id": "AI-025",
       "group": "style",
       "category": "新八股词",
-      "pattern": "底层逻辑|颗粒度|用户心智|占领心智|心智模型|拉通|拉齐|增长飞轮|护城河|破圈|出圈|降维打击|第一性原理|生态位|认知差|信息差",
+      "pattern": "底层逻辑|颗粒度|用户心智|占领心智|心智模型|拉通(?![^，。；！？\\n]{0,6}(?:道路|主干道|干道|断头路|路网|公路|铁路|管网|管线|管道|隧道|水系|河道|桥梁|轨道|线路))|拉齐|增长飞轮|护城河(?!整治|治理|疏浚|清淤|水系|水质|两岸|沿岸|遗址|公园|河道|景观|综合|改造|保护|沿线|周边)|破圈|出圈|降维打击|第一性原理|生态位|认知差|信息差",
+      "exclude": [
+        "(?:道路|主干道|干道|断头路|路网|公路|铁路|管网|管线|管道|隧道|水系|河道|桥梁|轨道|线路)[^，。；！？\\n]{0,6}拉通",
+        "(?:古城|老城|城墙|环城|疏浚|清淤|整治|治理)[^，。；！？\\n]{0,4}护城河"
+      ],
       "level": "P1",
       "message": "互联网黑话，不属于公文用语",
       "suggestion": "换成公文通用说法，如“拉通数据”改为“推进数据共享”",
@@ -482,11 +493,18 @@
       "source": "stop-slop-zh (MIT)",
       "hit_examples": [
         "要找准基层治理的底层逻辑。",
-        "进一步拉通各部门数据，对齐工作颗粒度。"
+        "进一步拉通各部门数据，对齐工作颗粒度。",
+        "构建核心竞争护城河。",
+        "拉通各部门数据。"
       ],
       "miss_examples": [
         "要加强部门间数据共享。",
-        "促进学生心智健康发展。"
+        "促进学生心智健康发展。",
+        "推进护城河清淤整治。",
+        "年内拉通三条断头路。",
+        "打通断头路、拉通主干道。",
+        "老城护城河水质明显改善。",
+        "两条断头路已全线拉通。"
       ]
     },
     {
@@ -650,7 +668,7 @@
       "message": "号召式收尾，非讲话类文书不宜使用",
       "suggestion": "删去号召，写明下一步工作要求",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "stop-slop-zh (MIT)",
       "hit_examples": [
         "让我们携手共创更加美好的明天！",
@@ -669,7 +687,7 @@
       "message": "金句式升华收尾",
       "suggestion": "删去升华句，让段落停在事实上",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "stop-slop-zh (MIT)",
       "hit_examples": [
         "这，就是基层干部的力量。",
@@ -727,7 +745,7 @@
       "message": "总结标签，后面多是对前文的复述",
       "suggestion": "删去标签和复述；确有新判断的，用“总的来看”引出",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "talk-normal (MIT)",
       "hit_examples": [
         "总而言之，今年各项工作稳中有进。",
@@ -746,7 +764,7 @@
       "message": "“综上所述”收束，常引出复述",
       "suggestion": "下行文删去；请示、报告结论段可改为“综上”并直接写结论",
       "density_per_1000": null,
-      "exempt_doc_types": ["请示", "报告", "调研报告", "签报"],
+      "exempt_doc_types": ["请示", "报告", "调研报告", "签报", "整改报告", "自查报告", "自评报告"],
       "source": "talk-normal (MIT)",
       "hit_examples": [
         "综上所述，我们要进一步加强队伍建设。",
@@ -765,7 +783,7 @@
       "message": "设问揭晓式表达，制造悬念",
       "suggestion": "直接写原因或结论",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "qu-ai-wei (MIT)",
       "hit_examples": [
         "答案是肯定的。",
@@ -784,7 +802,7 @@
       "message": "反问空转，没有增加信息",
       "suggestion": "改为陈述句",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "stop-slop-zh (MIT)",
       "hit_examples": [
         "这难道不是群众最期盼的吗？",
@@ -803,7 +821,7 @@
       "message": "自媒体式亲切称呼，不符合公文语体",
       "suggestion": "删去称呼；讲话稿用“同志们”等规范称呼",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "stop-slop-zh (MIT)",
       "hit_examples": [
         "亲爱的读者，今天我们聊聊政务服务。",
@@ -841,7 +859,7 @@
       "message": "连续三句以相同词语开头，叙述像在填表",
       "suggestion": "合并或换序打散句式；部署性排比（坚持……坚持……、要……要……）不在此列",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "lieflat-less-ai-tone (MIT)；Humanizer-zh (MIT)",
       "hit_examples": [
         "我们优化了审批流程，压缩了办理时限。我们完善了考核办法，强化了结果运用。我们加强了队伍培训，提升了服务能力。",
@@ -861,7 +879,7 @@
       "message": "连续三句长度相近、逗号位置相同（实测 AI 相邻句同构约为人类的 2 倍）",
       "suggestion": "合并、拆分或调换其中一句的语序；“一是……二是……”等列举不在此列",
       "density_per_1000": 2,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "lieflat-less-ai-tone (MIT)",
       "hit_examples": [
         "这个功能上线后反馈很好，用户满意度明显提高。团队开发效率提升明显，交付周期大幅缩短。下一步优化方向已经明确，工作计划正在制定。系统运行总体平稳，故障次数逐月下降。数据接口全部打通，部门共享更加顺畅。培训覆盖全部窗口，业务流程更加熟练。考核办法已经修订，奖惩措施同步落实。",
@@ -881,7 +899,7 @@
       "message": "“是……是……更是……”三连递进",
       "suggestion": "保留最有信息量的一项，其余删去或改写",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "stop-slop-zh (MIT)",
       "hit_examples": [
         "这是一项民生工程，是一项民心工程，更是一项德政工程。",
@@ -900,7 +918,7 @@
       "message": "句尾追加价值拔高",
       "suggestion": "事实已经说明问题的，删去拔高；信息、经验材料可适度保留",
       "density_per_1000": null,
-      "exempt_doc_types": ["信息", "经验材料", "讲话稿"],
+      "exempt_doc_types": ["信息", "经验材料", "讲话稿", "党课讲稿", "研讨发言", "简报", "新闻稿", "公众号推文"],
       "source": "Humanizer-zh (MIT)",
       "hit_examples": [
         "社区工作者连续奋战72小时，充分彰显了基层干部的担当。",
@@ -938,7 +956,7 @@
       "message": "“无论是……还是……都能……”式全覆盖宣传句",
       "suggestion": "写明实际适用对象和条件",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "unslop (MIT)；lieflat-less-ai-tone (MIT)",
       "hit_examples": [
         "无论是企业还是个人，都能享受到便捷服务。",
@@ -957,7 +975,7 @@
       "message": "强调虚壳，删去后意思不变",
       "suggestion": "删去虚壳，直接陈述",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "stop-slop-zh (MIT)",
       "hit_examples": [
         "不得不说，这项改革确实减轻了基层负担。",
@@ -977,7 +995,7 @@
       "message": "顿号并列过密，超出规范公文常见范围（每千字约 15 至 30 个）",
       "suggestion": "能概括的概括，必须列全的拆成两句；实施方案、工作要点的任务分工不受此限",
       "density_per_1000": 35,
-      "exempt_doc_types": ["实施方案", "工作要点", "计划"],
+      "exempt_doc_types": ["实施方案", "工作要点", "计划", "贯彻落实方案", "整改方案"],
       "source": "lieflat-less-ai-tone (MIT)；阈值参考 lieflat-gongwen 语料统计（仅思路）",
       "hit_examples": [
         "教育、卫生、民政、人社、住建、交通、水利、应急、市场监管等部门要按职责分工抓好落实。",
@@ -1017,7 +1035,7 @@
       "suggestion": "问题要具体：写明哪项工作、差多少、造成什么影响；素材没有的标【待补】",
       "density_per_1000": null,
       "exempt_doc_types": [],
-      "doc_types": ["总结", "述职报告"],
+      "doc_types": ["总结", "述职报告", "对照检查材料", "自查报告", "整改报告"],
       "source": "自研（依据 references/_shared/style/ai-tone.md 第三部分“问题部分写实”）",
       "hit_examples": [
         "理论学习不够深入，工作作风不够扎实。",
@@ -1240,7 +1258,7 @@
       "message": "对冲语气词，使判断不明确",
       "suggestion": "删去对冲词明确表态；确属未定事实的，标【待核实】",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿", "调研报告"],
+      "exempt_doc_types": ["讲话稿", "调研报告", "党课讲稿", "研讨发言"],
       "source": "talk-normal (MIT)；unslop (MIT)",
       "hit_examples": [
         "这一举措或许能够缓解停车难问题。",
@@ -1259,7 +1277,7 @@
       "message": "用“可能”给工作成效打折扣",
       "suggestion": "预期成效写成目标（“力争……”），已有成效写事实；风险提示中的“可能”不在此列",
       "density_per_1000": null,
-      "exempt_doc_types": ["调研报告"],
+      "exempt_doc_types": ["调研报告", "议题材料"],
       "source": "自研；talk-normal (MIT)",
       "hit_examples": [
         "该措施实施后可能会提升审批效率。",
@@ -1297,7 +1315,7 @@
       "message": "“可以考虑”“不妨”式商量口吻，态度不明确",
       "suggestion": "部署性文件改为“要”；上行文改为明确的建议方案",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "自研（依据《顶层设计》4.14）",
       "hit_examples": [
         "各单位可以考虑建立周调度机制。",
@@ -1317,7 +1335,7 @@
       "suggestion": "改为“各单位要……”；请示、报告、函、调研报告中的建议不在此列",
       "density_per_1000": null,
       "exempt_doc_types": [],
-      "doc_types": ["通知", "意见", "决定", "实施方案", "工作要点", "计划", "讲话稿"],
+      "doc_types": ["通知", "意见", "决定", "实施方案", "工作要点", "计划", "讲话稿", "贯彻落实方案", "整改方案"],
       "source": "自研（依据《顶层设计》4.14）；改为只在部署性文件中检查",
       "hit_examples": [
         "建议各单位于月底前完成自查。",
@@ -1336,7 +1354,7 @@
       "message": "平衡腔：两头都说，不下结论",
       "suggestion": "比较后亮明倾向，如“方案二投入少、见效快，建议采用方案二”",
       "density_per_1000": null,
-      "exempt_doc_types": ["纪要", "调研报告"],
+      "exempt_doc_types": ["纪要", "调研报告", "议题材料", "会议记录"],
       "source": "talk-normal (MIT)；chinese-natural-reply (MIT)",
       "hit_examples": [
         "两种方案各有利弊，需要综合权衡。",
@@ -1412,7 +1430,7 @@
       "message": "口语“应该”用于规范性要求",
       "suggestion": "规范性义务用“应当”，工作要求用“要”",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "自研",
       "hit_examples": [
         "各单位应该于10月底前报送材料。",
@@ -1432,7 +1450,7 @@
       "suggestion": "改为“各单位要……”；讲话稿结尾的“希望大家……”不在此列",
       "density_per_1000": null,
       "exempt_doc_types": [],
-      "doc_types": ["通知", "意见", "决定", "实施方案", "工作要点", "计划"],
+      "doc_types": ["通知", "意见", "决定", "实施方案", "工作要点", "计划", "贯彻落实方案", "整改方案"],
       "source": "自研；改为只在部署性文件中检查",
       "hit_examples": [
         "希望各单位能够高度重视。",
@@ -1451,7 +1469,7 @@
       "message": "“尽量”使时限或标准失去约束",
       "suggestion": "写明时限和标准；确属尽力而为的（如减少对群众影响）可保留",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "自研",
       "hit_examples": [
         "请各单位尽量按时报送。",
@@ -1546,7 +1564,7 @@
       "message": "预先纠正读者并未产生的误解",
       "suggestion": "直接写正面要求；确有常见误读需要澄清的，保留一句",
       "density_per_1000": null,
-      "exempt_doc_types": ["讲话稿"],
+      "exempt_doc_types": ["讲话稿", "党课讲稿", "研讨发言"],
       "source": "chinese-natural-reply (MIT)",
       "hit_examples": [
         "这并不意味着可以放松监管。",
@@ -1585,7 +1603,7 @@
       "suggestion": "能定时间的写明日期或时限，如“11月底前召开推进会”；确需授权下级把握的保留",
       "density_per_1000": 1,
       "exempt_doc_types": [],
-      "doc_types": ["通知", "意见", "决定", "实施方案", "工作要点", "计划"],
+      "doc_types": ["通知", "意见", "决定", "实施方案", "工作要点", "计划", "贯彻落实方案", "整改方案"],
       "source": "自研（依据 references/_shared/style/defensive.md 第五部分）",
       "hit_examples": [
         "适时召开推进会，择机开展专项督查。",

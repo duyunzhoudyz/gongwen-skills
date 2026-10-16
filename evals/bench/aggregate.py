@@ -1,7 +1,10 @@
 """评测汇总：解盲评分结果，计算通过率、编造次数、机检问题数，输出原始结果 JSON 和统计表。
 
 用法：
-    python evals/bench/aggregate.py --bench <评测目录> --out evals/results/v0.1-raw.json [--tables 统计表.md]
+    python evals/bench/aggregate.py --bench <评测目录> --out evals/results/<版本>-raw.json [--tables 统计表.md]
+    python evals/bench/aggregate.py --from-raw evals/results/v0.1-raw.json
+
+skill 清单从评测目录的 index.json（或原始结果中的用例）中取，按插件市场清单的顺序排列。
 """
 import argparse
 import json
@@ -15,8 +18,10 @@ except Exception:
     pass
 
 REPO = Path(__file__).resolve().parents[2]
-SKILLS = ["gongwen", "gongwen-report", "gongwen-title", "gongwen-humanize",
-          "gongwen-direct", "gongwen-review", "gongwen-format"]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from skill_list import ordered_unique  # noqa: E402
+
+SKILLS = []  # 由 main() 按数据实际包含的 skill 设置
 GROUPS = ("A", "B")
 
 
@@ -27,6 +32,7 @@ def pct(a, b):
 def build_cases(bench):
     """从评测目录解盲，组装每条用例两组的结果。"""
     index = json.loads((bench / "index.json").read_text(encoding="utf-8"))
+    SKILLS[:] = ordered_unique([r["skill"] for r in index], REPO)
     blind = json.loads((bench / "blind.json").read_text(encoding="utf-8"))
     classes = {(c["skill"], c["id"], c["idx"]): c["class"]
                for c in json.loads((bench / "exp_class.json").read_text(encoding="utf-8"))}
@@ -251,11 +257,13 @@ def main():
     src.add_argument("--from-raw", help="已有的原始结果 JSON，只复算统计，不需要评测目录")
     ap.add_argument("--out", help="原始结果 JSON 输出路径（--bench 时必填）")
     ap.add_argument("--tables", help="统计表 Markdown 输出路径")
+    ap.add_argument("--date", default="2026-10-16", help="写入原始结果的评测日期")
     args = ap.parse_args()
 
     if args.from_raw:
         raw = json.loads(Path(args.from_raw).read_text(encoding="utf-8"))
         cases, missing = raw["cases"], raw.get("missing", [])
+        SKILLS[:] = ordered_unique([c["skill"] for c in cases], REPO)
         summary = summarize(cases, raw["summary"].get("model_lines", {}))
         if summary != raw["summary"]:
             print("注意：复算结果与文件中保存的 summary 不一致", file=sys.stderr)
@@ -264,7 +272,10 @@ def main():
             ap.error("使用 --bench 时必须给出 --out")
         cases, missing, model_lines = build_cases(Path(args.bench).resolve())
         summary = summarize(cases, model_lines)
-        raw = {"version": "v0.1", "date": "2026-10-16", "cases_total": len(cases),
+        bench = Path(args.bench).resolve()
+        meta_path = bench / "meta.json"
+        tag = json.loads(meta_path.read_text(encoding="utf-8")).get("tag", "v0.1") if meta_path.exists() else "v0.1"
+        raw = {"version": tag, "date": args.date, "cases_total": len(cases),
                "missing": missing, "summary": summary, "cases": cases}
         Path(args.out).parent.mkdir(parents=True, exist_ok=True)
         Path(args.out).write_text(json.dumps(raw, ensure_ascii=False, indent=1), encoding="utf-8")

@@ -5,16 +5,20 @@
 接口见 docs/开发规范.md 第 8 节，其他 skill 只依赖命令行接口和 JSON 输出格式：
 
     python scripts/gongwen_lint.py <文件> [--doc-type 文书类型] [--checks 类别,类别] [--json] [--strict]
+                                   [--banned 禁用词.md] [--allow 规则ID,规则ID]
 
 - 只依赖标准库；读取 .docx 时需要 python-docx。
 - 规则数据：同目录下的 lint_rules.json（正则规则 + 函数规则登记）和 style_patterns.json（AI 味、防御性词表）。
 - 遇到单独成行的【起草说明】即停止读取（兼容“## 【起草说明】”“**【起草说明】**”，与 fact_diff.py、gongwen-format 一致）。
+- --banned：读取本单位禁用词表（.gongwen/禁用词.md），“禁用”命中报 P1（BAN-001），“慎用”命中报 P2（BAN-002）。
+- --allow：本单位制度明文规定的写法（如企业用方括号的发文字号），列出的规则命中时降为 P2，不计入 --strict。
 - 退出码：0 正常；--strict 且存在 P0 时为 1；输入错误为 2。
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -22,7 +26,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Pattern, Sequence, Set, Tuple
 
-VERSION = "0.1.0"
+VERSION = "1.0.0"
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_RULES = SCRIPT_DIR / "lint_rules.json"
 DEFAULT_PATTERNS = SCRIPT_DIR / "style_patterns.json"
@@ -49,13 +53,24 @@ CHECK_NAMES = {
 LEVELS = ("P0", "P1", "P2")
 LEVEL_RANK = {"P0": 0, "P1": 1, "P2": 2}
 
-# 统一词表中的文书类型（开发规范第 6 节）
+# 统一词表中的文书类型（开发规范第 6 节）。扩充类型的规则适用范围：
+# - 贯彻落实方案、整改方案：同实施方案（篇幅上限、部署类文风规则）；整改方案的报送、考核要求来自巡视巡察和审计整改规定，
+#   不查 JFU-002、JFU-004；
+# - 党课讲稿、研讨发言：同讲话稿，放宽口语化句式；
+# - 简报、新闻稿、公众号推文：同信息；
+# - 整改报告、自查报告、自评报告：同报告（报告夹带请示、主送、签发人检查），回顾性材料不查转嫁责任类减负规则；
+# - 议题材料、会议记录、整改报告、自查报告：字段冒号多，不查冒号密度；
+# - 对照检查材料：不适用请示、报告的结构检查，查空泛问题表述（AI-053）。
 DOC_TYPES = (
     "决议", "决定", "命令", "公报", "公告", "通告", "意见", "通知", "通报", "报告", "请示",
     "批复", "议案", "函", "纪要", "签报",
     "总结", "计划", "工作要点", "汇报材料", "调研报告", "经验材料", "述职报告", "实施方案",
     "讲话稿", "信息", "其他",
+    "对照检查材料", "党课讲稿", "心得体会", "研讨发言", "会议记录", "议题材料", "简报", "新闻稿",
+    "整改方案", "整改报告", "自查报告", "贯彻落实方案", "自评报告", "公众号推文",
 )
+# 报告类：报告夹带请示（STR-004）、主送（STR-006）等检查按“报告”处理
+REPORT_TYPES = {"报告", "整改报告", "自查报告", "自评报告"}
 # 法定文种（条例第八条）：标题文种与 --doc-type 不一致的提示只在两者都是法定文种时给出
 STATUTORY_TYPES = {
     "决议", "决定", "命令", "公报", "公告", "通告", "意见", "通知", "通报", "报告", "请示", "批复", "议案", "函", "纪要",
@@ -65,10 +80,23 @@ ZHUSONG_TYPES = {"通知", "通报", "报告", "请示", "批复", "函", "意�
 # 篇幅上限适用的下行文件（《整治形式主义为基层减负若干规定》第2条）
 LENGTH_LIMIT_TYPES = {
     "决议", "决定", "命令", "公报", "公告", "通告", "意见", "通知", "通报", "批复",
-    "实施方案", "工作要点", "计划",
+    "实施方案", "工作要点", "计划", "贯彻落实方案", "整改方案",
 }
+# 标题 → 扩充文书类型（先于 TITLE_DOC_SUFFIX 匹配；“请示报告”留给 STR-010）
+TITLE_DOC_PATTERNS = (
+    (re.compile(r"整改[^，。；]{0,16}(?<!请示)报告$"), "整改报告"),
+    (re.compile(r"自查[^，。；]{0,12}(?<!请示)报告$"), "自查报告"),
+    (re.compile(r"自评[^，。；]{0,12}(?<!请示)报告$"), "自评报告"),
+    (re.compile(r"整改[^，。；]{0,12}方案$"), "整改方案"),
+    (re.compile(r"贯彻落实[^，。；]{0,40}方案$"), "贯彻落实方案"),
+    (re.compile(r"(?:对照检查|检视剖析)[^，。；]{0,6}(?:材料|发言提纲)$"), "对照检查材料"),
+)
 # 标题结尾 → 文书类型（按顺序匹配，长的在前）
 TITLE_DOC_SUFFIX = (
+    ("对照检查材料", "对照检查材料"), ("检视剖析材料", "对照检查材料"), ("党课讲稿", "党课讲稿"), ("党课", "党课讲稿"),
+    ("心得体会", "心得体会"), ("学习体会", "心得体会"), ("研讨发言提纲", "研讨发言"), ("研讨发言", "研讨发言"),
+    ("会议记录", "会议记录"), ("议题材料", "议题材料"), ("新闻通稿", "新闻稿"), ("新闻稿", "新闻稿"),
+    ("简报", "简报"), ("推文", "公众号推文"),
     ("请示报告", "请示"), ("调研报告", "调研报告"), ("述责述廉报告", "述职报告"),
     ("述职述廉报告", "述职报告"), ("述职报告", "述职报告"), ("实施方案", "实施方案"),
     ("工作方案", "实施方案"), ("方案", "实施方案"), ("工作要点", "工作要点"), ("要点", "工作要点"),
@@ -108,7 +136,8 @@ QIANFA_RE = re.compile(r"签发人\s*[：:]")
 HEADING_START_RE = re.compile(r"^\s*(?:[一二三四五六七八九十]{1,3}\s*[、，,.．]|[（(]\s*[一二三四五六七八九十\d]{1,3}\s*[）)]|\d{1,2}\s*[.．、])")
 TITLE_END_RE = re.compile(
     r"(?:决议|决定|命令|公报|公告|通告|意见|通知|通报|报告|请示|批复|议案|函|纪要|签报|总结|计划|要点|材料|方案"
-    r"|讲话|发言|致辞|信息|简报|办法|规定|细则|规则|制度|章程|预案|规划|说明|汇报|提纲)$"
+    r"|讲话|发言|致辞|信息|简报|办法|规定|细则|规则|制度|章程|预案|规划|说明|汇报|提纲"
+    r"|讲稿|讲话稿|发言稿|新闻稿|通稿|心得体会|学习体会|会议记录|推文|党课)$"
 )
 DATE_ONLY_RE = re.compile(
     r"^\s*[\d〇○零一二三四五六七八九OＯ]{4}\s*年\s*[\d一二三四五六七八九十]{1,3}\s*月\s*[\d一二三四五六七八九十]{1,3}\s*日\s*$"
@@ -130,6 +159,10 @@ PUBLIC_TITLE_RE = re.compile(r"(?:公示|告知书|一封信|倡议书|温馨提
 # 法规类规则的“已写明依据”判断：同一句中命中位置之前出现这些字样时不报
 LEGAL_BASIS_RE = re.compile(
     r"依法|依照|《[^》]{2,40}(?:法|条例|规定|办法)》|(?:根据|按照)[^。；！？]{0,30}(?:法|条例)"
+)
+# 减负类规则的否定语境（skip_if_negated）：命中词之前 8 字内出现这些字样时不报
+NEGATION_RE = re.compile(
+    r"不要求|不得|禁止|严禁|不再|杜绝|避免|减少|取消|不搞|不以|不把|不将|无需|不需要?|不必|防止|纠正|不准|不允许"
 )
 
 # 层次序数：level, 正则（第 1 组为序号）
@@ -158,6 +191,22 @@ MASK_CHARS = set("某×X*＊")
 
 class InputError(Exception):
     """输入错误：文件不存在、格式不支持、依赖缺失等，退出码 2。"""
+
+
+def long_path(path: Path) -> Path:
+    """Windows 下完整路径接近 260 字符上限时加长路径前缀，避免“文件不存在”误报（与 overlap_check.py 一致）。"""
+    if os.name != "nt":
+        return path
+    try:
+        full = str(path.resolve())
+    except OSError:
+        return path
+    prefix = "\\\\?\\"
+    if len(full) < 240 or full.startswith(prefix):
+        return path
+    if full.startswith("\\\\"):
+        return Path(prefix + "UNC\\" + full[2:])
+    return Path(prefix + full)
 
 
 # ---------------------------------------------------------------------------
@@ -233,6 +282,7 @@ class RegexRule:
     public_only: bool = False
     skip_if_basis: bool = False
     skip_in_quotes: bool = False
+    skip_if_negated: bool = False
 
 
 @dataclass
@@ -247,6 +297,19 @@ class StylePattern:
     density: Optional[float]
     doc_types: Tuple[str, ...]
     exempt_doc_types: Tuple[str, ...]
+    exclude: Tuple[Pattern[str], ...] = ()
+
+
+@dataclass
+class BannedTerm:
+    """本单位禁用词表中的一条（--banned）。"""
+    term: str
+    regex: Pattern[str]
+    banned: bool            # True：禁用（BAN-001，P1）；False：慎用（BAN-002，P2）
+    reason: str = ""
+    suggestion: str = ""
+    scope: str = ""
+    source: str = ""        # 禁用词文件名，写入 basis
 
 
 def applies_to(doc_type: str, doc_types: Sequence[str], exempt: Sequence[str]) -> bool:
@@ -536,11 +599,20 @@ class Document:
     def infer_doc_type(self) -> Optional[str]:
         title = self.title_text.strip().rstrip(PUNCT_TAIL)
         if title:
+            for regex, doc_type in TITLE_DOC_PATTERNS:
+                if regex.search(title):
+                    return doc_type
             for suffix, doc_type in TITLE_DOC_SUFFIX:
                 if title.endswith(suffix):
                     return doc_type
-        if self.subtitle is not None and re.search(r"(讲话|发言|致辞)\s*$", self.paras[self.subtitle].text):
-            return "讲话稿"
+        if self.subtitle is not None:
+            sub = self.paras[self.subtitle].text.strip()
+            if "党课" in sub:
+                return "党课讲稿"
+            if re.search(r"研讨[^，。]{0,20}发言\s*$|研讨发言", sub):
+                return "研讨发言"
+            if re.search(r"(讲话|发言|致辞|讲稿)\s*$", sub):
+                return "讲话稿"
         return None
 
 
@@ -607,6 +679,7 @@ class Linter:
                     public_only=bool(item.get("public_only")),
                     skip_if_basis=bool(item.get("skip_if_basis")),
                     skip_in_quotes=bool(item.get("skip_in_quotes")),
+                    skip_if_negated=bool(item.get("skip_if_negated")),
                 ))
             except (KeyError, re.error, TypeError, ValueError) as exc:
                 self.warnings.append(f"规则 {item.get('id', '?')} 无效，已跳过：{exc}")
@@ -629,6 +702,7 @@ class Linter:
                     density=float(density) if density is not None else None,
                     doc_types=tuple(item.get("doc_types") or ()),
                     exempt_doc_types=tuple(item.get("exempt_doc_types") or ()),
+                    exclude=tuple(_compile(p) for p in item.get("exclude") or ()),
                 ))
             except (KeyError, re.error, TypeError, ValueError) as exc:
                 self.warnings.append(f"词表规则 {item.get('id', '?')} 无效，已跳过：{exc}")
@@ -639,7 +713,8 @@ class Linter:
                 self.warnings.append(f"白名单 {item.get('id', '?')} 无效，已跳过：{exc}")
 
     # -- 入口 -----------------------------------------------------------------
-    def lint(self, doc: Document, doc_type: str, checks: Set[str]) -> List[Issue]:
+    def lint(self, doc: Document, doc_type: str, checks: Set[str],
+             banned: Optional[Sequence[BannedTerm]] = None) -> List[Issue]:
         issues: List[Issue] = []
         issues.extend(self._run_regex_rules(doc, doc_type, checks))
         for check in CHECK_ORDER:
@@ -648,6 +723,8 @@ class Linter:
             for func in self._procedures().get(check, ()):
                 issues.extend(func(doc, doc_type))
         issues.extend(self._run_style(doc, doc_type, checks))
+        if banned and "style" in checks:
+            issues.extend(self._check_banned(doc, doc_type, banned))
         issues = self._resolve_yields(issues)
         issues = self._apply_once(issues)
         issues.sort(key=lambda x: (LEVEL_RANK.get(x.level, 9), x.line, x.start, x.id))
@@ -656,7 +733,7 @@ class Linter:
     def _procedures(self) -> Dict[str, Sequence[Callable[[Document, str], List[Issue]]]]:
         return {
             "punct": (self._check_quotes, self._check_colon_nesting),
-            "number": (self._check_date_styles,),
+            "number": (self._check_date_styles, self._check_quantity_points),
             "format": (self._check_date_padding, self._check_signoff_date, self._check_zhusong),
             "structure": (self._check_title, self._check_heading_sequence, self._check_count_summary,
                           self._check_qingshi, self._check_baogao, self._check_han, self._check_shangxing),
@@ -725,10 +802,12 @@ class Linter:
                         continue
                     if rule.skip_in_quotes and self._inside_quote(para.text, start):
                         continue  # 引号内是举例或引述，不是稿件本身的标注
-                    if rule.skip_if_basis:
+                    if rule.skip_if_basis or rule.skip_if_negated:
                         sent_start = max(para.text.rfind(ch, 0, start) for ch in "。！？；") + 1
-                        if LEGAL_BASIS_RE.search(para.text[sent_start:start]):
+                        if rule.skip_if_basis and LEGAL_BASIS_RE.search(para.text[sent_start:start]):
                             continue
+                        if rule.skip_if_negated and NEGATION_RE.search(para.text[max(sent_start, start - 8):start]):
+                            continue  # “不要求拍照留痕”“严禁签订责任状”是在落实减负规定，不是违反
                     excerpt = clip(match.group(0), 80)
                     suggestion = rule.suggestion
                     if rule.fixes:
@@ -801,12 +880,19 @@ class Linter:
             wl_spans = self._whitelist_spans
         hits: List[Tuple[Para, int, int]] = []
         for para in doc.paras:
+            own_spans: Optional[List[Tuple[int, int]]] = None
             for match in pat.regex.finditer(para.text):
                 start, end = match.span()
                 if start == end:
                     continue
                 if any(ws < end and start < we for ws, we in wl_spans(para)):
                     continue  # 与白名单重叠的命中不报告
+                if pat.exclude:
+                    if own_spans is None:  # 本规则专用的排除区间（如 AI-013 的字段标签、称呼行）
+                        own_spans = [m.span() for regex in pat.exclude for m in regex.finditer(para.text)
+                                     if m.end() > m.start()]
+                    if any(ws < end and start < we for ws, we in own_spans):
+                        continue
                 # 去掉正则为定位句首而带上的前导标点；命中本身就是标点（如顿号、冒号）时保留
                 trimmed = start
                 while trimmed < end and para.text[trimmed] in "。！？；，,：:、 \t　":
@@ -893,6 +979,22 @@ class Linter:
         r"记录人?|议题|牵头单位|责任单位|配合单位|责任人|完成时限|时间节点|报送方式|邮编|网址|开户行|账号|户名)\s*$"
     )
 
+    # “提交部门：某科　汇报人：李某”这类字段行：每个冒号前都是行首或空格后的短标签
+    FIELD_SEG_RE = re.compile(r"(?:^|(?<=[ 　\t]))[^\s：:，,。；;！？!?、]{1,8}[：:]")
+
+    @classmethod
+    def _is_field_line(cls, text: str) -> bool:
+        text = text.strip()
+        if re.search(r"[。！？!?；;](?=.)", text):
+            return False  # 句末之外还有句号、分号的，是成句的正文
+        colons = [m.start() for m in re.finditer("[：:]", text)
+                  if not (0 < m.start() < len(text) - 1 and text[m.start() - 1].isdigit()
+                          and text[m.start() + 1].isdigit())]
+        if len(colons) < 2:
+            return False
+        labels = {m.end() - 1 for m in cls.FIELD_SEG_RE.finditer(text)}
+        return all(pos in labels for pos in colons)
+
     def _check_colon_nesting(self, doc: Document, doc_type: str) -> List[Issue]:
         """PUN-014 一句之内套用冒号。"""
         issues: List[Issue] = []
@@ -901,6 +1003,8 @@ class Linter:
             skip |= set(range(doc.banji_start, len(doc.paras)))
         for para in doc.paras:
             if para.index in skip or para.in_table or "：" not in para.text:
+                continue
+            if self._is_field_line(para.text):
                 continue
             text = para.text
             marker_spans = [mk.span() for mk in MARKER_RE.finditer(text)]
@@ -961,6 +1065,37 @@ class Linter:
                 count=len(found["短横线"]))
             if issue:
                 issues.append(issue)
+        return issues
+
+    # 数量变化用了百分点（NUM-020，data-expression.md DE-08）
+    POINT_CHANGE_RE = re.compile(r"(?:增长|增加|下降|减少|提高|降低|上升|回落)了?\s*\d+(?:\.\d+)?\s*个?百分点")
+    QTY_WORD_RE = re.compile(
+        r"人次|人数|件数|户数|台次|例数|万元|亿元|千元|元|件|户|台|例|吨|辆|床日|数量|金额|总量|总额|收入|产值"
+        r"|销售额|营业额|交易额|利润|支出|投资额|门诊量|业务量|办件量|工作量|诊疗量|客流量|用量|销量|产量"
+    )
+    RATE_WORD_RE = re.compile(r"率|占比|比重|比例|增速|增幅|指数|份额|度|水平|系数|密度|进度|差距")
+
+    def _check_quantity_points(self, doc: Document, doc_type: str) -> List[Issue]:
+        """NUM-020 数量指标的变化用了“百分点”。只看同一分句内、数量词之后 15 字以内的写法。"""
+        issues: List[Issue] = []
+        for para in doc.paras:
+            if para.in_table or "百分点" not in para.text:
+                continue
+            text = para.text
+            for m in self.POINT_CHANGE_RE.finditer(text):
+                clause_start = max(text.rfind(ch, 0, m.start()) for ch in "，。；！？：,;:") + 1
+                window_start = max(clause_start, m.start() - 20)
+                qty = None
+                for q in self.QTY_WORD_RE.finditer(text, window_start, m.start()):
+                    qty = q
+                if qty is None or m.start() - qty.end() > 15:
+                    continue
+                # 数量词之后（含其前两字，排除“比例”“效率”之类）到动词之间出现比率字样的，是比率的变化
+                if self.RATE_WORD_RE.search(text[max(clause_start, qty.start() - 2):m.start()]):
+                    continue
+                issue = self._proc_issue("NUM-020", para, qty.start(), m.end())
+                if issue:
+                    issues.append(issue)
         return issues
 
     # -- 格式要素（函数） -----------------------------------------------------
@@ -1201,7 +1336,7 @@ class Linter:
                     continue
                 tail = para.text[m.end():]
                 found = self._inline_count(tail)
-                if found < 2:
+                if found < 2 and not self._external_aspects(doc, body, pos_in_body, heading_cache, para.text, m.start()):
                     found = self._following_count(doc, body, pos_in_body, heading_cache, body_set)
                 if found >= 2 and found != n:
                     issue = self._proc_issue(
@@ -1211,6 +1346,24 @@ class Linter:
                     if issue:
                         issues.append(issue)
         return issues
+
+    # 对照检查材料常见“围绕通知规定的四个方面，对照检查如下”：方面来自上级通知，不对应下文标题
+    INSPECT_WORDS_RE = re.compile(r"对照检查|查摆|检视|剖析")
+    SCOPE_LEAD_RE = re.compile(r"(?:围绕|按照|对照|聚焦)[^。；！？]{0,30}$")
+
+    @classmethod
+    def _external_aspects(cls, doc: Document, body: List[int], pos: int,
+                          heading_cache: Dict[int, Optional[Tuple[int, int]]], text: str, start: int) -> bool:
+        """数字概括所指的方面来自上级通知、不对应后续标题时返回 True（只比对同段“一是……”）。"""
+        sent_start = max(text.rfind(ch, 0, start) for ch in "。！？；") + 1
+        sent_end_candidates = [i for i in (text.find(ch, start) for ch in "。！？；") if i >= 0]
+        sentence = text[sent_start:min(sent_end_candidates) if sent_end_candidates else len(text)]
+        if cls.INSPECT_WORDS_RE.search(sentence):
+            return True
+        if cls.SCOPE_LEAD_RE.search(text[sent_start:start]):
+            # 只在全文开头（还没有任何层次标题）时适用；章节内部的“围绕三个方面”照常与下一级标题比对
+            return not any(heading_cache.get(body[back]) for back in range(pos + 1))
+        return False
 
     def _following_count(self, doc: Document, body: List[int], pos: int,
                          heading_cache: Dict[int, Optional[Tuple[int, int]]], body_set: Set[int]) -> int:
@@ -1264,7 +1417,7 @@ class Linter:
         """STR-003 请示结尾；STR-006 主送；STR-007 特此报告。"""
         issues: List[Issue] = []
         if doc_type != "请示":
-            if doc_type == "报告":
+            if doc_type in REPORT_TYPES:
                 issues.extend(self._check_main_recipient(doc, doc_type))
             return issues
         body = doc.body_indices()
@@ -1521,6 +1674,53 @@ class Linter:
                     add("PRI-002", s, e, masked)
         return issues
 
+    # -- 本单位禁用词（--banned） ---------------------------------------------
+    @staticmethod
+    def _scope_applies(scope: str, doc: Document, doc_type: str) -> bool:
+        """禁用词表“适用范围”一栏：空或“全部”都查；否则按文书类型、面向群众、对外发布判断。"""
+        tokens = [t.strip() for t in re.split(r"[、，,/／;；\s]+", scope or "") if t.strip()]
+        if not tokens or any(t in ("全部", "全文", "所有", "通用", "不限") for t in tokens):
+            return True
+        for token in tokens:
+            if "群众" in token or "居民" in token:
+                if doc.public_facing:
+                    return True
+            elif "对外" in token or "公开" in token:
+                if doc.public_facing or doc_type in ("新闻稿", "公众号推文", "信息", "简报", "公告", "通告"):
+                    return True
+            elif token in doc_type or (len(doc_type) >= 2 and doc_type in token):
+                return True
+        return False
+
+    def _check_banned(self, doc: Document, doc_type: str, terms: Sequence[BannedTerm]) -> List[Issue]:
+        """BAN-001 禁用表述（P1）；BAN-002 慎用表述（P2）。长的词条优先，同一处只报一次。"""
+        issues: List[Issue] = []
+        active = [t for t in terms if self._scope_applies(t.scope, doc, doc_type)]
+        active.sort(key=lambda t: len(t.term), reverse=True)
+        for para in doc.paras:
+            marker_spans = [mk.span() for mk in MARKER_RE.finditer(para.text)]
+            taken: List[Tuple[int, int]] = []
+            for term in active:
+                for m in term.regex.finditer(para.text):
+                    s, e = m.span()
+                    if s == e or any(a < e and s < b for a, b in taken + marker_spans):
+                        continue
+                    taken.append((s, e))
+                    level_word = "禁用" if term.banned else "慎用"
+                    message = f"使用了本单位{level_word}表述“{term.term}”"
+                    if term.reason:
+                        message += f"，原因：{term.reason}"
+                    suggestion = term.suggestion or ("按本单位禁用词表修改" if term.banned else "由用户决定是否保留")
+                    if term.banned:
+                        issue = self._proc_issue("BAN-001", para, s, e, message=message, suggestion=suggestion)
+                    else:
+                        issue = self._proc_issue("BAN-002", para, s, e, message=message, suggestion=suggestion)
+                    if issue:
+                        if term.source:
+                            issue.basis = f"本单位禁用词表（{term.source}）"
+                        issues.append(issue)
+        return issues
+
     # -- 篇幅（函数） ---------------------------------------------------------
     def _check_length(self, doc: Document, doc_type: str) -> List[Issue]:
         n = doc.body_char_count()
@@ -1562,6 +1762,140 @@ def parse_checks(value: Optional[str]) -> List[str]:
     return [c for c in CHECK_ORDER if c in wanted]
 
 
+# ---------------------------------------------------------------------------
+# 本单位禁用词表（--banned）
+# 格式见 shared/profiles/profile-template.md 第三部分：表格第一列（或表头为“词语或表述”的一列）取词，
+# “级别”一列为“禁用”的报 P1、“慎用”的报 P2；没有表格时按列表项取词，级别看列表项中的“（慎用）”或所在小标题。
+# ---------------------------------------------------------------------------
+BANNED_SKIP_SECTION_RE = re.compile(r"维护记录|更新记录|变更记录|修改记录|填写说明|使用说明|备注|附注|^说明$")
+BANNED_LIST_ITEM_RE = re.compile(r"^\s*(?:[-*+•·]|\d{1,3}[.、)）]|[（(]\d{1,3}[）)])\s*(.+?)\s*$")
+BANNED_SEPARATOR_RE = re.compile(r"^\s*:?-{2,}:?\s*$")
+BANNED_WILDCARDS = ("……", "…", "×××", "XXX")
+
+
+def _banned_level(text: str) -> Optional[bool]:
+    """“慎用”返回 False，“禁用”“不用”“停用”返回 True，看不出返回 None。"""
+    if "慎用" in text or "少用" in text:
+        return False
+    if "禁用" in text or "不用" in text or "停用" in text or "不得使用" in text:
+        return True
+    return None
+
+
+def _clean_term(text: str) -> str:
+    text = re.sub(r"[`*]+", "", text).strip()
+    return text.strip("“”\"'‘’「」『』 　")
+
+
+def _term_regex(term: str) -> Pattern[str]:
+    """词条转正则：词中空白可有可无，“……”“×××”作通配。"""
+    parts: List[str] = []
+    for token in re.split(r"(……|…|×××|XXX|\s+)", term):
+        if not token:
+            continue
+        if token in BANNED_WILDCARDS:
+            parts.append(r"[^。；！？\n]{0,20}?")
+        elif token.isspace():
+            parts.append(r"\s*")
+        else:
+            parts.append(re.escape(token))
+    return re.compile("".join(parts))
+
+
+def _split_terms(cell: str) -> List[str]:
+    terms = []
+    for piece in re.split(r"[、/／;；]", cell):
+        term = _clean_term(piece)
+        if term and len(term) <= 30 and not re.fullmatch(r"[-—–\s]*|【待补[^】]*】|无", term):
+            terms.append(term)
+    return terms
+
+
+def load_banned(path: Path) -> List[BannedTerm]:
+    """读取禁用词文件；文件不存在或无法读取时抛出 InputError（退出码 2）。"""
+    real = long_path(path)
+    if not real.is_file():
+        raise InputError(f"禁用词文件不存在：{path}（可用 gongwen-profile 建立 .gongwen/禁用词.md）")
+    try:
+        raw = real.read_bytes()
+    except OSError as exc:
+        raise InputError(f"无法读取禁用词文件：{exc}") from exc
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        try:
+            text = raw.decode("gb18030")
+        except UnicodeDecodeError as exc:
+            raise InputError("无法识别禁用词文件的编码，请另存为 UTF-8 后重试。") from exc
+    lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    source = path.name
+    table_terms: List[BannedTerm] = []
+    list_terms: List[BannedTerm] = []
+    section_level: Optional[bool] = None
+    skip_section = False
+    cols: Optional[Dict[str, Optional[int]]] = None
+
+    def is_row(s: str) -> bool:
+        return s.startswith("|") and s.count("|") >= 2
+
+    def cells_of(s: str) -> List[str]:
+        return [c.strip() for c in s.strip().strip("|").split("|")]
+
+    for idx, line in enumerate(lines):
+        s = line.strip()
+        if s.startswith("```"):
+            continue
+        heading = re.match(r"^#{1,6}\s*(.*)$", s)
+        if heading:
+            title = heading.group(1).strip()
+            skip_section = bool(BANNED_SKIP_SECTION_RE.search(title))
+            level = _banned_level(title)
+            if level is not None:
+                section_level = level
+            cols = None
+            continue
+        if skip_section or not s:
+            if not s:
+                cols = None
+            continue
+        if is_row(s):
+            cells = cells_of(s)
+            if all(BANNED_SEPARATOR_RE.match(c) for c in cells if c) or not any(cells):
+                continue
+            nxt = lines[idx + 1].strip() if idx + 1 < len(lines) else ""
+            if cols is None and is_row(nxt) and all(BANNED_SEPARATOR_RE.match(c) for c in cells_of(nxt) if c):
+                # 表头：按列名定位各列，找不到词语列时取第一列
+                def find(pattern: str) -> Optional[int]:
+                    return next((i for i, c in enumerate(cells) if re.search(pattern, c)), None)
+                term_col = find(r"词|表述|用语|提法")
+                cols = {"term": term_col if term_col is not None else 0, "level": find(r"级别|等级|类别|类型"),
+                        "reason": find(r"原因|理由|来源|依据"), "suggestion": find(r"替换|建议|改为|替代"),
+                        "scope": find(r"适用|范围")}
+                continue
+            spec = cols or {"term": 0, "level": None, "reason": None, "suggestion": None, "scope": None}
+
+            def cell(key: str) -> str:
+                i = spec.get(key)
+                return cells[i] if i is not None and i < len(cells) else ""
+
+            level = _banned_level(cell("level"))
+            banned = level if level is not None else (section_level if section_level is not None else True)
+            for term in _split_terms(cell("term")):
+                table_terms.append(BannedTerm(term, _term_regex(term), banned, cell("reason"),
+                                              cell("suggestion"), cell("scope"), source))
+            continue
+        item = BANNED_LIST_ITEM_RE.match(line)
+        if item:
+            parts = re.split(r"[：:（(—|，,；;]", item.group(1), maxsplit=1)
+            head, tail = parts[0], (parts[1] if len(parts) > 1 else "")
+            level = _banned_level(tail)
+            banned = level if level is not None else (section_level if section_level is not None else True)
+            reason = re.sub(r"[（(【]?(?:禁用|慎用)[）)】]?", "", tail).strip("）)】 　：:，,；;").strip()
+            for term in _split_terms(head):
+                list_terms.append(BannedTerm(term, _term_regex(term), banned, reason, "", "", source))
+    return table_terms if table_terms else list_terms
+
+
 def resolve_doc_type(doc: Document, given: Optional[str]) -> Tuple[str, str]:
     if given and given.strip():
         return given.strip(), "参数"
@@ -1571,15 +1905,61 @@ def resolve_doc_type(doc: Document, given: Optional[str]) -> Tuple[str, str]:
     return "其他", "默认"
 
 
+def parse_allow(value: Optional[Any]) -> List[str]:
+    """解析 --allow：逗号或空格分隔的规则 ID，统一为大写。"""
+    if not value:
+        return []
+    items = value if isinstance(value, (list, tuple, set)) else re.split(r"[,，\s]+", str(value))
+    return [str(v).strip().upper() for v in items if str(v).strip()]
+
+
+def _apply_allow(issues: List[Issue], allow: Sequence[str], linter: Linter, notes: List[str]) -> List[Issue]:
+    """--allow：本单位制度明文规定的写法，命中时降为 P2 并注明，不计入 --strict。"""
+    known = ({r.id for r in linter.rules} | set(linter.proc_meta) | {p.id for p in linter.patterns})
+    unknown = [a for a in allow if a not in known]
+    if unknown:
+        notes.append(f"--allow 中的规则 {'、'.join(unknown)} 不存在，已忽略。")
+    wanted = set(allow) & known
+    changed: List[str] = []
+    for issue in issues:
+        if issue.id in wanted:
+            issue.level = "P2"
+            if not issue.message.startswith("按本单位制度保留："):
+                issue.message = "按本单位制度保留：" + issue.message
+            changed.append(issue.id)
+    if changed:
+        notes.append(f"按 --allow 降为 P2 的问题 {len(changed)} 处（{'、'.join(sorted(set(changed)))}），"
+                     "依据本单位制度保留，不计入 --strict。")
+        issues.sort(key=lambda x: (LEVEL_RANK.get(x.level, 9), x.line, x.start, x.id))
+    return issues
+
+
 def lint_document(doc: Document, doc_type: Optional[str] = None, checks: Optional[str] = None,
-                  linter: Optional[Linter] = None, notes: Optional[List[str]] = None) -> Dict[str, Any]:
+                  linter: Optional[Linter] = None, notes: Optional[List[str]] = None,
+                  banned: Optional[Sequence[BannedTerm]] = None,
+                  allow: Optional[Sequence[str]] = None) -> Dict[str, Any]:
+    """banned 为 None 表示没有指定禁用词表；allow 为降级规则 ID 清单（见 --allow）。"""
     linter = linter or Linter()
     check_list = parse_checks(checks)
     dtype, source = resolve_doc_type(doc, doc_type)
     all_notes = list(notes or [])
     if dtype not in DOC_TYPES:
         all_notes.append(f"文书类型“{dtype}”不在统一词表中，按文种限定的规则不会生效。")
-    issues = linter.lint(doc, dtype, set(check_list))
+    issues = linter.lint(doc, dtype, set(check_list), banned)
+    if banned is not None:
+        if "style" not in check_list:
+            all_notes.append("未检查 style 类，禁用词表没有比对。")
+        elif not banned:
+            all_notes.append("禁用词表中没有识别出词条（格式见单位画像模板第三部分：表格第一列为词语，“级别”列填禁用或慎用）。")
+        else:
+            n_ban = sum(1 for t in banned if t.banned)
+            skipped = sum(1 for t in banned if not linter._scope_applies(t.scope, doc, dtype))
+            msg = f"已比对本单位禁用词表 {len(banned)} 条（禁用 {n_ban} 条、慎用 {len(banned) - n_ban} 条）"
+            if skipped:
+                msg += f"，其中 {skipped} 条的适用范围不含“{dtype}”，未比对"
+            all_notes.append(msg + "。")
+    if allow:
+        issues = _apply_allow(issues, parse_allow(allow), linter, all_notes)
     summary: Dict[str, Any] = {lv: sum(1 for i in issues if i.level == lv) for lv in LEVELS}
     # 待补、待核实标记单独计数（开发规范第 8 节），不论是否检查 marker 类
     summary["markers"] = {
@@ -1597,14 +1977,16 @@ def lint_document(doc: Document, doc_type: Optional[str] = None, checks: Optiona
                 f"正文含【待补】{todo} 处、【待核实】{verify} 处"
                 + (f"、格式不规范的标记 {bad} 处" if bad else "")
                 + "，定稿前须逐条补齐或核实，并在【起草说明】中汇总。")
+    body_chars = doc.body_char_count()
     if "length" in check_list:
-        all_notes.append(f"篇幅口径：标题之后、【起草说明】之前的正文，不含空白和版记，约 {doc.body_char_count()} 字。")
+        all_notes.append(f"篇幅口径：标题之后、【起草说明】之前的正文，不含空白和版记，约 {body_chars} 字。")
     all_notes.extend(linter.warnings)
     return {
         "file": doc.file,
         "doc_type": dtype,
         "doc_type_source": source,
         "char_count": doc.char_count,
+        "body_char_count": body_chars,
         "summary": summary,
         "issues": [i.to_dict() for i in issues],
         "checks": check_list,
@@ -1614,20 +1996,23 @@ def lint_document(doc: Document, doc_type: Optional[str] = None, checks: Optiona
 
 
 def lint_text(text: str, doc_type: Optional[str] = None, checks: Optional[str] = None,
-              file_name: str = "<text>", linter: Optional[Linter] = None) -> Dict[str, Any]:
+              file_name: str = "<text>", linter: Optional[Linter] = None,
+              banned: Optional[Sequence[BannedTerm]] = None, allow: Optional[Sequence[str]] = None) -> Dict[str, Any]:
     """检查一段文本（供其他脚本和测试调用）。"""
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     lines = [(i, line, False) for i, line in enumerate(text.split("\n"), start=1)]
-    return lint_document(Document(file_name, lines), doc_type, checks, linter)
+    return lint_document(Document(file_name, lines), doc_type, checks, linter, banned=banned, allow=allow)
 
 
 def lint_file(path: Path, doc_type: Optional[str] = None, checks: Optional[str] = None,
-              linter: Optional[Linter] = None) -> Dict[str, Any]:
-    if not path.is_file():
+              linter: Optional[Linter] = None, banned: Optional[Sequence[BannedTerm]] = None,
+              allow: Optional[Sequence[str]] = None) -> Dict[str, Any]:
+    real = long_path(path)  # Windows 下超过 260 字符的路径
+    if not real.is_file():
         raise InputError(f"文件不存在：{path}")
-    lines, notes = read_lines(path)
+    lines, notes = read_lines(real)
     unit = "段" if path.suffix.lower() == ".docx" else "行"
-    return lint_document(Document(path.name, lines, unit), doc_type, checks, linter, notes)
+    return lint_document(Document(path.name, lines, unit), doc_type, checks, linter, notes, banned, allow)
 
 
 def render_text(result: Dict[str, Any]) -> str:
@@ -1669,7 +2054,7 @@ class _ChineseHelpFormatter(argparse.HelpFormatter):
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="gongwen_lint.py",
-        description="公文机检：残留、标点、数字、格式要素、结构、AI 味、防御性、隐私与保密、待补标记、篇幅。",
+        description="公文机检：残留、标点、数字、格式要素、结构、AI 味、防御性、隐私与保密、法规、减负、待补标记、篇幅。",
         epilog="退出码：0 正常；--strict 且存在 P0 时为 1；输入错误为 2。docx 输入时“行号”为段落序号。",
         add_help=False,
         formatter_class=_ChineseHelpFormatter,
@@ -1678,11 +2063,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser._optionals.title = "选项"
     parser.add_argument("file", help="待检查文件（.txt、.md、.docx），遇到【起草说明】行即停止读取")
     parser.add_argument("--doc-type", default=None,
-                        help="文书类型，如 通知、请示、报告、总结、讲话稿；不填时按标题推断，推断不出按“其他”")
+                        help="文书类型，如 通知、请示、报告、总结、讲话稿、对照检查材料、整改方案；"
+                             "不填时按标题推断，推断不出按“其他”")
     parser.add_argument("--checks", default="all",
                         help="检查类别，逗号分隔：all（默认）、" + "、".join(CHECK_ORDER))
     parser.add_argument("--json", action="store_true", help="输出 JSON")
     parser.add_argument("--strict", action="store_true", help="存在 P0 时返回 1")
+    parser.add_argument("--banned", default=None, metavar="禁用词.md",
+                        help="本单位禁用词表（一般为 .gongwen/禁用词.md）：“禁用”命中报 P1（BAN-001），"
+                             "“慎用”命中报 P2（BAN-002），归入 style 类；文件不存在时返回 2")
+    parser.add_argument("--allow", default=None, metavar="规则ID,规则ID",
+                        help="本单位制度明文规定的写法（如企业发文字号用方括号时写 FMT-001），"
+                             "列出的规则命中时降为 P2 并注明“按本单位制度保留”，不计入 --strict")
     parser.add_argument("-h", "--help", action="help", help="显示帮助并退出")
     return parser
 
@@ -1696,7 +2088,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        result = lint_file(Path(args.file), args.doc_type, args.checks)
+        banned = load_banned(Path(args.banned)) if args.banned else None
+        result = lint_file(Path(args.file), args.doc_type, args.checks, banned=banned, allow=parse_allow(args.allow))
     except InputError as exc:
         print(f"错误：{exc}", file=sys.stderr)
         return 2

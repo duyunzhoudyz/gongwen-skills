@@ -18,8 +18,8 @@ except Exception:
     pass
 
 REPO = Path(__file__).resolve().parents[2]
-SKILLS = ["gongwen", "gongwen-report", "gongwen-title", "gongwen-humanize",
-          "gongwen-direct", "gongwen-review", "gongwen-format"]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from skill_list import ordered_unique  # noqa: E402
 
 HEADER = """# 缺陷归因任务：{skill}
 
@@ -72,7 +72,7 @@ def main():
     dirs = {(r["skill"], r["id"], r["group"]): r["dir"] for r in index}
     (bench / "defects").mkdir(exist_ok=True)
 
-    for skill in SKILLS:
+    for skill in ordered_unique([r["skill"] for r in index], REPO):
         if args.skill and skill not in args.skill:
             continue
         data = json.loads((REPO / "skills" / skill / "evals" / "evals.json").read_text(encoding="utf-8"))

@@ -4,11 +4,11 @@
 
 ## 使用说明
 
-1. 只在两种情况下提示：用户首次使用；用户需求模糊（如"这个月要准备什么"）。其余时候不主动提示。
+1. 只在两种情况下提示：用户首次使用；用户需求模糊（如“这个月要准备什么”）。其余时候不主动提示。
 2. 先查第一节通用节点，再按画像的单位类型查第二节行业节点；一次最多提示 3 条，行业节点优先。
-3. 表中时间多为常见惯例，有制度依据的已注明。具体时间以当年上级通知和本单位安排为准，提示时用"一般""通常"等措辞。
+3. 表中时间多为常见惯例，有制度依据的已注明。具体时间以当年上级通知和本单位安排为准，提示时用“一般”“通常”等措辞。
 4. skill 列是首选 skill。行业包（gongwen-grassroots、gongwen-hospital、gongwen-university、gongwen-k12、gongwen-soe）已安装时，行业节点优先交给行业包。
-5. 表中 skill 尚未安装时，改用已安装的相近 skill（如讲话稿先用 gongwen-report 出提纲），并告诉用户。
+5. 表中 skill 未安装的，按 `references/_shared/style/output-format.md` 第四部分给出交接卡、网页提示词和安装命令，不用不对口的 skill 代写。
 6. 春节等农历节日对应的月份每年不同，按当年日历判断。
 
 ## 一、通用节点
@@ -31,8 +31,8 @@
 | 3 月 | 全国两会后的学习贯彻材料；工作推进会讲话 | gongwen-implement、gongwen-speech |
 | 4 月 | 一季度工作分析、季度汇报 | gongwen-report、gongwen-data |
 | 5 月 | 重点任务中期督查自查 | gongwen-report |
-| 6 月 | 安全生产月方案和总结；"七一"党建材料、党课讲稿 | gongwen-draft、gongwen-party |
-| 7 月 | 上半年总结、半年运行分析（全年第二高峰）；"七一"表彰讲话 | gongwen-report、gongwen-data、gongwen-speech |
+| 6 月 | 安全生产月方案和总结；“七一”党建材料、党课讲稿 | gongwen-draft、gongwen-party |
+| 7 月 | 上半年总结、半年运行分析（全年第二高峰）；“七一”表彰讲话 | gongwen-report、gongwen-data、gongwen-speech |
 | 8 月 | 下半年工作部署；防汛等季节性通知 | gongwen-draft、gongwen-implement |
 | 9 月 | 国庆节前安全检查通知；秋季工作推进 | gongwen-draft |
 | 10 月 | 前三季度工作分析；年度目标完成情况盘点 | gongwen-report、gongwen-data |
@@ -56,15 +56,15 @@
 
 | 时间 | 节点与材料 | skill |
 |---|---|---|
-| 1 月 | 上年度绩效考核（国考）自评和数据核对（2019 年各地实施方案多定在 1 月底前，近年以国家年度启动通知为准）；科室主任述职；目标责任书 | gongwen-data、gongwen-report |
-| 1–3 月 | 年度工作会和职代会院长报告；年度质量安全改进工作方案 | gongwen-speech、gongwen-report、gongwen-implement |
+| 1 月 | 科室主任述职；目标责任书 | gongwen-hospital（未安装时 gongwen-report） |
+| 1–3 月 | 职代会院长工作报告；年度工作会讲话；年度质量安全改进工作方案 | gongwen-report（院长工作报告）、gongwen-speech（讲话）、gongwen-implement |
 | 4 月、10 月 | 季度医疗质量分析、运营分析 | gongwen-data、gongwen-report |
 | 5 月 | 护士节（5 月 12 日）表彰与讲话 | gongwen-speech |
 | 7 月 | 半年工作总结、半年质量分析 | gongwen-report、gongwen-data |
 | 8 月 | 中国医师节（8 月 19 日）表彰与讲话 | gongwen-speech |
 | 11–12 月 | 医院和科室年终总结、次年计划、预算 | gongwen-report |
 | 每月 | 病案首页数据按月上传；医疗质量、院感、运营月报 | gongwen-data |
-| 收到通知时 | 国家年度绩效考核（监测）启动通知的时间每年不同，收到后准备数据核对和自评材料 | gongwen-data、gongwen-report |
+| 收到通知时 | 绩效考核（监测）自评和数据核对，以国家年度启动通知为准（2026 年启动 2025 年度工作的通知在 7 月） | gongwen-hospital（未安装时 gongwen-data、gongwen-report） |
 | 按周期 | 等级评审自评、专项检查迎检；不良事件根因分析 | gongwen-report、gongwen-rectify |
 
 ### （三）高校
@@ -72,14 +72,14 @@
 | 时间 | 节点与材料 | skill |
 |---|---|---|
 | 2–3 月 | 春季开学：新学期工作会议讲话、党政工作要点 | gongwen-speech、gongwen-report |
-| 3–4 月 | 教代会报告（时间以学校安排为准） | gongwen-speech、gongwen-report |
+| 3–4 月 | 教代会工作报告（时间以学校安排为准） | gongwen-report |
 | 5–6 月 | 毕业典礼讲话；就业工作材料 | gongwen-speech、gongwen-report |
 | 7 月 | 学期总结；暑期工作会材料 | gongwen-report、gongwen-speech |
 | 9 月 | 开学典礼讲话；迎新方案；教师节（9 月 10 日）表彰 | gongwen-speech、gongwen-draft |
 | 10–11 月 | 本科教学质量报告（按省级教育部门通知）；年度统计数据报送 | gongwen-report、gongwen-data |
 | 12 月–次年 1 月 | 年度考核、述职、学院年度总结；就业质量年度报告 | gongwen-report |
 | 按评估周期 | 本科教育教学审核评估自评报告、学科评估材料及整改 | gongwen-report、gongwen-rectify |
-| 按届期 | 党代会报告 | gongwen-report、gongwen-party |
+| 按届期 | 党代会报告（叠加严谨模式） | gongwen-report |
 
 ### （四）中小学
 
@@ -105,7 +105,7 @@
 | 7–8 月 | 半年经营分析；年中工作会；上市公司半年报（8 月底前） | gongwen-data、gongwen-speech |
 | 10 月 | 前三季度经营分析；上市公司三季报 | gongwen-data |
 | 11–12 月 | 下年度预算；年终总结；述职述廉；年度考核 | gongwen-report、gongwen-data |
-| 事件触发 | "三重一大"议题材料、董事会议案；巡视巡察和审计整改 | gongwen-minutes、gongwen-rectify |
+| 事件触发 | “三重一大”议题材料、董事会议案；巡视巡察和审计整改 | gongwen-minutes、gongwen-rectify |
 
 ## 三、宣传节点（固定日期）
 
@@ -122,7 +122,7 @@
 
 ## 四、提示示例
 
-用户在 11 月说"最近要准备点什么材料"，画像为公立医院、院办秘书时：
+用户在 11 月说“最近要准备点什么材料”，画像为公立医院、院办秘书时：
 
 ```text
 11 月一般是年终材料的准备期，可以先从这几件开始：

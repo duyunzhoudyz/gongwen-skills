@@ -153,6 +153,37 @@ class CountSummaryTest(unittest.TestCase):
         r = run("深入开展“三个方面”专项行动：一是甲；二是乙。", checks="structure")
         self.assertNotIn("STR-002", ids(r))
 
+    # W1-PA-1：对照检查材料中“围绕四个方面对照检查如下”的方面来自上级通知，不与后续一级标题比对
+    INSPECTION = ("某局领导班子对照检查材料\n\n按照通知要求，围绕四个方面对照检查如下。\n\n一、存在的问题\n\n"
+                  "（一）甲。\n\n（二）乙。\n\n（三）丙。\n\n（四）丁。\n\n二、原因分析\n\n内容。\n\n三、整改措施\n\n"
+                  "内容。\n\n四、努力方向\n\n内容。\n\n五、其他\n\n内容。\n")
+
+    def test_inspection_aspects_not_counted_against_headings(self):
+        self.assertNotIn("STR-002", ids(run(self.INSPECTION, None, "structure")))
+        text = self.INSPECTION.replace("围绕四个方面对照检查如下", "从四个方面查摆问题如下")
+        self.assertNotIn("STR-002", ids(run(text, None, "structure")))
+
+    def test_scope_lead_in_preamble_not_counted(self):
+        text = ("某学院2026年工作总结\n\n2026年，学院围绕人才培养、科学研究、师资队伍建设三项重点任务开展工作。\n\n"
+                "一、人才培养\n\n内容。\n\n二、科学研究\n\n内容。\n\n三、师资队伍\n\n内容。\n\n四、存在问题\n\n内容。\n")
+        self.assertNotIn("STR-002", ids(run(text, None, "structure")))
+
+    def test_inline_mismatch_still_reported(self):
+        r = run("我们抓了三个方面：一是甲；二是乙；三是丙；四是丁。", checks="structure")
+        self.assertIn("STR-002", ids(r))
+        r = run("查摆出三个方面问题：一是甲；二是乙。", checks="structure")
+        self.assertIn("STR-002", ids(r))
+
+    def test_speech_points_still_checked(self):
+        text = ("在全市安全生产工作会议上的讲话\n\n同志们：\n\n下面，我讲三点意见。\n\n一、认清形势\n\n内容。\n\n"
+                "二、突出重点\n\n内容。\n\n三、压实责任\n\n内容。\n\n四、其他\n\n内容。\n")
+        self.assertIn("STR-002", ids(run(text, "讲话稿", "structure")))
+
+    def test_scope_lead_inside_section_still_checked(self):
+        text = (NOTICE_HEAD + "一、主要任务\n\n围绕三个方面抓好落实：\n\n（一）甲。\n\n（二）乙。\n\n（三）丙。\n\n"
+                "（四）丁。\n\n二、工作要求\n\n内容。\n")
+        self.assertIn("STR-002", ids(run(text, "通知", "structure")))
+
 
 class DocTypeRulesTest(unittest.TestCase):
     QINGSHI_OK = "某区教育局关于申请校舍维修经费的请示\n\n区人民政府：\n\n恳请安排维修经费386万元。\n\n妥否，请批示。\n\n某区教育局\n2026年10月16日\n"

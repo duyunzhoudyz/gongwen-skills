@@ -155,5 +155,77 @@ class TruncationAndEncodingTest(TempDirMixin, unittest.TestCase):
         self.assertTrue({"RES-001", "RES-002"} <= found)
 
 
+class BodyCharCountTest(TempDirMixin, unittest.TestCase):
+    """W1-PL-4：JSON 顶层给出正文字数 body_char_count（标题之后、不含空白和版记），char_count 原义不变。"""
+
+    def test_body_char_count(self):
+        text = ("某市某局关于做好某项工作的通知\n\n各区某局：\n\n请按时报送。\n\n某市某局\n2026年10月16日\n\n"
+                "抄送：市政府办公室。\n\n【起草说明】\n说明。\n")
+        path = self.write("正文.txt", text)
+        _code, out, _err = cli(str(path), "--json")
+        data = json.loads(out)
+        expected = gl.nonspace_len("各区某局：请按时报送。某市某局2026年10月16日")
+        self.assertEqual(data["body_char_count"], expected)
+        self.assertEqual(data["char_count"], gl.nonspace_len(
+            "某市某局关于做好某项工作的通知各区某局：请按时报送。某市某局2026年10月16日抄送：市政府办公室。"))
+        note = next(n for n in data["notes"] if n.startswith("篇幅口径"))
+        self.assertIn(f"约 {data['body_char_count']} 字", note)
+
+
+class AllowTest(TempDirMixin, unittest.TestCase):
+    """FM-6-L：--allow 列出的规则命中时降为 P2、注明按本单位制度保留，不计入 --strict。"""
+
+    def test_allow_downgrades_and_strict_passes(self):
+        path = self.write("正文.txt", "某能源发［2026］47号\n\n关于做好安全生产工作的通知\n\n各子公司：\n\n请按时报送。\n")
+        code, out, _err = cli(str(path), "--json", "--strict")
+        self.assertEqual(code, 1)
+        self.assertIn("P0", [i["level"] for i in json.loads(out)["issues"] if i["id"] == "FMT-001"])
+        code, out, _err = cli(str(path), "--json", "--strict", "--allow", "FMT-001")
+        self.assertEqual(code, 0)
+        data = json.loads(out)
+        found = [i for i in data["issues"] if i["id"] == "FMT-001"]
+        self.assertTrue(found)
+        self.assertTrue(all(i["level"] == "P2" and i["message"].startswith("按本单位制度保留：") for i in found))
+        self.assertEqual(data["summary"]["P0"], 0)
+        self.assertTrue(any("--allow" in n for n in data["notes"]))
+
+    def test_unknown_rule_noted(self):
+        path = self.write("正文.txt", "内容。\n")
+        code, out, _err = cli(str(path), "--json", "--allow", "FMT-001,ABC-999")
+        self.assertEqual(code, 0)
+        self.assertTrue(any("ABC-999" in n for n in json.loads(out)["notes"]))
+
+    def test_help_mentions_options(self):
+        _code, out, _err = cli("--help")
+        for word in ("--allow", "按本单位制度保留", "--banned", "BAN-001"):
+            self.assertIn(word, out)
+
+
+@unittest.skipUnless(os.name == "nt", "长路径前缀只在 Windows 下需要")
+class LongPathTest(unittest.TestCase):
+    """W1-IM-3：Windows 下超过 260 字符的路径能正常检查。"""
+
+    PREFIX = "\\\\?\\"
+
+    def test_long_path(self):
+        base = Path(tempfile.mkdtemp()).resolve()
+        try:
+            folder = base
+            while len(str(folder)) < 300:
+                folder = folder / ("用于构造超长路径的目录名称" * 3)
+                os.mkdir(self.PREFIX + str(folder))
+            target = folder / "正文.txt"
+            with open(self.PREFIX + str(target), "w", encoding="utf-8") as fh:
+                fh.write("某发[2026]5号\n\n内容。\n")
+            self.assertGreater(len(str(target)), 260)
+            code, out, err = cli(str(target), "--json")
+            self.assertEqual(code, 0, err)
+            self.assertIn("FMT-001", [i["id"] for i in json.loads(out)["issues"]])
+            self.assertEqual(gl.long_path(Path("相对路径.txt")), Path("相对路径.txt"))
+        finally:
+            import shutil
+            shutil.rmtree(self.PREFIX + str(base), ignore_errors=True)
+
+
 if __name__ == "__main__":
     unittest.main()

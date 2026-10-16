@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import importlib.util
 import io
+import os
 import shutil
 import sys
 import tempfile
@@ -234,6 +235,69 @@ class ConvertTest(Md2xlsxCase):
         self.assertEqual(code, 0, err)
         self.assertIn("已生成", out)
         self.assertTrue((self.tmp / "out.xlsx").is_file())
+
+
+def _win_long(path: Path) -> str:
+    """测试自身访问超长路径时用的 Windows 长路径写法。"""
+    text = str(path.resolve())
+    return text if text.startswith("\\\\?\\") else "\\\\?\\" + text
+
+
+@unittest.skipUnless(sys.platform.startswith("win"), "只在 Windows 下有 260 字符路径上限")
+@unittest.skipUnless(HAS_OPENPYXL, "需要 openpyxl")
+class LongPathTest(unittest.TestCase):
+    """W1-IM-4：完整路径约 300 字符时也能读入 Markdown、写出 xlsx（原来报 WinError 206）。"""
+
+    def setUp(self) -> None:
+        self.tmp = Path(tempfile.mkdtemp(prefix="md2xlsx_long_"))
+        base_len = len(str(self.tmp.resolve()))
+        # 目录名每段 50 字符，拼到完整路径约 300 字符
+        parts, length = [], base_len
+        while length < 280:
+            parts.append("长路径目录" + "d" * 45)
+            length += 51
+        self.deep = self.tmp.joinpath(*parts)
+
+    def tearDown(self) -> None:
+        shutil.rmtree(_win_long(self.tmp), ignore_errors=True)
+
+    def test_write_to_300_char_path(self):
+        out = self.deep / "整改台账.xlsx"
+        self.assertGreaterEqual(len(str(out.resolve())), 300)
+        src = self.tmp / "台账.md"
+        src.write_text(LEDGER_MD, encoding="utf-8")
+        target, _tables, names = md2xlsx.convert(src, out)
+        self.assertEqual(target, out)  # 返回和显示的是原路径，不带前缀
+        self.assertTrue(Path(_win_long(out)).is_file())
+        ws = openpyxl.load_workbook(_win_long(out))[names[0]]
+        self.assertEqual(ws["A1"].value, "某局巡察整改台账")
+        # 再写一次不覆盖，另存为 -v2（超长路径下也能判断已存在）
+        second, _, _ = md2xlsx.convert(src, out)
+        self.assertEqual(second.name, "整改台账-v2.xlsx")
+
+    def test_read_from_long_path(self):
+        os.makedirs(_win_long(self.deep), exist_ok=True)
+        src = self.deep / "台账.md"
+        Path(_win_long(src)).write_text(LEDGER_MD, encoding="utf-8")
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            code = md2xlsx.main([str(src), str(self.tmp / "短路径.xlsx")])
+        self.assertEqual(code, 0, err.getvalue())
+        self.assertTrue((self.tmp / "短路径.xlsx").is_file())
+
+
+class LongPathHelperTest(unittest.TestCase):
+
+    def test_prefix_only_for_long_windows_paths(self):
+        short = Path("台账.xlsx")
+        self.assertEqual(md2xlsx._long_path(short), short)
+        long_path = Path("C:/" + "a" * 250 + "/台账.xlsx")
+        if sys.platform.startswith("win"):
+            self.assertTrue(str(md2xlsx._long_path(long_path)).startswith("\\\\?\\C:\\"))
+            unc = Path("\\\\server\\share\\" + "b" * 250 + "\\台账.xlsx")
+            self.assertTrue(str(md2xlsx._long_path(unc)).startswith("\\\\?\\UNC\\server"))
+        else:
+            self.assertEqual(md2xlsx._long_path(long_path), long_path)
 
 
 class CliErrorTest(Md2xlsxCase):

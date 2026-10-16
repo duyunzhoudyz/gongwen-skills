@@ -5,30 +5,47 @@
 维护者：gongwen-humanize。接口见 docs/开发规范.md 8.1 节。
 
 用法：
-    python scripts/fact_diff.py <原稿> <改稿> [--json] [--strict]
-    python scripts/fact_diff.py <素材台账.md> <正文.txt> --ledger [--json] [--strict]
+    python scripts/fact_diff.py <原稿> <改稿> [--ref <另一份原稿>]... [--json] [--strict]
+    python scripts/fact_diff.py <素材台账.md> <正文.txt> --ledger [--ref <另一份材料>]... [--json] [--strict]
 
 --ledger（台账对账）：只输出"改稿新增"，即正文中有、台账中没有的事实；按集合比较，同一个数在正文中
 用两次不报；台账中 Markdown 表格表头为"序号""来源"的列不参与比对。
 
+--ref（多份原稿，可重复）：多稿合并、原稿加补充材料时使用。各稿分别截掉【起草说明】及其后内容，
+合起来作比对基准；同一事实按出现次数最多的那一份计数；"原稿有而改稿没有"的每项注明出自哪份原稿。
+
 比对内容（只比对【起草说明】之前的正文）：
     数字：阿拉伯数字和带量词的汉字数字，连同单位一起比对，如"3.5天""12.5%""2个百分点"；
           汉字数字换算成阿拉伯数字后比对，"三家"与"3家"视为相同；"三分之一"按"1/3"比对；
+          含万、亿的汉字数字不带量词也比对，"三百二十万"按"320万"比对，"一点五亿"按"1.5亿"比对；
+          "万"与"万元"、"亿"与"亿元"在一方缺"元"时按同一数值比对（只限这两种）；
           数值范围中前一个数省略的单位按后一个数补全，"3～5万元"与"3万～5万元"视为相同；
     日期：如"2026年10月16日""2026-10-16"；时刻如"9:30"；月、日的虚位 0 不计，"11月05日"与"11月5日"视为相同；
     标记：【待补：……】【待核实：……】；
     书名号：《……》整体比对；
-    引号：“……”‘……’「……」『……』及成对的英文双引号，整体比对；
+    引号：“……”‘……’「……」『……』及成对的英文双引号，整体比对；英文双引号、「」按“”比对，『』按‘’比对；
     发文字号：如"某政发〔2026〕12号"。
+
+比对前去掉数字与单位、量词之间的空格（含全角空格，不含制表符），"3216 人次"与"3216人次"视为相同；
+"第 3 次""2026 年 10 月 16 日"中的空格同样去掉；紧挨英文字母的编号（"E1 家校协同"）不并入后面的文字。
 
 不算事实、不参与比对的内容：
     层次序号 一、（一）1.（1），段内的 1. 1、1）（1）列举序号，作列举用的"第一，""第二、"；
-    单独的汉字"一"加量词（如"一个""一批"），以及不带量词的汉字数字（如"统一""一是"）。
+    单独的汉字"一"加量词（如"一个""一批"），以及不带量词、不含万亿的汉字数字（如"统一""一是"）。
 
-输出两张清单："原稿有而改稿没有""改稿新增"。按出现次数比对：原稿出现 2 次、改稿 1 次，也会列出。
+可能是序数或概数的内容单列第三张清单"可能是序数或概数（请人工判断）"，不计入前两张清单和 --strict：
+    结构序数：十以内的"X点意见""X个方面""X项要求""X条建议""X件事"，"讲三点""以下三点"，"第三点"；
+    概数："X成"，如"九成以上""9成患者满意"；"数""几"开头的汉字数字，如"数十万人次""几十家"。
 
-退出码：0 正常；--strict 时任一清单非空返回 1；输入错误（文件不存在、格式不支持、读取失败）返回 2。
-只依赖标准库；读取 .docx 需要 python-docx，未安装时给出安装提示并返回 2。
+前两张清单为"原稿有而改稿没有""改稿新增"。按出现次数比对：原稿出现 2 次、改稿 1 次，也会列出。
+--json 输出中，第三张清单在 uncertain 字段（每项带 hint：序数或概数；list：missing 或 added），
+docx 修订等说明在 notes 字段，各原稿文件名在 original_files 字段。
+
+读取 .docx 时按"接受全部修订"后的文字比对：含修订插入（w:ins）的文字，不含修订删除（w:del）的文字，
+输出中注明"已按接受修订后的文字比对"。
+
+退出码：0 正常；--strict 时前两张清单任一非空返回 1；输入错误（文件不存在、格式不支持、读取失败）返回 2。
+只依赖标准库（.docx 用 zipfile 和 ElementTree 解析）。
 """
 from __future__ import annotations
 
@@ -37,6 +54,8 @@ import json
 import os
 import re
 import sys
+import zipfile
+import xml.etree.ElementTree as ET
 from collections import Counter, OrderedDict
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
@@ -136,6 +155,10 @@ ARABIC_RE = re.compile(
 CN_RE = re.compile(
     r"(第)?([" + CN_NUM_CHARS + r"]+(?:[万亿][" + CN_NUM_CHARS + r"]+)*)(余|多)?([万亿]{1,2})?(余|多)?"
 )
+# 汉字小数"一点五亿""三点五个百分点"；小数部分逐位书写，后面紧跟十百千的是时刻（"十二点三十分"），不算
+CN_DECIMAL_RE = re.compile(
+    r"([" + CN_NUM_CHARS + r"]+)点([〇零一二三四五六七八九]+)(?![十百千])([万亿])?"
+)
 
 # 单位：先匹配多字单位，再匹配单字单位
 MULTI_UNITS = (
@@ -148,8 +171,37 @@ SINGLE_UNITS = frozenset(
     "年月日号时秒天周岁倍元角吨亩米层级类种支队组届点股斤箱瓶块段部章成"
 )
 # 含数字但不表示数量的成语和惯用语，抽取汉字数字前先屏蔽
-CN_IDIOMS = ("第一时间", "千家万户", "百家争鸣", "三番五次", "三天两头", "五花八门", "一五一十", "三令五申")
+CN_IDIOMS = ("第一时间", "千家万户", "百家争鸣", "三番五次", "三天两头", "五花八门", "一五一十", "三令五申",
+             "十万火急")
 LATIN_UNIT_RE = re.compile(r"[A-Za-z]{1,3}[²³]?(?![A-Za-z])")
+
+# 数字与单位之间可去掉的空白：半角、不换行、全角空格等；不含制表符（表格各列以制表符分隔）
+SPACE_CHARS = frozenset("      　")
+DIGIT_CHARS = frozenset("0123456789０１２３４５６７８９")
+UNIT_LEAD_CHARS = frozenset("%‰％万亿余多")
+# "万"与"万元"、"亿"与"亿元"按同一数值比对：比对键去掉万、亿（可带余、多）之后的"元"
+YUAN_AFTER_MULT_RE = re.compile(r"(?<=[万亿])(余|多)?元$")
+# 前面是"数""几"的汉字数字（"数十万人次"）属概数，列入第三张清单
+CN_VAGUE_PREFIXES = frozenset("数几")
+# 引号统一：英文双引号、直角引号按中文双引号比对，『』按中文单引号比对
+QUOTE_NORM = {"\"": ("“", "”"), "“": ("“", "”"), "「": ("“", "”"), "‘": ("‘", "’"), "『": ("‘", "’")}
+
+# 第三张清单：可能是序数或概数
+HINT_ORDINAL = "序数"
+HINT_APPROX = "概数"
+STRUCT_MAX = 10  # 结构序数只认十以内
+# 量词后紧跟这些词时，多为讲话、材料的结构序数（"三点意见""五项要求""两件事""三个方面"）
+STRUCT_FOLLOW = {
+    "点": ("意见", "要求", "建议", "看法", "体会", "想法", "打算", "感受", "认识", "希望", "考虑", "思考",
+          "启示", "收获"),
+    "条": ("意见", "建议", "要求", "体会", "启示", "感受"),
+    "项": ("要求", "意见", "建议", "原则"),
+    "件": ("事",),
+    "个": ("方面",),
+}
+STRUCT_NOT_FOLLOW = ("事项", "事业", "事务", "事件", "事宜", "事迹")
+# "讲三点""以下三点"：量词"点"前面是这些词时按结构序数（"下午3点"不算）
+POINT_LEAD_RE = re.compile(r"(?:讲|谈|提|说|强调|以下|如下|下面|这)$")
 
 
 # ---------------------------------------------------------------------------
@@ -157,18 +209,26 @@ LATIN_UNIT_RE = re.compile(r"[A-Za-z]{1,3}[²³]?(?![A-Za-z])")
 # ---------------------------------------------------------------------------
 
 class Fact:
-    __slots__ = ("kind", "value", "line", "pos", "excerpt")
+    """一项事实。value 用于显示；norm 用于比对（去掉单位前空格、统一引号、万元按万等）；
+    hint 非空时表示可能是序数或概数；source 为所在文件名（多份原稿时用于注明出处）。"""
 
-    def __init__(self, kind: str, value: str, line: int, pos: int, excerpt: str) -> None:
+    __slots__ = ("kind", "value", "line", "pos", "excerpt", "norm", "hint", "source")
+
+    def __init__(self, kind: str, value: str, line: int, pos: int, excerpt: str,
+                 norm: Optional[str] = None, hint: str = "", source: str = "") -> None:
         self.kind = kind
         self.value = value
         self.line = line
         self.pos = pos
         self.excerpt = excerpt
+        self.norm = value if norm is None else norm
+        self.hint = hint
+        self.source = source
 
     @property
-    def key(self) -> Tuple[str, str]:
-        return (self.kind, self.value)
+    def key(self) -> Tuple[str, str, str]:
+        # 序数、概数与同写法的数量分开计数："讲三点"与"下午3点"不相抵
+        return (self.kind, self.norm, self.hint)
 
 
 class InputError(Exception):
@@ -191,36 +251,92 @@ def _decode(data: bytes, path: Path) -> str:
     raise InputError(f"无法识别文件编码，请另存为 UTF-8：{path}")
 
 
-def _read_docx(path: Path) -> str:
-    try:
-        import docx  # type: ignore
-        from docx.table import Table  # type: ignore
-        from docx.text.paragraph import Paragraph  # type: ignore
-    except ImportError:
-        raise InputError("读取 .docx 需要 python-docx，请先运行：pip install python-docx；"
-                         "或把正文另存为 .txt 后再比对。")
-    try:
-        document = docx.Document(str(path))
-    except Exception as exc:  # 文件损坏、不是 docx 等
-        raise InputError(f"无法打开 docx 文件：{path}（{exc}）")
+# .docx 解析（标准库 zipfile + ElementTree），按"接受全部修订"后的文字读取
+W_NS = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+W_BODY, W_P, W_T, W_TBL, W_TR, W_TC = (W_NS + t for t in ("body", "p", "t", "tbl", "tr", "tc"))
+W_TAB, W_BR, W_CR, W_SECTPR = (W_NS + t for t in ("tab", "br", "cr", "sectPr"))
+W_INS, W_DEL, W_MOVE_FROM, W_MOVE_TO = (W_NS + t for t in ("ins", "del", "moveFrom", "moveTo"))
+MAX_XML_BYTES = 50 * 1024 * 1024
+
+
+def _docx_para_text(paragraph: ET.Element) -> str:
+    """段落文字：含 w:ins、w:moveTo 内的文字，不含 w:del、w:moveFrom 内的文字；文本框等嵌套段落不并入。"""
+    parts: List[str] = []
+
+    def walk(element: ET.Element) -> None:
+        for child in element:
+            tag = child.tag
+            if tag in (W_DEL, W_MOVE_FROM, W_P):
+                continue
+            if tag == W_T:
+                parts.append(child.text or "")
+            elif tag == W_TAB:
+                parts.append("\t")
+            elif tag in (W_BR, W_CR):
+                parts.append("\n")
+            else:
+                walk(child)
+
+    walk(paragraph)
+    return "".join(parts)
+
+
+def _docx_lines(body: ET.Element) -> List[str]:
+    """正文逐段取文字；表格一行为一行，单元格之间用制表符分隔。
+
+    合并单元格在 XML 中只有一个 w:tc（纵向合并的后续行是空单元格），一处数字不会计成多处；
+    嵌套表格的文字并入所在单元格。
+    """
     lines: List[str] = []
-    body = document.element.body
-    for child in body.iterchildren():
-        tag = child.tag.rsplit("}", 1)[-1]
-        if tag == "p":
-            lines.append(Paragraph(child, document).text)
-        elif tag == "tbl":
-            # python-docx 对横向、纵向合并的单元格逐格重复返回同一个单元格，按底层 tc 元素去重，避免一处数字计成多处
-            seen = set()
-            for row in Table(child, document).rows:
-                texts = []
-                for cell in row.cells:
-                    if cell._tc in seen:
-                        continue
-                    seen.add(cell._tc)
-                    texts.append(cell.text.replace("\n", " "))
-                lines.append("\t".join(texts))
-    return "\n".join(lines)
+
+    def cell_text(cell: ET.Element) -> str:
+        texts: List[str] = []
+
+        def walk(element: ET.Element) -> None:
+            for child in element:
+                if child.tag == W_P:
+                    texts.append(_docx_para_text(child).replace("\n", " ").strip())
+                else:
+                    walk(child)
+
+        walk(cell)
+        return " ".join(t for t in texts if t)
+
+    def walk(element: ET.Element) -> None:
+        for child in element:
+            tag = child.tag
+            if tag == W_P:
+                lines.extend(_docx_para_text(child).split("\n"))
+            elif tag == W_TBL:
+                for row in (r for r in child if r.tag == W_TR):
+                    lines.append("\t".join(cell_text(tc) for tc in row if tc.tag == W_TC))
+            elif tag != W_SECTPR:
+                walk(child)  # 内容控件（w:sdt）、w:customXml 等容器
+
+    walk(body)
+    return lines
+
+
+def _read_docx(path: Path) -> Tuple[str, int]:
+    """返回（接受全部修订后的正文，修订痕迹处数）。"""
+    try:
+        with zipfile.ZipFile(str(path)) as archive:
+            try:
+                info = archive.getinfo("word/document.xml")
+            except KeyError:
+                raise InputError(f"不是有效的 Word 文档（缺少 word/document.xml）：{path}")
+            if info.file_size > MAX_XML_BYTES:
+                raise InputError(f"word/document.xml 过大，已停止读取：{path}")
+            data = archive.read(info)
+    except (zipfile.BadZipFile, OSError, RuntimeError) as exc:  # 文件损坏、不是 docx、加密等
+        raise InputError(f"无法打开 docx 文件：{path}（{exc}）")
+    try:
+        root = ET.fromstring(data)
+    except ET.ParseError as exc:
+        raise InputError(f"docx 文件内容损坏：{path}（{exc}）")
+    body = root.find(W_BODY)
+    revisions = sum(1 for el in root.iter() if el.tag in (W_INS, W_DEL, W_MOVE_FROM, W_MOVE_TO))
+    return "\n".join(_docx_lines(root if body is None else body)), revisions
 
 
 def _long_path(path: Path) -> Path:
@@ -239,8 +355,8 @@ def _long_path(path: Path) -> Path:
     return Path(prefix + full)
 
 
-def read_text(path: Path) -> str:
-    """读取 .txt、.md、.docx 文件的全文。"""
+def read_document(path: Path) -> Tuple[str, int]:
+    """读取 .txt、.md、.docx 文件的全文，返回（全文，docx 修订痕迹处数）。"""
     shown = path
     path = _long_path(path)
     if not path.exists():
@@ -256,7 +372,12 @@ def read_text(path: Path) -> str:
         data = path.read_bytes()
     except OSError as exc:
         raise InputError(f"读取失败：{path}（{exc}）")
-    return _decode(data, path)
+    return _decode(data, path), 0
+
+
+def read_text(path: Path) -> str:
+    """读取 .txt、.md、.docx 文件的全文（docx 按接受全部修订后的文字）。"""
+    return read_document(path)[0]
 
 
 TABLE_ROW_RE = re.compile(r"^\s*\|.*\|\s*$")
@@ -437,22 +558,103 @@ def _docno_value(match: "re.Match[str]") -> Tuple[str, int]:
     return match.group(0)[offset:], offset
 
 
+def _unit_follows(text: str, pos: int) -> bool:
+    """pos 处是否以单位、量词或万、亿、余、多开头。"""
+    ch = text[pos]
+    if ch in UNIT_LEAD_CHARS or ch in SINGLE_UNITS:
+        return True
+    return any(text.startswith(unit, pos) for unit in MULTI_UNITS)
+
+
+def _space_removable(kept: List[str], text: str, nxt: int) -> bool:
+    """kept 为已保留的字符，nxt 为空白之后第一个字符的位置。"""
+    prev, following = kept[-1], text[nxt]
+    if prev in DIGIT_CHARS:
+        # 数字前紧挨英文字母的是编号（"指标E1 家校协同"），不并入后面的文字
+        k = len(kept) - 1
+        while k >= 0 and (kept[k] in DIGIT_CHARS or kept[k] in ".,．"):
+            k -= 1
+        if k >= 0 and (kept[k].isascii() and kept[k].isalpha() or kept[k] in "-_"):
+            return False
+        return _unit_follows(text, nxt)  # "3216 人次""12 %""320 万元"
+    if prev == "第":
+        return following in DIGIT_CHARS  # "第 3 次"
+    if prev in "年月" and len(kept) >= 2 and kept[-2] in DIGIT_CHARS:
+        return following in DIGIT_CHARS  # "2026 年 10 月 16 日"
+    return False
+
+
+def squeeze_spaces(line: str) -> Tuple[str, List[int]]:
+    """去掉数字与单位、量词之间的空白，返回（新文本，新文本每个字符在原行中的位置）。"""
+    kept: List[str] = []
+    positions: List[int] = []
+    i, n = 0, len(line)
+    while i < n:
+        if line[i] not in SPACE_CHARS:
+            kept.append(line[i])
+            positions.append(i)
+            i += 1
+            continue
+        j = i
+        while j < n and line[j] in SPACE_CHARS:
+            j += 1
+        if not (kept and j < n and _space_removable(kept, line, j)):
+            kept.extend(line[i:j])
+            positions.extend(range(i, j))
+        i = j
+    return "".join(kept), positions
+
+
+def _number_norm(value: str) -> str:
+    """数字的比对键："320万元"与"320万"、"1.5亿元"与"1.5亿"相同。"""
+    return YUAN_AFTER_MULT_RE.sub(lambda m: m.group(1) or "", value)
+
+
+def _quote_norm(text: str) -> str:
+    """引号的比对键：英文双引号、「」统一为“”，『』统一为‘’。"""
+    pair = QUOTE_NORM.get(text[:1])
+    return pair[0] + text[1:-1] + pair[1] if pair and len(text) >= 2 else text
+
+
+def _number_hint(text: str, start: int, end: int, unit: str, value: Optional[int], ordinal: bool) -> str:
+    """可能是序数或概数时返回 HINT_ORDINAL 或 HINT_APPROX，否则返回空字符串。"""
+    if unit == "成":
+        return HINT_APPROX  # "九成以上""9成患者满意"
+    if value is None or not 1 <= value <= STRUCT_MAX:
+        return ""
+    if ordinal:
+        return HINT_ORDINAL if unit == "点" else ""  # "第三点"
+    follows = STRUCT_FOLLOW.get(unit)
+    if follows and any(text.startswith(word, end) for word in follows) \
+            and not any(text.startswith(word, end) for word in STRUCT_NOT_FOLLOW):
+        return HINT_ORDINAL  # "三点意见""五项要求""两件事""三个方面"
+    if unit == "点" and POINT_LEAD_RE.search(text[max(0, start - 2):start]):
+        return HINT_ORDINAL  # "讲三点""以下三点"
+    return ""
+
+
 def extract_line(line: str, lineno: int) -> List[Fact]:
     """抽取一行正文中的事实。"""
     facts: List[Fact] = []
     original = line
-    norm = line.translate(FULLWIDTH_TABLE)
+    stripped, positions = squeeze_spaces(line)  # 去掉数字与单位之间的空白，positions 用于回溯原文位置
+    norm = stripped.translate(FULLWIDTH_TABLE)  # 逐字替换，长度不变
     buf = list(norm)
 
     def current() -> str:
         return "".join(buf)
 
-    def add(kind: str, value: str, start: int, end: int) -> None:
-        facts.append(Fact(kind, value, lineno, start, _excerpt(original, start, end)))
+    def add(kind: str, value: str, start: int, end: int, key: Optional[str] = None, hint: str = "") -> None:
+        o_start, o_end = positions[start], positions[end - 1] + 1
+        if key is None:
+            key = value
+        if kind in (T_MARKER, T_TITLE, T_QUOTE):
+            value = original[o_start:o_end]  # 显示原文写法
+        facts.append(Fact(kind, value, lineno, o_start, _excerpt(original, o_start, o_end), key, hint))
 
     # 1. 标记
     for start, end, m in _scan_spans(MARKER_RE, current()):
-        add(T_MARKER, original[start:end], start, end)
+        add(T_MARKER, stripped[start:end], start, end)
         _mask(buf, start, end)
     # 2. 发文字号
     for start, end, m in _scan_spans(DOCNO_RE, current()):
@@ -461,12 +663,12 @@ def extract_line(line: str, lineno: int) -> List[Fact]:
         _mask(buf, start + offset, end)
     # 3. 书名号（内部可含已识别的发文字号、标记）
     for start, end, m in _scan_spans(TITLE_RE, current(), allow_inner_mask=True):
-        add(T_TITLE, original[start:end], start, end)
+        add(T_TITLE, stripped[start:end], start, end)
         _mask(buf, start, end)
-    # 4. 引号（内部可含已识别的书名号等）
+    # 4. 引号（内部可含已识别的书名号等）；中英文引号统一后比对
     for regex in QUOTE_RES:
         for start, end, m in _scan_spans(regex, current(), allow_inner_mask=True):
-            add(T_QUOTE, original[start:end], start, end)
+            add(T_QUOTE, stripped[start:end], start, end, key=_quote_norm(stripped[start:end]))
             _mask(buf, start, end)
     # 5. 层次序号和列举序号（不算事实，只屏蔽）
     m = SEQ_LINE_START_RE.match(current())
@@ -527,14 +729,32 @@ def extract_line(line: str, lineno: int) -> List[Fact]:
             cur[2] = nxt[2]
     for m, mult, unit, end in numbers:
         ordinal, int_part, frac, approx1, _mult, approx2 = m.groups()
-        value = (ordinal or "") + _norm_number(int_part, frac) + (approx1 or "") + mult + \
-            (approx2 or "") + unit.replace(" ", "")
-        add(T_NUMBER, value, m.start(), end)
+        unit = unit.replace(" ", "")
+        value = (ordinal or "") + _norm_number(int_part, frac) + (approx1 or "") + mult + (approx2 or "") + unit
+        plain = None if (frac or approx1 or approx2 or mult) else int(int_part.replace(",", ""))
+        hint = _number_hint(norm, m.start(), end, unit, plain, bool(ordinal))
+        add(T_NUMBER, value, m.start(), end, key=_number_norm(value), hint=hint)
         _mask(buf, m.start(), end)
     # 9. 带量词的汉字数字（先屏蔽成语）
     for idiom in CN_IDIOMS:
         for m in re.finditer(re.escape(idiom), current()):
             _mask(buf, m.start(), m.end())
+    # 9.1 汉字小数：须带万、亿或单位，"一点五亿"按"1.5亿"比对
+    text = current()
+    for start, end, m in _scan_spans(CN_DECIMAL_RE, text):
+        whole = cn_to_int(m.group(1))
+        if whole is None:
+            continue
+        unit = _match_unit(text, end)
+        if unit and LATIN_UNIT_RE.fullmatch(unit):
+            unit = ""
+        if not (m.group(3) or unit):
+            continue
+        frac = "".join(str(_CN_DIGIT_VALUE[ch]) for ch in m.group(2)).rstrip("0")
+        unit = unit.replace(" ", "")
+        value = str(whole) + (f".{frac}" if frac else "") + (m.group(3) or "") + unit
+        add(T_NUMBER, value, start, end + len(unit), key=_number_norm(value))
+        _mask(buf, start, end + len(unit))
     text = current()
     for m in CN_RE.finditer(text):
         ordinal, digits, approx1, mult, approx2 = m.groups()
@@ -542,25 +762,43 @@ def extract_line(line: str, lineno: int) -> List[Fact]:
         if number is None:
             continue
         unit = _match_unit(text, m.end())
+        if unit and LATIN_UNIT_RE.fullmatch(unit) and not ordinal:
+            unit = ""
+        if not ordinal and m.start() > 0 and text[m.start() - 1] in CN_VAGUE_PREFIXES:
+            # "数十万人次""几十家"是概数：原样列入第三张清单；"数十""几百"不带量词、不含万亿的不算
+            if not unit and not mult:
+                continue
+            start = m.start() - 1
+            unit = unit.replace(" ", "")
+            end = m.end() + len(unit)
+            value = text[start] + digits + (approx1 or "") + (mult or "") + (approx2 or "") + unit
+            add(T_NUMBER, value, start, end, key=_number_norm(value), hint=HINT_APPROX)
+            _mask(buf, start, end)
+            continue
         if not ordinal:
-            if not unit or LATIN_UNIT_RE.fullmatch(unit):
-                continue  # 不带量词的汉字数字（统一、一是、十四五）不算
+            if not unit and not mult:
+                continue  # 不带量词的汉字数字（统一、一是、十四五）不算；含万、亿的（三百二十万）照常比对
             if digits == "一" and not (approx1 or mult or approx2):
                 continue  # "一个""一批""一次"多为泛指
-        value = (ordinal or "") + str(number) + (approx1 or "") + (mult or "") + (approx2 or "") + \
-            unit.replace(" ", "")
+        unit = unit.replace(" ", "")
+        value = (ordinal or "") + str(number) + (approx1 or "") + (mult or "") + (approx2 or "") + unit
         end = m.end() + len(unit)
-        add(T_NUMBER, value, m.start(), end)
+        plain = None if (approx1 or mult or approx2) else number
+        hint = _number_hint(norm, m.start(), end, unit, plain, bool(ordinal))
+        add(T_NUMBER, value, m.start(), end, key=_number_norm(value), hint=hint)
         _mask(buf, m.start(), end)
     facts.sort(key=lambda f: f.pos)
     return facts
 
 
-def extract_facts(lines: Sequence[str]) -> List[Fact]:
+def extract_facts(lines: Sequence[str], source: str = "") -> List[Fact]:
     facts: List[Fact] = []
     for index, line in enumerate(lines, start=1):
         if line.strip():
             facts.extend(extract_line(line, index))
+    if source:
+        for fact in facts:
+            fact.source = source
     return facts
 
 
@@ -568,10 +806,33 @@ def extract_facts(lines: Sequence[str]) -> List[Fact]:
 # 比对
 # ---------------------------------------------------------------------------
 
+def _entry(items: List[Fact], original_count: int, revised_count: int, with_source: bool) -> dict:
+    """生成一项差异。items 为该项在一侧的全部出现位置；可能是序数或概数的带 hint 字段。"""
+    first = items[0]
+    locations = []
+    for f in items[:MAX_LOCATIONS]:
+        loc = {"line": f.line, "excerpt": f.excerpt}
+        if with_source and f.source:
+            loc["file"] = f.source
+        locations.append(loc)
+    entry = {
+        "type": first.kind,
+        "value": first.value,
+        "original_count": original_count,
+        "revised_count": revised_count,
+        "locations": locations,
+    }
+    if with_source:
+        entry["sources"] = list(OrderedDict.fromkeys(f.source for f in items if f.source))
+    if first.hint:  # 比对键含 hint，同一项的各处 hint 相同
+        entry["hint"] = first.hint
+    return entry
+
+
 def _diff_entries(base: List[Fact], base_counts: Counter, other_counts: Counter,
-                  base_is_original: bool) -> List[dict]:
+                  base_is_original: bool, with_source: bool = False) -> List[dict]:
     """列出 base 中出现次数多于另一稿的项（按首次出现顺序），位置取自 base。"""
-    grouped: "OrderedDict[Tuple[str, str], List[Fact]]" = OrderedDict()
+    grouped: "OrderedDict[Tuple[str, str, str], List[Fact]]" = OrderedDict()
     for fact in base:
         grouped.setdefault(fact.key, []).append(fact)
     entries: List[dict] = []
@@ -579,22 +840,26 @@ def _diff_entries(base: List[Fact], base_counts: Counter, other_counts: Counter,
         mine, theirs = base_counts[key], other_counts.get(key, 0)
         if mine <= theirs:
             continue
-        kind, value = key
-        entries.append({
-            "type": kind,
-            "value": value,
-            "original_count": mine if base_is_original else theirs,
-            "revised_count": theirs if base_is_original else mine,
-            "locations": [{"line": f.line, "excerpt": f.excerpt} for f in items[:MAX_LOCATIONS]],
-        })
+        if base_is_original:
+            entries.append(_entry(items, mine, theirs, with_source))
+        else:
+            entries.append(_entry(items, theirs, mine, False))
     return entries
 
 
-def compare(original: List[Fact], revised: List[Fact]) -> Tuple[List[dict], List[dict]]:
-    """返回 (原稿有而改稿没有, 改稿新增)。按出现次数比对。"""
-    orig_counts = Counter(f.key for f in original)
+def compare(original: List[Fact], revised: List[Fact], original_counts: Optional[Counter] = None,
+            with_source: Optional[bool] = None) -> Tuple[List[dict], List[dict]]:
+    """返回 (原稿有而改稿没有, 改稿新增)。按出现次数比对。
+
+    original_counts：多份原稿时传入各稿计数取最大值后的结果；不传时按 original 计数。
+    with_source：是否在"原稿有而改稿没有"中注明出自哪份原稿；不传时按 original 中的文件数判断。
+    可能是序数或概数的项带 hint 字段，由 split_uncertain 分出。
+    """
+    orig_counts = original_counts if original_counts is not None else Counter(f.key for f in original)
     rev_counts = Counter(f.key for f in revised)
-    missing = _diff_entries(original, orig_counts, rev_counts, base_is_original=True)
+    if with_source is None:
+        with_source = len({f.source for f in original}) > 1
+    missing = _diff_entries(original, orig_counts, rev_counts, base_is_original=True, with_source=with_source)
     added = _diff_entries(revised, rev_counts, orig_counts, base_is_original=False)
     return missing, added
 
@@ -603,17 +868,18 @@ def compare_ledger(ledger: List[Fact], body: List[Fact]) -> List[dict]:
     """台账对账：返回正文中有、台账中没有的事实。按集合比较，同一事实在正文中用几次都只看有没有。"""
     known = {f.key for f in ledger}
     body_counts = Counter(f.key for f in body)
-    grouped: "OrderedDict[Tuple[str, str], List[Fact]]" = OrderedDict()
+    grouped: "OrderedDict[Tuple[str, str, str], List[Fact]]" = OrderedDict()
     for fact in body:
         if fact.key not in known:
             grouped.setdefault(fact.key, []).append(fact)
-    return [{
-        "type": kind,
-        "value": value,
-        "original_count": 0,
-        "revised_count": body_counts[(kind, value)],
-        "locations": [{"line": f.line, "excerpt": f.excerpt} for f in items[:MAX_LOCATIONS]],
-    } for (kind, value), items in grouped.items()]
+    return [_entry(items, 0, body_counts[key], False) for key, items in grouped.items()]
+
+
+def split_uncertain(entries: List[dict], side: str) -> Tuple[List[dict], List[dict]]:
+    """把可能是序数或概数的项分出来，返回 (确定的项, 可能是序数或概数的项)。side 记入后者的 list 字段。"""
+    certain = [e for e in entries if "hint" not in e]
+    uncertain = [dict(e, list=side) for e in entries if "hint" in e]
+    return certain, uncertain
 
 
 def _type_counts(facts: List[Fact]) -> Dict[str, int]:
@@ -621,48 +887,93 @@ def _type_counts(facts: List[Fact]) -> Dict[str, int]:
     return {kind: counts.get(kind, 0) for kind in TYPE_ORDER}
 
 
-def build_report(original_path: Path, revised_path: Path, ledger: bool = False) -> dict:
-    orig_lines = body_lines(read_text(original_path))
-    rev_lines = body_lines(read_text(revised_path))
-    if ledger:
-        orig_lines = ledger_lines(orig_lines)
-    orig_facts = extract_facts(orig_lines)
+def _display_names(paths: Sequence[Path]) -> List[str]:
+    names = [p.name for p in paths]
+    if len(set(names)) != len(names):  # 不同目录下的同名文件，改用完整路径区分
+        names = [str(p) for p in paths]
+    return names
+
+
+def _revision_note(name: str, revisions: int) -> str:
+    return f"{name} 含修订痕迹 {revisions} 处，已按接受修订后的文字比对"
+
+
+def build_report(original_path: Path, revised_path: Path, ledger: bool = False,
+                 refs: Optional[Sequence[Path]] = None) -> dict:
+    """refs：追加的原稿（台账模式下为追加的台账或材料），与 original_path 合起来作比对基准。"""
+    paths = [original_path] + list(refs or [])
+    names = _display_names(paths)
+    notes: List[str] = []
+    orig_facts: List[Fact] = []
+    orig_counts: Counter = Counter()
+    orig_line_total = 0
+    for path, name in zip(paths, names):
+        text, revisions = read_document(path)
+        if revisions:
+            notes.append(_revision_note(name, revisions))
+        lines = body_lines(text)
+        if ledger:
+            lines = ledger_lines(lines)
+        facts = extract_facts(lines, source=name)
+        orig_facts += facts
+        orig_counts |= Counter(f.key for f in facts)  # 多份原稿：同一事实按出现次数最多的一份计
+        orig_line_total += len(lines)
+    text, revisions = read_document(revised_path)
+    if revisions:
+        notes.append(_revision_note(revised_path.name, revisions))
+    rev_lines = body_lines(text)
     rev_facts = extract_facts(rev_lines)
-    if ledger:
-        added = compare_ledger(orig_facts, rev_facts)
-        return {
-            "mode": "ledger",
-            "original_file": original_path.name,
-            "revised_file": revised_path.name,
-            "scope": "【起草说明】之前的正文；台账表格的“序号”“来源”列不参与比对",
-            "original_lines": len(orig_lines),
-            "revised_lines": len(rev_lines),
-            "fact_counts": {"original": _type_counts(orig_facts), "revised": _type_counts(rev_facts)},
-            "added": added,
-            "consistent": not added,
-        }
-    missing, added = compare(orig_facts, rev_facts)
-    return {
-        "original_file": original_path.name,
+    report = {
+        "original_file": names[0],
+        "original_files": names,
         "revised_file": revised_path.name,
         "scope": "【起草说明】之前的正文",
-        "original_lines": len(orig_lines),
+        "notes": notes,
+        "original_lines": orig_line_total,
         "revised_lines": len(rev_lines),
         "fact_counts": {"original": _type_counts(orig_facts), "revised": _type_counts(rev_facts)},
+    }
+    if ledger:
+        added, uncertain = split_uncertain(compare_ledger(orig_facts, rev_facts), "added")
+        report = dict({"mode": "ledger"}, **report)
+        report["scope"] = "【起草说明】之前的正文；台账表格的“序号”“来源”列不参与比对"
+        report.update({"added": added, "uncertain": uncertain, "consistent": not added})
+        return report
+    missing, added = compare(orig_facts, rev_facts, orig_counts, with_source=len(paths) > 1)
+    missing, uncertain_missing = split_uncertain(missing, "missing")
+    added, uncertain_added = split_uncertain(added, "added")
+    report.update({
         "missing": missing,
         "added": added,
+        "uncertain": uncertain_missing + uncertain_added,
         "consistent": not missing and not added,
-    }
+    })
+    return report
 
 
 # ---------------------------------------------------------------------------
 # 输出
 # ---------------------------------------------------------------------------
 
+UNCERTAIN_TITLE = "可能是序数或概数（请人工判断，不计入 --strict）"
+UNCERTAIN_SIDES = {"missing": "原稿有而改稿没有", "added": "改稿新增"}
+
+
 def _short(value: str) -> str:
     if len(value) <= VALUE_DISPLAY_LIMIT:
         return value
     return value[:VALUE_DISPLAY_LIMIT] + "……"
+
+
+def _render_item(index: int, item: dict, where: str, names: Tuple[str, str], extra: str = "") -> List[str]:
+    sources = item.get("sources") or []
+    tail = f"；出自 {'、'.join(sources)}" if sources else ""
+    lines = [f"{index}. [{item['type']}] {_short(item['value'])}"
+             f"（{names[0]} {item['original_count']} 处，{names[1]} {item['revised_count']} 处{tail}{extra}）"]
+    for loc in item["locations"]:
+        place = f"{loc['file']} " if loc.get("file") else where
+        lines.append(f"   {place}第 {loc['line']} 行：{loc['excerpt']}")
+    return lines
 
 
 def _render_list(title: str, entries: List[dict], where: str,
@@ -672,11 +983,31 @@ def _render_list(title: str, entries: List[dict], where: str,
         lines.append("无")
         return lines
     for index, item in enumerate(entries, start=1):
-        lines.append(f"{index}. [{item['type']}] {_short(item['value'])}"
-                     f"（{names[0]} {item['original_count']} 处，{names[1]} {item['revised_count']} 处）")
-        for loc in item["locations"]:
-            lines.append(f"   {where}第 {loc['line']} 行：{loc['excerpt']}")
+        lines += _render_item(index, item, where, names)
     return lines
+
+
+def _render_uncertain(title: str, entries: List[dict], names: Tuple[str, str],
+                      sides: Dict[str, str], wheres: Dict[str, str]) -> List[str]:
+    lines = [f"{title}（{len(entries)} 项）"]
+    for index, item in enumerate(entries, start=1):
+        side = item.get("list", "added")
+        extra = f"；{sides.get(side, side)}；可能是{item.get('hint', '序数或概数')}"
+        lines += _render_item(index, item, wheres.get(side, ""), names, extra)
+    return lines
+
+
+def _uncertain_conclusion(report: dict) -> List[str]:
+    count = len(report.get("uncertain") or [])
+    if not count:
+        return []
+    return [f"另有 {count} 项可能是序数或概数（如“三点意见”“九成”），未计入差异和 --strict，"
+            "请人工判断：属于事实数据的（如“9成患者满意”），按前面的清单同样处理。"]
+
+
+def _file_label(report: dict) -> str:
+    files = report.get("original_files") or [report["original_file"]]
+    return "、".join(files) + (f"（共 {len(files)} 份）" if len(files) > 1 else "")
 
 
 def render_ledger_text(report: dict) -> str:
@@ -684,18 +1015,24 @@ def render_ledger_text(report: dict) -> str:
     counts_r = report["fact_counts"]["revised"]
     summary = "，".join(f"{k} {counts_o[k]}/{counts_r[k]}" for k in TYPE_ORDER)
     lines = [
-        f"台账对账：台账 {report['original_file']}，正文 {report['revised_file']}",
+        f"台账对账：台账 {_file_label(report)}，正文 {report['revised_file']}",
         f"比对范围：{report['scope']}（台账 {report['original_lines']} 行，正文 {report['revised_lines']} 行）",
         f"识别到的事实项（台账/正文）：{summary}",
-        "",
     ]
+    lines += [f"说明：{note}。" for note in report.get("notes") or []]
+    lines.append("")
     lines += _render_list("正文中有、台账中没有", report["added"], "正文", ("台账", "正文"))
     lines.append("")
+    if report.get("uncertain"):
+        lines += _render_uncertain(UNCERTAIN_TITLE, report["uncertain"], ("台账", "正文"),
+                                   {"added": "正文中有、台账中没有"}, {"added": "正文"})
+        lines.append("")
     if report["added"]:
         lines.append(f"结论：{len(report['added'])} 项不在台账中。逐项处理：补进台账并写明出处，"
                      "或在正文中改为【待补：说明】；新加的【待补】【待核实】标记核对无误即可。")
     else:
         lines.append("结论：正文中的数字、日期、标记等均能在台账中找到。")
+    lines += _uncertain_conclusion(report)
     return "\n".join(lines)
 
 
@@ -706,15 +1043,22 @@ def render_text(report: dict) -> str:
     counts_r = report["fact_counts"]["revised"]
     summary = "，".join(f"{k} {counts_o[k]}/{counts_r[k]}" for k in TYPE_ORDER)
     lines = [
-        f"事实一致性检查：原稿 {report['original_file']}，改稿 {report['revised_file']}",
+        f"事实一致性检查：原稿 {_file_label(report)}，改稿 {report['revised_file']}",
         f"比对范围：{report['scope']}（原稿 {report['original_lines']} 行，改稿 {report['revised_lines']} 行）",
         f"识别到的事实项（原稿/改稿）：{summary}",
-        "",
     ]
+    lines += [f"说明：{note}。" for note in report.get("notes") or []]
+    if len(report.get("original_files") or []) > 1:
+        lines.append("说明：多份原稿合并作比对基准，同一事实按出现次数最多的一份计数。")
+    lines.append("")
     lines += _render_list("一、原稿有而改稿没有", report["missing"], "原稿")
     lines.append("")
     lines += _render_list("二、改稿新增", report["added"], "改稿")
     lines.append("")
+    if report.get("uncertain"):
+        lines += _render_uncertain("三、" + UNCERTAIN_TITLE, report["uncertain"], ("原稿", "改稿"),
+                                   UNCERTAIN_SIDES, {"missing": "原稿", "added": "改稿"})
+        lines.append("")
     total = len(report["missing"]) + len(report["added"])
     if total:
         lines.append(f"结论：发现差异 {total} 项。逐项核对：属于事实改动的，恢复原稿写法；"
@@ -722,6 +1066,7 @@ def render_text(report: dict) -> str:
                      "在修改说明中写明。")
     else:
         lines.append("结论：未发现事实差异。人名、单位名、承诺事项不在本脚本比对范围内，请人工核对。")
+    lines += _uncertain_conclusion(report)
     return "\n".join(lines)
 
 
@@ -747,7 +1092,7 @@ def make_parser() -> argparse.ArgumentParser:
         prog="fact_diff.py",
         description="比对改稿前后的数字、日期、【待补】【待核实】标记、书名号和引号内容、发文字号，"
                     "确认改稿没有改动事实。只比对【起草说明】之前的正文。",
-        epilog="退出码：0 正常；1 使用 --strict 且发现差异；2 输入错误。",
+        epilog="退出码：0 正常；1 使用 --strict 且前两张清单有差异（“可能是序数或概数”一张不计）；2 输入错误。",
         formatter_class=_ChineseHelpFormatter,
         add_help=False,
     )
@@ -757,10 +1102,15 @@ def make_parser() -> argparse.ArgumentParser:
     parser.add_argument("original", help="原稿文件（.txt、.md、.docx）")
     parser.add_argument("revised", help="改稿文件（.txt、.md、.docx）")
     parser.add_argument("--json", action="store_true", help="以 JSON 格式输出")
-    parser.add_argument("--strict", action="store_true", help="任一清单非空时返回 1")
+    parser.add_argument("--strict", action="store_true",
+                        help="“原稿有而改稿没有”“改稿新增”任一非空时返回 1（“可能是序数或概数”不计）")
     parser.add_argument("--ledger", action="store_true",
                         help="台账对账：第一个文件为素材台账、第二个为正文，只列正文中有、台账中没有的事实；"
                              "按是否出现比较，不计次数；台账表格的“序号”“来源”列不参与比对")
+    parser.add_argument("--ref", action="append", default=[], metavar="文件",
+                        help="追加一份原稿（台账模式下为追加的台账或材料），可重复使用；各稿分别截掉【起草说明】"
+                             "及其后内容，与第一个文件合起来作比对基准，同一事实按出现次数最多的一份计数，"
+                             "“原稿有而改稿没有”的每项注明出自哪份原稿")
     return parser
 
 
@@ -772,7 +1122,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     except SystemExit as exc:
         return 0 if exc.code == 0 else 2
     try:
-        report = build_report(Path(args.original), Path(args.revised), ledger=args.ledger)
+        report = build_report(Path(args.original), Path(args.revised), ledger=args.ledger,
+                              refs=[Path(p) for p in args.ref])
     except InputError as exc:
         print(f"错误：{exc}", file=sys.stderr)
         return 2

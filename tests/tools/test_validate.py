@@ -2,8 +2,11 @@
 """tools/validate.py 的单元测试。"""
 from __future__ import annotations
 
+import io
 import json
 import unittest
+import zipfile
+from pathlib import Path
 
 from tests.tools.fixtures import TempRepoTestCase, make_trigger, run_quiet, skill_md, write_json, write_text
 
@@ -257,6 +260,150 @@ class EvalsTest(ValidateTestBase):
         write_json(d / "evals/trigger.json", {"query": "不是数组"})
         rep = self.run_checks("gongwen-demo")
         self.assert_has(rep.errors, "顶层必须是数组")
+
+
+REQUIRED = [{"src": s} for s in ("guardrails.md", "style/output-format.md", "style/ai-tone.md", "style/defensive.md")]
+
+
+class SharedClosureTest(ValidateTestBase):
+    """D18 / CM-1：references/_shared 中各文件互相引用的共享资料必须同步进来。"""
+
+    def setUp(self) -> None:
+        super().setUp()
+        # 复现 v0.1 CM-1：guardrails.md 第四条写“详见 references/_shared/rules/jianfu.md”，但 skill 没有同步 jianfu.md
+        write_text(self.root / "shared/guardrails.md",
+                   "# 六条写作红线\n\n## 四、篇幅\n\n详见 references/_shared/rules/jianfu.md第三条。\n")
+        write_text(self.root / "shared/rules/jianfu.md",
+                   "# 减负规定\n\n格式见 `references/_shared/rules/gbt9704.md`。\n")
+
+    def closure_errors(self, rep):
+        return [m for _s, m in rep.errors if m.startswith("共享资料引用不闭合")]
+
+    def test_missing_shared_reference_reported(self):
+        self.repo.add_skill()
+        rep = self.run_checks("gongwen-demo")
+        self.assertEqual(self.closure_errors(rep), [
+            "共享资料引用不闭合：references/_shared/guardrails.md 引用 references/_shared/rules/jianfu.md，"
+            "请在 manifest.json 的 shared 中补上 rules/jianfu.md"])
+        code, out = run_quiet(validate.main, ["--root", str(self.root), "--skill", "gongwen-demo"])
+        self.assertEqual(code, 1, out)
+
+    def test_closed_after_adding_to_manifest(self):
+        # 补上 jianfu.md 后，jianfu.md 又引用 gbt9704.md，继续报；两个都补上后通过
+        self.repo.add_skill(shared=REQUIRED + [{"src": "rules/jianfu.md"}])
+        rep = self.run_checks("gongwen-demo")
+        self.assertEqual(len(self.closure_errors(rep)), 1)
+        self.assert_has(rep.errors, "references/_shared/rules/jianfu.md 引用 references/_shared/rules/gbt9704.md")
+        self.repo.add_skill(shared=REQUIRED + [{"src": "rules/jianfu.md"}, {"src": "rules/gbt9704.md"}])
+        rep = self.run_checks("gongwen-demo")
+        self.assertEqual(rep.errors, [])
+        self.assertEqual(rep.warnings, [])
+
+    def test_referrers_grouped_and_skill_md_included(self):
+        body = "\n格式要求见 references/_shared/rules/jianfu.md。\n"
+        d = self.repo.add_skill(skill_text=skill_md("gongwen-demo", extra_body=body))
+        write_text(d / "references/checklist.md", "# 自检清单\n\n- [ ] 篇幅符合 `references/_shared/rules/jianfu.md`\n")
+        rep = self.run_checks("gongwen-demo")
+        errors = self.closure_errors(rep)
+        self.assertEqual(len(errors), 1, errors)
+        for who in ("SKILL.md", "references/_shared/guardrails.md", "references/checklist.md"):
+            self.assertIn(who, errors[0])
+        # SKILL.md 中的同一路径不再按“路径不存在”重复报告
+        self.assert_not_has(rep.errors, "SKILL.md 引用的路径不存在")
+
+    def test_source_missing_in_shared(self):
+        write_text(self.root / "shared/guardrails.md", "# 红线\n\n见 references/_shared/rules/nope.md。\n")
+        self.repo.add_skill()
+        rep = self.run_checks("gongwen-demo")
+        self.assert_has(rep.errors, "shared/rules/nope.md 也不存在")
+
+    def test_directory_placeholder_and_evals(self):
+        write_text(self.root / "shared/guardrails.md",
+                   "# 红线\n\n画像见 references/_shared/profiles/units/ 下对应文件，"
+                   "如 references/_shared/profiles/units/<文件名>.md。\n")
+        d = self.repo.add_skill()
+        # evals/ 不查
+        write_text(d / "evals/files/说明.md", "见 references/_shared/rules/missing.md\n")
+        rep = self.run_checks("gongwen-demo")
+        errors = self.closure_errors(rep)
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("references/_shared/profiles/units/", errors[0])
+        self.assertIn("下所需的文件", errors[0])
+
+    def test_real_repository_reports_d18_gaps(self):
+        """对真实仓库运行：各 skill 补齐 manifest 前，缺口应与 D18 清单一致（用于核对 v0.1 CM-1）。"""
+        repo_root = Path(__file__).resolve().parents[2]
+        if not (repo_root / "skills/gongwen-title/manifest.json").is_file():
+            self.skipTest("不在完整仓库中")
+        rep, _ = validate.run_validation(repo_root, "gongwen-title")
+        missing = {m.split(" 引用 ")[1].split("，")[0] for m in self.closure_errors(rep)}
+        # 补齐后本用例自然不再命中，只要求报出的缺口都是 references/_shared 下的路径
+        self.assertTrue(all(p.startswith("references/_shared/") for p in missing), missing)
+
+
+class EvalOverlapTest(ValidateTestBase):
+    """W1-SO-6：--eval-overlap 检查示例是否复用评测材料。"""
+
+    MATERIAL = ("某医院2026年工作记录：全年门急诊3216人次，满意度98.6%，投入资金1200万元。\n"
+                "2026年9月26日召开推进会。依据第305条和GB/T 9704-2012，全文不超过1500字，覆盖率100%。\n"
+                "统计截至2026年12月31日，参与1320人。\n")
+
+    def make(self, reference_text: str):
+        d = self.repo.add_skill()
+        write_text(d / "evals/files/素材.txt", self.MATERIAL)
+        write_text(d / "references/checklist.md", reference_text)
+        return d
+
+    def overlap_warnings(self, rep):
+        return [m for _s, m in rep.warnings if m.startswith("示例可能复用评测材料")]
+
+    def test_overlap_reported(self):
+        self.make("# 示例\n\n- 正：全年门急诊3216 人次，满意度98.6％。\n- 推进会于2026年9月26日召开。\n")
+        rep, _ = validate.run_validation(self.root, "gongwen-demo", eval_overlap=True)
+        warnings = self.overlap_warnings(rep)
+        self.assertEqual(len(warnings), 3, warnings)
+        joined = "\n".join(warnings)
+        for token in ("3216人次", "98.6%", "2026年9月26日"):
+            self.assertIn(token, joined)
+        self.assertIn("evals/files/素材.txt", joined)
+        self.assertIn("references/checklist.md 第 3 行", joined)
+        self.assertEqual(rep.errors, [])
+
+    def test_not_run_by_default(self):
+        self.make("全年门急诊3216人次。\n")
+        rep = self.run_checks("gongwen-demo")
+        self.assertEqual(self.overlap_warnings(rep), [])
+        code, out = run_quiet(validate.main, ["--root", str(self.root), "--skill", "gongwen-demo", "--eval-overlap"])
+        self.assertEqual(code, 0, out)
+        self.assertIn("示例可能复用评测材料：3216人次", out)
+
+    def test_excluded_tokens_not_reported(self):
+        # 年份、条款号、标准号、字数、100%、年末日期、更长数字的一部分、_shared 中的内容都不报
+        d = self.make("2026年工作要点；第305条；GB/T 9704-2012；不超过1500字；覆盖率100%；"
+                      "截至2026年12月31日；参与320人；参与11320人。\n")
+        write_text(d / "references/_shared/rules/demo.md", "全年门急诊3216人次。\n")
+        rep, _ = validate.run_validation(self.root, "gongwen-demo", eval_overlap=True)
+        self.assertEqual(self.overlap_warnings(rep), [])
+
+    def test_prompt_and_docx_sources(self):
+        d = self.make("# 示例\n\n培训覆盖456名职工，经费88.5万元。\n")
+        path = d / "evals/evals.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["evals"][0]["prompt"] = "帮我写总结，今年培训覆盖456名职工。"
+        write_json(path, data)
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            archive.writestr("word/document.xml", "<w:document><w:body><w:p><w:r><w:t>经费88.5万元</w:t></w:r></w:p>"
+                                                  "</w:body></w:document>")
+        (d / "evals/files/材料.docx").write_bytes(buffer.getvalue())
+        rep, _ = validate.run_validation(self.root, "gongwen-demo", eval_overlap=True)
+        joined = "\n".join(self.overlap_warnings(rep))
+        self.assertIn("456名（评测材料：evals.json 第 1 条 prompt", joined)
+        self.assertIn("88.5万元（评测材料：evals/files/材料.docx", joined)
+
+    def test_overlap_tokens(self):
+        tokens = validate.overlap_tokens("门急诊3216 人次；2026-09-26；２０２６年１０月１６日；12人；0571人；第123条；2026年")
+        self.assertEqual(tokens, ["3216人次", "2026年10月16日", "2026年9月26日"])
 
 
 class RepoChecksTest(ValidateTestBase):

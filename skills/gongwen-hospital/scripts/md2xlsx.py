@@ -32,6 +32,7 @@
     以 = 开头的文字存为文本，不当作公式。
 
 输出文件已存在时，自动改名为 <名称>-v2.xlsx、-v3.xlsx……，不覆盖已有文件。
+Windows 下完整路径接近 260 字符上限时，读写前自动加长路径前缀，避免 WinError 206。
 
 退出码：0 成功；2 输入错误（文件不存在、没有表格、输出扩展名不是 .xlsx、未安装 openpyxl 等）。
 只依赖标准库和 openpyxl；openpyxl 未安装时给出安装提示并返回 2。
@@ -41,6 +42,7 @@ from __future__ import annotations
 import argparse
 import html
 import math
+import os
 import re
 import sys
 import unicodedata
@@ -246,9 +248,29 @@ def parse_tables(text: str) -> List[MdTable]:
     return tables
 
 
+def _long_path(path: Path) -> Path:
+    """Windows 下完整路径接近 260 字符上限时加长路径前缀，避免 WinError 206 和"文件不存在"误报。
+
+    只用于实际读写，显示给用户的仍是原路径。与 overlap_check.py、fact_diff.py 的同名函数用途相同；
+    这里用 os.path.abspath 取完整路径，不访问文件系统，输出目录尚不存在时也能加前缀。
+    """
+    if os.name != "nt":
+        return path
+    full = os.path.abspath(str(path))
+    prefix = "\\\\?\\"
+    if len(full) < 240 or full.startswith(prefix):
+        return path
+    if full.startswith("\\\\"):
+        return Path(prefix + "UNC\\" + full[2:])
+    return Path(prefix + full)
+
+
 def read_text(path: Path) -> str:
     """读取 UTF-8 文本（兼容 BOM），失败时尝试 GB18030。"""
-    data = path.read_bytes()
+    try:
+        data = _long_path(path).read_bytes()
+    except OSError as exc:
+        raise InputError(f"读取失败：{path}（{exc}）") from exc
     try:
         return data.decode("utf-8-sig")
     except UnicodeDecodeError:
@@ -324,13 +346,13 @@ def sanitize_sheet_name(name: str, used: List[str], index: int) -> str:
 
 
 def unique_path(path: Path) -> Path:
-    """已存在时依次尝试 -v2、-v3……，不覆盖已有文件。"""
-    if not path.exists():
+    """已存在时依次尝试 -v2、-v3……，不覆盖已有文件（超长路径同样能判断是否存在）。"""
+    if not _long_path(path).exists():
         return path
     n = 2
     while True:
         candidate = path.with_name(f"{path.stem}-v{n}{path.suffix}")
-        if not candidate.exists():
+        if not _long_path(candidate).exists():
             return candidate
         n += 1
 
@@ -433,7 +455,7 @@ def convert(
     all_tables: bool = False,
 ) -> Tuple[Path, List[MdTable], List[str]]:
     """转换主函数，返回 (实际输出路径, 已转换的表, 工作表名)。出错时抛出 InputError。"""
-    if not input_path.is_file():
+    if not _long_path(input_path).is_file():
         raise InputError(f"未找到输入文件：{input_path}")
     if output_path.suffix.lower() != ".xlsx":
         raise InputError(f"输出文件须为 .xlsx：{output_path}")
@@ -459,10 +481,11 @@ def convert(
         write_table(ws, table, table.title)
 
     target = unique_path(output_path)
+    real = _long_path(target)  # 实际写入用的路径；返回和显示的仍是 target
     try:
-        if not target.parent.is_dir():  # 已存在的目录不再 mkdir（Windows 超长路径下 mkdir 会报错）
-            target.parent.mkdir(parents=True, exist_ok=True)
-        wb.save(str(target))
+        if not real.parent.is_dir():  # 已存在的目录不再 mkdir
+            real.parent.mkdir(parents=True, exist_ok=True)
+        wb.save(str(real))
     except OSError as exc:
         raise InputError(f"无法写入输出文件：{target}（{exc}）") from exc
     return target, selected, used

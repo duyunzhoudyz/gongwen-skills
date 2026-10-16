@@ -3,7 +3,11 @@
 """校验仓库内所有 skill 是否符合 docs/开发规范.md。
 
 检查项：frontmatter、SKILL.md 行数、manifest.json 与共享资料同步、SKILL.md 中的相对路径、
+共享资料引用闭合（SKILL.md 和 references/ 下各 .md 中出现的 references/_shared/ 路径都要存在）、
 evals、README.md、.claude-plugin/marketplace.json，以及全仓库的字体文件、大文件和 JSON 合法性。
+
+可选检查 --eval-overlap（默认不运行，结果记为警告）：评测材料中带单位的数字和完整日期，
+是否出现在本 skill 的 SKILL.md 或 references/（不含 _shared）中，提示示例可能复用了评测材料。
 
 输出"错误 / 警告"清单；存在错误时返回 1，参数错误返回 2。
 """
@@ -12,6 +16,7 @@ from __future__ import annotations
 import os
 import re
 import sys
+import zipfile
 from pathlib import Path, PurePosixPath
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
@@ -59,7 +64,7 @@ SKILL_MD_MAX_LINES = 500
 DESCRIPTION_WARN_CHARS = 300
 DESCRIPTION_MAX_CHARS = 1024
 NAME_MAX_CHARS = 64
-MIN_EVALS = 10
+MIN_EVALS = 12
 TRIGGER_COUNT = 20
 
 # 规范第 6 节统一词表
@@ -73,6 +78,34 @@ REL_PATH_RE = re.compile(
 )
 PLACEHOLDER_MARKS = ("<", ">", "*", "{", "}", "…", "...", "＜", "＞", "$")
 EXT_CUT_RE = re.compile(r"\.[A-Za-z0-9]{1,8}(?=[^A-Za-z0-9]|$)")
+# 共享资料引用闭合检查（D18）：同步进来的共享资料默认放在 references/_shared/ 下
+SHARED_PREFIX = "references/_shared/"
+MAX_SHOWN_PLACES = 3
+
+# --eval-overlap：评测材料中的"带单位的数字"（整数部分不少于 3 位，或带小数）和完整日期
+EVAL_UNITS = (
+    "个百分点", "百分点", "万人次", "人次", "例次", "台次", "户次", "万元", "亿元", "万人", "万户", "万亩",
+    "平方公里", "平方千米", "平方米", "立方米", "公里", "千米", "公顷", "千克", "公斤", "小时", "分钟", "工作日",
+    "%", "‰", "元", "人", "户", "家", "个", "项", "次", "台", "件", "条", "所", "名", "位", "天", "吨", "亩",
+    "米", "床", "例", "套", "间", "篇", "份", "场", "批", "辆", "处", "座", "张", "本", "册", "节", "期", "轮",
+    "万", "亿", "倍", "岁", "层", "栋", "块", "箱", "分",
+)
+# 前面紧挨数字、小数点、英文字母（编号、标准号）或"第"（条款号、序号）的不抽取
+EVAL_NUMBER_RE = re.compile(
+    r"(?<![\d.A-Za-z第])(\d{3,}(?:\.\d+)?|\d+\.\d+)(" + "|".join(re.escape(u) for u in EVAL_UNITS) + r")"
+)
+EVAL_DATE_RES = (
+    re.compile(r"(?<!\d)(\d{4})年(\d{1,2})月(\d{1,2})[日号]"),
+    re.compile(r"(?<![\d.])(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?![\d.])"),
+)
+EVAL_ALLOWED = {"100%"}  # 通用写法，不算重合
+# 年初、季末、年末是通用的截止日期和统计时点，不算重合
+EVAL_ALLOWED_MONTH_DAYS = {(1, 1), (3, 31), (6, 30), (9, 30), (12, 31)}
+EVAL_TEXT_SUFFIXES = {".txt", ".md", ".csv", ".tsv", ".json"}
+EVAL_ZIP_PARTS = {".docx": ("word/document.xml",), ".xlsx": ("xl/sharedStrings.xml", "xl/worksheets/")}
+FULLWIDTH_DIGITS = str.maketrans("０１２３４５６７８９％．", "0123456789%.")
+XML_TAG_RE = re.compile(r"<[^>]+>")
+MAX_EVAL_ZIP_PART_BYTES = 20 * 1024 * 1024
 
 # 全仓库扫描时跳过的目录
 SKIP_DIR_NAMES = {
@@ -259,26 +292,84 @@ def _path_ok(skill_dir: Path, rel: str) -> bool:
     return exists_exact(skill_dir, rel)
 
 
-def check_relative_paths(name: str, skill_dir: Path, text: str, rep: Report) -> None:
-    """检查 SKILL.md 中引用的 references/、scripts/、assets/、evals/ 路径是否存在。"""
-    reported: Set[str] = set()
+def find_missing_paths(skill_dir: Path, text: str, cache: Optional[Dict[str, bool]] = None) -> List[str]:
+    """找出文本中引用的 references/、scripts/、assets/、evals/ 路径里不存在的（去重，按出现顺序）。"""
+    cache = {} if cache is None else cache
+
+    def ok(rel: str) -> bool:
+        if rel not in cache:
+            cache[rel] = _path_ok(skill_dir, rel)
+        return cache[rel]
+
+    missing: List[str] = []
     for match in REL_PATH_RE.finditer(text):
         raw = match.group(1)
         if any(mark in raw for mark in PLACEHOLDER_MARKS):
             continue  # 示例占位符，如 references/<文种>.md、scripts/*.py
         candidate = raw.rstrip(".,;:!?")
-        if not candidate or _path_ok(skill_dir, candidate):
+        if not candidate or ok(candidate):
             continue
         # 中文正文紧贴路径时（如 "guardrails.md第一条"），尝试在扩展名处截断
         cuts = [candidate[:m.end()] for m in EXT_CUT_RE.finditer(candidate)]
-        if any(_path_ok(skill_dir, cut) for cut in cuts):
+        if any(ok(cut) for cut in cuts):
             continue
         # 路径后紧跟中文时，只报告到扩展名为止的部分
         shown = candidate if (not cuts or cuts[-1] == candidate) else cuts[0]
-        if shown in reported:
+        if shown not in missing:
+            missing.append(shown)
+    return missing
+
+
+def check_relative_paths(name: str, skill_dir: Path, text: str, rep: Report) -> None:
+    """检查 SKILL.md 中引用的 references/、scripts/、assets/、evals/ 路径是否存在。
+
+    references/_shared/ 下的路径由 check_shared_references 统一检查，这里不重复报告。
+    """
+    for shown in find_missing_paths(skill_dir, text):
+        if not shown.startswith(SHARED_PREFIX):
+            rep.error(name, f"SKILL.md 引用的路径不存在（注意大小写）：{shown}")
+
+
+def _join_places(places: List[str], unit: str) -> str:
+    text = "、".join(places[:MAX_SHOWN_PLACES])
+    if len(places) > MAX_SHOWN_PLACES:
+        text += f" 等 {len(places)} {unit}"
+    return text
+
+
+def check_shared_references(repo_root: Path, name: str, skill_dir: Path, rep: Report) -> None:
+    """共享资料引用闭合（D18）：SKILL.md 和 references/ 下各 .md（含 _shared）中出现的
+    references/_shared/<路径> 都必须存在；缺失时提示在 manifest.json 的 shared 中补上。evals/ 不查。"""
+    files: List[Path] = []
+    if (skill_dir / "SKILL.md").is_file():
+        files.append(skill_dir / "SKILL.md")
+    refs_dir = skill_dir / "references"
+    if refs_dir.is_dir():
+        files += sorted(p for p in refs_dir.rglob("*.md") if p.is_file())
+    cache: Dict[str, bool] = {}
+    referrers: Dict[str, List[str]] = {}
+    for path in files:
+        rel = path.relative_to(skill_dir).as_posix()
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            if rel != "SKILL.md":  # SKILL.md 的编码问题由 check_skill_md 报告
+                rep.warn(name, f"{rel} 不是合法的 UTF-8 编码，已跳过共享资料引用检查")
             continue
-        reported.add(shown)
-        rep.error(name, f"SKILL.md 引用的路径不存在（注意大小写）：{shown}")
+        except OSError:
+            continue
+        for shown in find_missing_paths(skill_dir, text, cache):
+            if shown.startswith(SHARED_PREFIX):
+                referrers.setdefault(shown, []).append(rel)
+    for target, sources in referrers.items():
+        src = target[len(SHARED_PREFIX):]
+        if target.endswith("/"):
+            hint = f"请在 manifest.json 的 shared 中补上 {src} 下所需的文件"
+        elif exists_exact(repo_root / "shared", src, want_dir=False):
+            hint = f"请在 manifest.json 的 shared 中补上 {src}"
+        else:
+            hint = f"shared/{src} 也不存在，请改正引用或先在 shared/ 中补上该文件"
+        rep.error(name, f"共享资料引用不闭合：{_join_places(sources, '个文件')} 引用 {target}，{hint}")
 
 
 def check_skill_md(name: str, skill_dir: Path, rep: Report) -> None:
@@ -511,10 +602,12 @@ def _check_evals_data(name: str, skill_dir: Path, data: dict, is_draft: bool, re
         rep.warn(name, "evals 中缺少标注\"保密\"的用例")
 
 
-def check_skill(repo_root: Path, skill_dir: Path, rep: Report, checked_json: Set[Path]) -> None:
+def check_skill(repo_root: Path, skill_dir: Path, rep: Report, checked_json: Set[Path],
+                eval_overlap: bool = False) -> None:
     name = skill_dir.name
     rep.touch(name)
     check_skill_md(name, skill_dir, rep)
+    check_shared_references(repo_root, name, skill_dir, rep)
     if not exists_exact(skill_dir, "README.md", want_dir=False):
         rep.error(name, "缺少 README.md")
     manifest_path = skill_dir / "manifest.json"
@@ -523,6 +616,122 @@ def check_skill(repo_root: Path, skill_dir: Path, rep: Report, checked_json: Set
     manifest = check_manifest(repo_root, name, skill_dir, rep)
     status = manifest.get("status") if isinstance(manifest, dict) else None
     check_evals(name, skill_dir, status, rep, checked_json)
+    if eval_overlap:
+        check_eval_overlap(name, skill_dir, rep)
+
+
+# ---------------------------------------------------------------------------
+# 可选检查：示例是否复用评测材料（--eval-overlap）
+# ---------------------------------------------------------------------------
+
+def _normalize_overlap_text(text: str) -> str:
+    return re.sub(r"\s+", "", text.translate(FULLWIDTH_DIGITS))
+
+
+def overlap_tokens(text: str) -> List[str]:
+    """抽取带单位的数字（整数部分不少于 3 位或带小数）和完整日期。
+
+    年份（"2026年"）、条款号（"第305条"）、标准号（"GB/T 9704"）、字数（"1500字"）不抽取；
+    "100%"和年初、季末、年末日期（1月1日、3月31日、6月30日、9月30日、12月31日）不算重合。
+    """
+    norm = _normalize_overlap_text(text)
+    tokens: List[str] = []
+    for m in EVAL_NUMBER_RE.finditer(norm):
+        number, unit = m.group(1), m.group(2)
+        if number.startswith("0") and "." not in number:
+            continue  # 编号、电话区号
+        token = number + unit
+        if token not in EVAL_ALLOWED and token not in tokens:
+            tokens.append(token)
+    for regex in EVAL_DATE_RES:
+        for m in regex.finditer(norm):
+            year, month, day = (int(g) for g in m.groups())
+            if 1 <= month <= 12 and 1 <= day <= 31 and (month, day) not in EVAL_ALLOWED_MONTH_DAYS:
+                token = f"{year}年{month}月{day}日"
+                if token not in tokens:
+                    tokens.append(token)
+    return tokens
+
+
+def _eval_file_text(path: Path) -> Optional[str]:
+    """读取评测材料的文字；docx、xlsx 只取 XML 中的文字，读不了的返回 None。"""
+    suffix = path.suffix.lower()
+    try:
+        if suffix in EVAL_TEXT_SUFFIXES:
+            data = path.read_bytes()
+            for encoding in ("utf-8-sig", "gb18030"):
+                try:
+                    return data.decode(encoding)
+                except UnicodeDecodeError:
+                    continue
+            return None
+        parts = EVAL_ZIP_PARTS.get(suffix)
+        if not parts:
+            return None
+        texts: List[str] = []
+        with zipfile.ZipFile(str(path)) as archive:
+            for info in archive.infolist():
+                wanted = any(info.filename == p or (p.endswith("/") and info.filename.startswith(p)) for p in parts)
+                if wanted and info.file_size <= MAX_EVAL_ZIP_PART_BYTES:
+                    xml = archive.read(info).decode("utf-8", errors="replace")
+                    xml = re.sub(r"</w:p>|</si>|</row>", "\n", xml)  # 段落、单元格之间断行，避免数字粘连
+                    texts.append(XML_TAG_RE.sub("", xml))
+        return "\n".join(texts)
+    except (zipfile.BadZipFile, OSError, RuntimeError):
+        return None
+
+
+def _eval_sources(skill_dir: Path) -> List[Tuple[str, str]]:
+    """评测材料：evals/files/ 下的文件，以及 evals.json 中各用例的 prompt。"""
+    sources: List[Tuple[str, str]] = []
+    files_dir = skill_dir / "evals" / "files"
+    if files_dir.is_dir():
+        for path in sorted(p for p in files_dir.rglob("*") if p.is_file()):
+            text = _eval_file_text(path)
+            if text:
+                sources.append((path.relative_to(skill_dir).as_posix(), text))
+    evals_path = skill_dir / "evals" / "evals.json"
+    if evals_path.is_file():
+        data, err = load_json_file(evals_path)
+        if not err and isinstance(data, dict) and isinstance(data.get("evals"), list):
+            for item in data["evals"]:
+                if isinstance(item, dict) and isinstance(item.get("prompt"), str):
+                    sources.append((f"evals.json 第 {item.get('id')} 条 prompt", item["prompt"]))
+    return sources
+
+
+def check_eval_overlap(name: str, skill_dir: Path, rep: Report) -> None:
+    """评测材料中的数字、日期出现在 SKILL.md 或 references/（不含 _shared）中时，报警告。"""
+    token_source: Dict[str, str] = {}
+    for source, text in _eval_sources(skill_dir):
+        for token in overlap_tokens(text):
+            token_source.setdefault(token, source)
+    if not token_source:
+        return
+    files: List[Path] = [skill_dir / "SKILL.md"]
+    refs_dir = skill_dir / "references"
+    if refs_dir.is_dir():
+        files += sorted(p for p in refs_dir.rglob("*.md")
+                        if p.is_file() and "_shared" not in p.relative_to(refs_dir).parts)
+    hits: Dict[str, List[str]] = {}
+    for path in files:
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeDecodeError):
+            continue
+        rel = path.relative_to(skill_dir).as_posix()
+        for lineno, line in enumerate(lines, start=1):
+            norm = _normalize_overlap_text(line)
+            for token in token_source:
+                for m in re.finditer(re.escape(token), norm):
+                    before = norm[m.start() - 1] if m.start() else ""
+                    if before.isdigit() or before == ".":
+                        continue  # "1320人"中的"320人"不算
+                    hits.setdefault(token, []).append(f"{rel} 第 {lineno} 行")
+                    break
+    for token, places in hits.items():
+        rep.warn(name, f"示例可能复用评测材料：{token}（评测材料：{token_source[token]}；"
+                       f"出现在：{_join_places(places, '处')}）")
 
 
 # ---------------------------------------------------------------------------
@@ -624,8 +833,12 @@ def check_repository(repo_root: Path, rep: Report, checked_json: Set[Path]) -> N
 # 入口
 # ---------------------------------------------------------------------------
 
-def run_validation(repo_root: Path, skill: Optional[str] = None) -> Tuple[Report, int]:
-    """执行校验，返回 (报告, 已检查的 skill 数)。skill 不存在时抛出 LookupError。"""
+def run_validation(repo_root: Path, skill: Optional[str] = None,
+                   eval_overlap: bool = False) -> Tuple[Report, int]:
+    """执行校验，返回 (报告, 已检查的 skill 数)。skill 不存在时抛出 LookupError。
+
+    eval_overlap：同时运行可选的"示例是否复用评测材料"检查（结果记为警告）。
+    """
     rep = Report()
     checked_json: Set[Path] = set()
     skill_dirs = list_skill_dirs(repo_root)
@@ -634,13 +847,13 @@ def run_validation(repo_root: Path, skill: Optional[str] = None) -> Tuple[Report
         if not selected:
             raise LookupError(skill)
         for skill_dir in selected:
-            check_skill(repo_root, skill_dir, rep, checked_json)
+            check_skill(repo_root, skill_dir, rep, checked_json, eval_overlap)
         return rep, len(selected)
 
     if not skill_dirs:
         rep.warn(REPO_SCOPE, "skills/ 下还没有任何 skill，已跳过 skill 检查")
     for skill_dir in skill_dirs:
-        check_skill(repo_root, skill_dir, rep, checked_json)
+        check_skill(repo_root, skill_dir, rep, checked_json, eval_overlap)
     check_marketplace(repo_root, skill_dirs, rep, checked_json)
     check_repository(repo_root, rep, checked_json)
     return rep, len(skill_dirs)
@@ -655,12 +868,16 @@ def main(argv: Optional[Sequence[str]] = None, repo_root: Optional[Path] = None)
     )
     parser.add_argument("--skill", metavar="NAME", help="只检查指定 skill（同时跳过插件清单和全仓库检查）")
     parser.add_argument("--quiet", action="store_true", help="只输出错误，不输出警告和通过信息")
+    parser.add_argument("--eval-overlap", action="store_true",
+                        help="另查示例是否复用评测材料：evals/files/ 和 evals.json prompt 中带单位的数字"
+                             "（3 位以上或带小数）、完整日期，出现在 SKILL.md 或 references/（不含 _shared）中的"
+                             "记为警告；默认不运行")
     add_root_argument(parser)
     args = parser.parse_args(argv)
 
     root = (args.root or repo_root or REPO_ROOT).resolve()
     try:
-        rep, count = run_validation(root, args.skill)
+        rep, count = run_validation(root, args.skill, eval_overlap=args.eval_overlap)
     except LookupError:
         print(f"错误：skills/ 下找不到名为 {args.skill} 的 skill")
         return 2

@@ -11,6 +11,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+import zipfile
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
@@ -404,6 +405,359 @@ class LedgerModeTest(FactDiffTestCase):
         code, out, _ = self.ledger("全年完成PCI 613台。", "--strict")
         self.assertEqual(code, 1)
         self.assertIn("613台", out)
+
+
+class SpaceQuoteWanTest(FactDiffTestCase):
+    """TL-1：数字与单位之间的空白、中英文引号、含万亿的汉字数字（v0.1 评测 gongwen-report 用例 5、6 误报）。"""
+
+    # 必过：空白
+    def test_space_between_number_and_unit_ignored(self):
+        pairs = (
+            ("门急诊3216 人次，开展培训12 次。", "门急诊3216人次，开展培训12次。"),
+            ("门急诊3216　人次，增长3.5 %。", "门急诊3216人次，增长3.5%。"),
+            ("投入320 万元，覆盖1,200 余家企业。", "投入320万元，覆盖1200余家企业。"),
+            ("第 3 次会议于2026 年 10 月 16 日召开。", "第3次会议于2026年10月16日召开。"),
+        )
+        for original, revised in pairs:
+            with self.subTest(original=original):
+                self.assertTrue(self.diff(original, revised)["consistent"])
+
+    def test_space_in_ledger_mode(self):
+        # 复现 RP-3：台账写“3216 人次”“12 次”，正文连写，不应报台账没有
+        ledger = self.write("素材台账.md", "| 序号 | 内容 | 来源 |\n|---|---|---|\n"
+                                          "| 1 | 门急诊3216 人次 | 材料1 |\n| 2 | 培训12 次 | 材料2 |\n")
+        body = self.write("正文.txt", "全年门急诊3216人次，开展培训12次。")
+        code, out, _ = self.run_main(str(ledger), str(body), "--ledger", "--json", "--strict")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(json.loads(out)["added"], [])
+
+    def test_excerpt_keeps_original_spacing(self):
+        facts = fact_diff.extract_line("门急诊3216 人次，满意", 1)
+        self.assertEqual([(f.value, f.pos) for f in facts], [("3216人次", 3)])
+        self.assertIn("3216 人次", facts[0].excerpt)
+
+    def test_code_before_space_not_merged(self):
+        # 编号“E1”后的空格不去掉，“1”不能和“家校协同”的“家”拼成“1家”
+        self.assertEqual([f.value for f in fact_diff.extract_line("指标E1 家校协同", 1)], ["1"])
+        self.assertEqual([f.value for f in fact_diff.extract_line("完成PCI 612 台", 1)], ["612台"])
+
+    def test_tab_between_cells_not_removed(self):
+        # 表格各列以制表符分隔，不能把下一列的文字当成单位
+        values = [f.value for f in fact_diff.extract_line("数量\t12\t个人申报", 1)]
+        self.assertEqual(values, ["12"])
+
+    # 必过：引号
+    def test_chinese_and_english_quotes_equivalent(self):
+        for original, revised in (("推行\"最多跑一次\"改革。", "推行“最多跑一次”改革。"),
+                                  ("推行「最多跑一次」改革。", "推行“最多跑一次”改革。"),
+                                  ("推行“党建+业务”模式，打造『红色驿站』。", "推行\"党建+业务\"模式，打造‘红色驿站’。")):
+            with self.subTest(original=original):
+                self.assertTrue(self.diff(original, revised)["consistent"])
+
+    # 必过：汉字万、亿
+    def test_chinese_wan_and_yuan(self):
+        pairs = (
+            ("投入资金三百二十万。", "投入资金320万元。"),
+            ("投入资金320万。", "投入资金320万元。"),
+            ("总投资1.5亿元。", "总投资1.5亿。"),
+            ("总投资十五亿。", "总投资15亿元。"),
+            ("惠及三百二十万人次。", "惠及320万人次。"),
+            ("投入320万余元。", "投入320万余。"),
+        )
+        for original, revised in pairs:
+            with self.subTest(original=original):
+                self.assertTrue(self.diff(original, revised)["consistent"])
+
+    def test_chinese_decimal(self):
+        # 原问题：“一点五亿”被拆成“5亿”；“三点五个百分点”被拆成“3点”“5个百分点”
+        for original, revised in (("总盘子是一点五亿。", "总盘子是1.5亿元。"),
+                                  ("提高三点五个百分点。", "提高3.5个百分点。"),
+                                  ("增长二点零倍。", "增长2倍。")):
+            with self.subTest(original=original):
+                self.assertTrue(self.diff(original, revised)["consistent"])
+        report = self.diff("总盘子是一点五亿。", "总盘子是1.6亿元。")
+        self.assertEqual([i["value"] for i in report["missing"]], ["1.5亿"])
+        self.assertEqual([f.value for f in fact_diff.extract_line("十二点三十分开会", 1)], ["12点"])
+
+    def test_chinese_wan_in_ledger_mode(self):
+        # 复现 W1 gongwen-minutes：记录写“三百二十万”，纪要写“320万元”
+        ledger = self.write("原始记录.txt", "张主任：这个项目预算三百二十万，分两年支付。")
+        body = self.write("纪要.txt", "会议同意项目预算320万元，分两年支付。")
+        code, out, _ = self.run_main(str(ledger), str(body), "--ledger", "--json", "--strict")
+        self.assertEqual(code, 0, out)
+
+    def test_vague_numbers_marked_and_idioms_skipped(self):
+        # “数十万”“几十万人次”是概数，进第三张清单，不按“10万”比对
+        for text, value in (("惠及数十万群众。", "数十万"), ("几十万人次参与。", "几十万人次"), ("数十家企业", "数十家")):
+            with self.subTest(text=text):
+                facts = fact_diff.extract_line(text, 1)
+                self.assertEqual([(f.value, f.hint) for f in facts], [(value, "概数")])
+        for text in ("十万火急。", "数十位同志", "几百"):
+            with self.subTest(text=text):
+                self.assertEqual([f.value for f in fact_diff.extract_line(text, 1) if not f.hint], [])
+        report = self.diff("惠及数十万群众。", "惠及30万群众。")
+        self.assertEqual([i["value"] for i in report["added"]], ["30万"])
+        self.assertEqual([(i["value"], i["list"]) for i in report["uncertain"]], [("数十万", "missing")])
+
+    # 必错：数值或单位不同仍报
+    def test_value_change_still_reported(self):
+        cases = (
+            ("门急诊3216 人次。", "门急诊3217人次。", "3216人次", "3217人次"),
+            ("投入资金三百二十万。", "投入资金330万元。", "320万", "330万元"),
+            ("投入资金320万元。", "惠及320万人。", "320万元", "320万人"),
+            ("投入资金320万元。", "投入资金320元。", "320万元", "320元"),
+            ("推行\"最多跑一次\"改革。", "推行“最多跑两次”改革。", "\"最多跑一次\"", "“最多跑两次”"),
+        )
+        for original, revised, gone, new in cases:
+            with self.subTest(original=original):
+                report = self.diff(original, revised)
+                self.assertIn(gone, [item["value"] for item in report["missing"]])
+                self.assertIn(new, [item["value"] for item in report["added"]])
+                self.assertFalse(report["consistent"])
+        a = self.write("a.txt", "门急诊3216 人次。")
+        b = self.write("b.txt", "门急诊3217人次。")
+        self.assertEqual(self.run_main(str(a), str(b), "--strict")[0], 1)
+
+
+def _docx_bytes(body_xml: str) -> bytes:
+    """用标准库拼一份最小 docx（含修订标记时不依赖 python-docx）。"""
+    ns = ('xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" '
+          'xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"')
+    document = f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document {ns}><w:body>' \
+               f'{body_xml}<w:sectPr/></w:body></w:document>'
+    content_types = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        '<Default Extension="xml" ContentType="application/xml"/>'
+        '<Override PartName="/word/document.xml" '
+        'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
+        '</Types>'
+    )
+    rels = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        '<Relationship Id="rId1" '
+        'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" '
+        'Target="word/document.xml"/></Relationships>'
+    )
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("[Content_Types].xml", content_types)
+        archive.writestr("_rels/.rels", rels)
+        archive.writestr("word/document.xml", document)
+    return buffer.getvalue()
+
+
+def _run(text: str) -> str:
+    return f'<w:r><w:t xml:space="preserve">{text}</w:t></w:r>'
+
+
+REVISED_PARAGRAPHS = (
+    # 全年排查隐患[删200][插218]处
+    '<w:p>' + _run("全年排查隐患")
+    + '<w:del w:id="1" w:author="审稿人" w:date="2026-10-16T09:00:00Z">'
+      '<w:r><w:delText>200</w:delText></w:r></w:del>'
+    + '<w:ins w:id="2" w:author="审稿人" w:date="2026-10-16T09:00:00Z">' + _run("218") + '</w:ins>'
+    + _run("处，") + '</w:p>'
+    # 移动：moveFrom 不计，moveTo 计入
+    '<w:p><w:moveFrom w:id="3" w:author="审稿人">' + _run("整改率95%") + '</w:moveFrom>'
+    + _run("完成整改") + '<w:moveTo w:id="4" w:author="审稿人">' + _run("，整改率96%") + '</w:moveTo></w:p>'
+    # 表格单元格中的修订
+    '<w:tbl><w:tr><w:tc><w:p>' + _run("检查次数") + '</w:p></w:tc>'
+    '<w:tc><w:p><w:del w:id="5" w:author="审稿人"><w:r><w:delText>8次</w:delText></w:r></w:del>'
+    '<w:ins w:id="6" w:author="审稿人">' + _run("9次") + '</w:ins></w:p></w:tc></w:tr></w:tbl>'
+    '<w:p>' + _run("【起草说明】") + '</w:p>'
+    '<w:p>' + _run("原稿为300处。") + '</w:p>'
+)
+
+
+class DocxRevisionTest(FactDiffTestCase):
+    """W1-PL-2：docx 按“接受全部修订”读取，含 w:ins、不含 w:del（不依赖 python-docx）。"""
+
+    def make_docx(self, name: str = "改稿.docx", body_xml: str = REVISED_PARAGRAPHS) -> Path:
+        path = self.tmp / name
+        path.write_bytes(_docx_bytes(body_xml))
+        return path
+
+    def test_read_accepts_revisions(self):
+        text, revisions = fact_diff.read_document(self.make_docx())
+        lines = fact_diff.body_lines(text)
+        self.assertEqual(lines[0], "全年排查隐患218处，")
+        self.assertEqual(lines[1], "完成整改，整改率96%")
+        self.assertEqual(lines[2], "检查次数\t9次")
+        self.assertEqual(len(lines), 3)  # 起草说明之后不读
+        self.assertEqual(revisions, 6)
+
+    def test_compare_after_accepting_revisions(self):
+        path = self.make_docx()
+        same = self.write("原稿.txt", "全年排查隐患218处，\n完成整改，整改率96%\n检查次数\t9次")
+        code, out, _ = self.run_main(str(same), str(path), "--json", "--strict")
+        self.assertEqual(code, 0, out)
+        report = json.loads(out)
+        self.assertTrue(report["consistent"])
+        self.assertIn("改稿.docx 含修订痕迹 6 处，已按接受修订后的文字比对", report["notes"])
+        old = self.write("旧稿.txt", "全年排查隐患200处，\n完成整改，整改率95%\n检查次数\t8次")
+        code, out, _ = self.run_main(str(old), str(path))
+        self.assertEqual(code, 0)
+        self.assertIn("已按接受修订后的文字比对", out)
+        self.assertIn("200处", out)
+        self.assertIn("218处", out)
+
+    def test_docx_without_revisions_has_no_note(self):
+        path = self.make_docx(body_xml='<w:p>' + _run("全年完成12项。") + '</w:p>')
+        a = self.write("原稿.txt", "全年完成12项。")
+        code, out, _ = self.run_main(str(a), str(path), "--json")
+        self.assertEqual(json.loads(out)["notes"], [])
+
+    def test_textbox_paragraph_not_merged_and_sdt_read(self):
+        body = ('<w:p>' + _run("正文12项")
+                + '<w:r><w:drawing><w:txbxContent><w:p>' + _run("框内99项") + '</w:p></w:txbxContent>'
+                  '</w:drawing></w:r></w:p>'
+                '<w:sdt><w:sdtContent><w:p>' + _run("控件内5家") + '</w:p></w:sdtContent></w:sdt>')
+        text, _ = fact_diff.read_document(self.make_docx(body_xml=body))
+        self.assertEqual(text.split("\n"), ["正文12项", "控件内5家"])
+
+    def test_broken_docx_returns_2(self):
+        bad = self.tmp / "损坏.docx"
+        bad.write_bytes(b"not a zip")
+        a = self.write("a.txt", "完成12项。")
+        code, _out, err = self.run_main(str(a), str(bad))
+        self.assertEqual(code, 2)
+        self.assertIn("无法打开 docx", err)
+        empty = self.tmp / "空包.docx"
+        with zipfile.ZipFile(empty, "w") as archive:
+            archive.writestr("readme.txt", "x")
+        code, _out, err = self.run_main(str(a), str(empty))
+        self.assertEqual(code, 2)
+        self.assertIn("word/document.xml", err)
+
+
+class OrdinalApproxTest(FactDiffTestCase):
+    """W1-SP-4：结构序数、成数概数单列第三张清单，不计入 --strict，但不丢弃。"""
+
+    SPEECH_LEDGER = "会议材料：今年全区新建养老服务站12个，服务老人3200人次。"
+    SPEECH = ("同志们：今天我讲三点意见。今年全区新建养老服务站12个，服务老人3200人次，"
+              "群众满意度九成以上。下面我再提五项要求，重点抓好两件事，从三个方面推进。第三点，强化保障。")
+
+    def ledger(self, body: str, *extra: str):
+        a = self.write("材料.txt", self.SPEECH_LEDGER)
+        b = self.write("讲话稿.txt", body)
+        return self.run_main(str(a), str(b), "--ledger", *extra)
+
+    def test_speech_ordinals_go_to_third_list(self):
+        code, out, _ = self.ledger(self.SPEECH, "--json", "--strict")
+        self.assertEqual(code, 0, out)
+        report = json.loads(out)
+        self.assertEqual(report["added"], [])
+        uncertain = {(item["value"], item["hint"]) for item in report["uncertain"]}
+        self.assertEqual(uncertain, {("3点", "序数"), ("9成", "概数"), ("5项", "序数"), ("2件", "序数"),
+                                     ("3个", "序数"), ("第3点", "序数")})
+        self.assertTrue(all(item["list"] == "added" for item in report["uncertain"]))
+
+    def test_third_list_in_text_output(self):
+        code, out, _ = self.ledger(self.SPEECH)
+        self.assertEqual(code, 0)
+        self.assertIn("可能是序数或概数（请人工判断，不计入 --strict）（6 项）", out)
+        self.assertIn("9成", out)
+        self.assertIn("可能是概数", out)
+
+    def test_ratio_fact_kept_for_manual_check(self):
+        # “9成患者满意”是数据，不能直接丢弃：留在第三张清单
+        report = self.diff("患者满意度较高。", "9成患者满意。")
+        self.assertEqual(report["added"], [])
+        self.assertEqual([(i["value"], i["hint"], i["list"]) for i in report["uncertain"]], [("9成", "概数", "added")])
+        report = self.diff("九成患者满意。", "8成患者满意。")
+        self.assertEqual({(i["value"], i["list"]) for i in report["uncertain"]}, {("9成", "missing"), ("8成", "added")})
+        self.assertTrue(report["consistent"])
+
+    def test_quantities_stay_in_main_lists(self):
+        # 必错：真实数量、时刻、大于十的项不进第三张清单
+        report = self.diff("会议材料。", "下午3点开会，完成12项事项，办好十件实事，提出12项要求，新建3个站点。")
+        values = [(item["value"], item["revised_count"]) for item in report["added"]]
+        self.assertEqual(values, [("3点", 1), ("12项", 2), ("10件", 1), ("3个", 1)])
+        self.assertEqual(report["uncertain"], [])
+        a = self.write("a.txt", "会议材料。")
+        b = self.write("b.txt", "下午3点开会。")
+        self.assertEqual(self.run_main(str(a), str(b), "--strict")[0], 1)
+
+    def test_ordinal_and_time_counted_separately(self):
+        # “讲三点”与“下午3点”不相抵：改稿把时刻删掉、加了“讲三点”，时刻的删除照常报出
+        report = self.diff("下午3点开会。", "开会时我讲三点。")
+        self.assertEqual([i["value"] for i in report["missing"]], ["3点"])
+        self.assertEqual(report["added"], [])
+        self.assertEqual([(i["value"], i["list"]) for i in report["uncertain"]], [("3点", "added")])
+        self.assertFalse(report["consistent"])
+
+
+class MultiRefTest(FactDiffTestCase):
+    """W1-PL-3：--ref 追加原稿，合并作比对基准，注明出处。"""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.a = self.write("甲稿.txt", "全年完成12项，投入66万元。\n【起草说明】\n甲稿另有13项。")
+        self.b = self.write("乙稿.txt", "全年完成12项，新增企业3家。\n【起草说明】\n乙稿备注5家。")
+
+    def test_merged_draft_consistent(self):
+        merged = self.write("合并稿.txt", "全年完成12项，投入66万元，新增企业3家。")
+        code, out, _ = self.run_main(str(self.a), str(merged), "--ref", str(self.b), "--json", "--strict")
+        self.assertEqual(code, 0, out)
+        report = json.loads(out)
+        self.assertTrue(report["consistent"])
+        self.assertEqual(report["original_files"], ["甲稿.txt", "乙稿.txt"])
+        # 不加 --ref 时，乙稿的事实被报为新增
+        code, out, _ = self.run_main(str(self.a), str(merged), "--json")
+        self.assertEqual([i["value"] for i in json.loads(out)["added"]], ["3家"])
+
+    def test_missing_item_names_source(self):
+        merged = self.write("合并稿.txt", "全年完成12项，投入66万元，新增企业4家。")
+        code, out, _ = self.run_main(str(self.a), str(merged), "--ref", str(self.b), "--json")
+        report = json.loads(out)
+        self.assertEqual([(i["value"], i["sources"]) for i in report["missing"]], [("3家", ["乙稿.txt"])])
+        self.assertEqual(report["missing"][0]["locations"][0]["file"], "乙稿.txt")
+        self.assertEqual([i["value"] for i in report["added"]], ["4家"])
+        code, out, _ = self.run_main(str(self.a), str(merged), "--ref", str(self.b))
+        self.assertIn("出自 乙稿.txt", out)
+        self.assertIn("乙稿.txt 第 1 行", out)
+        self.assertIn("甲稿.txt、乙稿.txt（共 2 份）", out)
+
+    def test_max_count_across_drafts(self):
+        # 两稿各写一次“12项”，合并稿写一次不报；合并稿写两次报新增
+        once = self.write("合并稿.txt", "全年完成12项，投入66万元，新增企业3家。")
+        self.assertTrue(self.diff_refs(once)["consistent"])
+        twice = self.write("合并稿2.txt", "全年完成12项，投入66万元，新增企业3家。其中12项已验收。")
+        report = self.diff_refs(twice)
+        self.assertEqual([(i["value"], i["original_count"], i["revised_count"]) for i in report["added"]],
+                         [("12项", 1, 2)])
+
+    def diff_refs(self, merged: Path) -> dict:
+        code, out, _ = self.run_main(str(self.a), str(merged), "--ref", str(self.b), "--json")
+        self.assertEqual(code, 0)
+        return json.loads(out)
+
+    def test_ledger_with_refs(self):
+        body = self.write("正文.txt", "全年完成12项，投入66万元，新增企业3家。")
+        code, out, _ = self.run_main(str(self.a), str(body), "--ledger", "--ref", str(self.b), "--strict")
+        self.assertEqual(code, 0, out)
+        code, _out, _ = self.run_main(str(self.a), str(body), "--ledger", "--strict")
+        self.assertEqual(code, 1)
+
+    def test_missing_ref_returns_2(self):
+        body = self.write("正文.txt", "全年完成12项。")
+        code, _out, err = self.run_main(str(self.a), str(body), "--ref", str(self.tmp / "不存在.txt"))
+        self.assertEqual(code, 2)
+        self.assertIn("文件不存在", err)
+
+    def test_same_name_in_different_dirs(self):
+        sub = self.tmp / "sub"
+        sub.mkdir()
+        other = sub / "甲稿.txt"
+        other.write_bytes("新增企业3家。".encode("utf-8"))
+        merged = self.write("合并稿.txt", "全年完成12项，投入66万元。")
+        code, out, _ = self.run_main(str(self.a), str(merged), "--ref", str(other), "--json")
+        report = json.loads(out)
+        self.assertEqual(len(set(report["original_files"])), 2)
+        self.assertEqual(report["missing"][0]["sources"], [str(other)])
 
 
 class LongPathTest(unittest.TestCase):

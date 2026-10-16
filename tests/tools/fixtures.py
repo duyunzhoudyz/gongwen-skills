@@ -77,7 +77,7 @@ def skill_md(name: str, description: Optional[str] = None, extra_body: str = "",
     )
 
 
-def make_evals(name: str, count: int = 10) -> dict:
+def make_evals(name: str, count: int = 12) -> dict:
     items = []
     for i in range(1, count + 1):
         tags = ["测试"]
@@ -124,7 +124,7 @@ class FakeRepo:
         shared: Optional[List[dict]] = None,
         bundle: Optional[List[str]] = None,
         skill_text: Optional[str] = None,
-        evals_count: int = 10,
+        evals_count: int = 12,
         sync: bool = True,
     ) -> Path:
         d = self.skill_dir(name)

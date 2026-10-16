@@ -143,6 +143,53 @@ BAOMI_ZONGJIE = """某市国家保密局2026年保密工作总结
 2027年，市保密局将把新入职人员保密培训覆盖率提高到100%，每半年开展一次涉密载体专项清查。
 """
 
+DUIZHAO = """某局领导班子2026年度民主生活会对照检查材料
+
+按照市委关于召开2026年度民主生活会的通知要求，领导班子围绕四个方面对照检查如下。
+
+一、存在的问题
+
+（一）理论学习方面。班子集体学习12次，其中专题研讨4次，结合业务讨论的只有1次，学用结合不紧。
+
+（二）落实部署方面。年初确定的8项重点任务，有2项未按期完成，督办跟进不及时。
+
+（三）联系群众方面。班子成员全年到基层调研36次，到偏远乡镇只有5次，调研后形成解决措施的只有3项。
+
+（四）作风建设方面。全年发文86件，比上年多9件，会议通知中有6件要求下级报送书面材料。
+
+二、原因分析
+
+对理论学习的重要性认识不深，抓落实的责任没有逐项压到人，调研计划没有覆盖偏远乡镇。
+
+三、整改措施
+
+一是每季度安排1次结合业务的专题研讨；二是对未完成的2项任务明确牵头领导，2027年3月底前完成；三是班子成员每人每年到偏远乡镇调研不少于2次。
+
+四、下一步打算
+
+班子将把整改措施列入2027年工作要点，每季度在班子会上通报一次进展。
+
+五、对上年问题整改情况的说明
+
+上年查摆的5个问题已整改4个，1个持续推进。
+"""
+
+ZHENGGAI_FANGAN = """某局落实巡察反馈问题整改方案
+
+为落实市委第三巡察组反馈意见，制定本方案。
+
+一、整改任务
+
+（一）关于“政府采购程序不规范”问题。责任领导：分管副局长；责任部门：财务科；整改时限：2027年3月底前。整改措施：修订采购管理办法，对2026年采购项目逐项复查。
+
+（二）关于“公务用车管理不严”问题。责任领导：办公室主任；责任部门：办公室；整改时限：2026年12月底前。整改措施：建立用车登记台账，每月公示一次。
+
+二、工作要求
+
+各责任部门每月5日前报送整改进展，整改完成后由局纪检组逐项验收。
+"""
+
+
 class FalsePositiveTest(unittest.TestCase):
     def assert_clean(self, result):
         bad = [(i["level"], i["id"], i["line"], i["excerpt"]) for i in result["issues"] if i["level"] in ("P0", "P1")]
@@ -179,6 +226,38 @@ class FalsePositiveTest(unittest.TestCase):
         self.assertEqual(result["doc_type"], "总结")
         self.assert_clean(result)
         self.assertEqual([i for i in result["issues"] if i["check"] == "privacy"], [])
+
+    def test_inspection_material(self):
+        """W1-PA-1：“围绕四个方面对照检查如下”的四个方面来自通知，不与五个一级标题比对。"""
+        result = run(DUIZHAO)
+        self.assertEqual(result["doc_type"], "对照检查材料")
+        self.assert_clean(result)
+        self.assertNotIn("STR-002", ids(result))
+
+    def test_rectification_plan(self):
+        """扩充类型“整改方案”：字段冒号不计入冒号密度，规范稿件没有 P0、P1。"""
+        result = run(ZHENGGAI_FANGAN)
+        self.assertEqual(result["doc_type"], "整改方案")
+        self.assert_clean(result)
+        self.assertNotIn("AI-013", ids(result))
+
+
+class MaskedNumberTest(unittest.TestCase):
+    """TL-2：脱敏后的星号不是 Markdown 加粗。"""
+
+    def test_masked_id_and_phone(self):
+        result = run("身份证号110101************，联系电话138****0000。", checks="residue")
+        self.assertNotIn("RES-002", ids(result))
+        result = run("住院号2026*******，身份证号110101************，联系电话138****0000，于8月16日入院。", checks="residue")
+        self.assertNotIn("RES-002", ids(result))
+
+    def test_masked_names(self):
+        self.assertNotIn("RES-002", ids(run("患者张**、王**均已出院。", checks="residue")))
+
+    def test_bold_still_reported(self):
+        for text in ("**加粗**", "我们要**加强组织领导**，确保按期完成。", "**2026年**工作打算"):
+            with self.subTest(text=text):
+                self.assertIn("RES-002", ids(run(text, checks="residue")))
 
 
 class ProblemDenseTest(unittest.TestCase):
