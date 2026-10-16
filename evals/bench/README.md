@@ -30,6 +30,25 @@ python evals/bench/defect_prep.py --bench <评测目录>
 python evals/bench/archive.py --bench <评测目录> --out evals/results/v0.1-runs
 ```
 
+## skill 范围与版本
+
+- `prep.py --skills`：默认评测插件市场清单（`.claude-plugin/marketplace.json`）中的全部 skill；写 `--skills v0.1` 复现 v0.1 的 7 个 skill，也可以列出具体名称。
+- `prep.py --tag`：评测版本标签（默认 `v1.0`），用于生成工作目录编号，并写入 `meta.json`；`aggregate.py` 据此填写原始结果中的版本。
+- 用例的 `file_dest` 字段指定材料放在工作目录中的位置，例如 `{"evals/files/已有单位画像.md": ".gongwen/单位画像.md"}`。
+- 输入材料为 docx 时按"接受全部修订"读取（与 fact_diff 一致）；为 xlsx 时逐表逐行转为文本，供 fact_diff 比对。
+
+## 跨 skill 触发评测
+
+模拟 Agent 工具按 description 选 skill：给模型看全部 skill 的描述和各 skill `evals/trigger.json` 中的说法，为每条说法选一个 skill 或"无"。
+
+```bash
+python evals/bench/trigger_prep.py --out <评测目录>          # 生成 <评测目录>/trigger/tasks/batch-*.md
+# 对每个任务说明各起一个子智能体，答案写到 trigger/answers/batch-*.json
+python evals/bench/trigger_score.py --bench <评测目录> --out evals/results/<版本>-trigger.json --tables <表.md>
+```
+
+判定：正例选中来源 skill 为对；反例没有选中来源 skill 为对。
+
 ## 注意
 
 - 评测目录放在仓库之外（`prep.py` 会拒绝仓库内路径），避免 B 组读到 skill 文件。

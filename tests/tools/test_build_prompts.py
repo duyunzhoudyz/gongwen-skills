@@ -219,3 +219,47 @@ class BuildPromptsTest(TempRepoTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HandoffAppendixTest(TempRepoTestCase):
+    """没有整份打包 output-format.md 的 skill，自动附上第四部分"交接卡与转交"。"""
+
+    OUTPUT_FORMAT = (
+        "# 输出格式规范\n\n## 一、正文\n\n正文要求。\n\n"
+        "## 四、交接卡与转交\n\n### （一）转交与未安装兜底\n\n给交接卡和安装命令。\n\n"
+        "### （二）交接卡\n\n【交接卡】示例。\n"
+    )
+
+    def build(self, *args):
+        return run_quiet(build_prompts.main, ["--root", str(self.root), *args])
+
+    def test_extract_handoff(self):
+        text = build_prompts.extract_handoff(self.OUTPUT_FORMAT)
+        self.assertTrue(text.startswith("# 交接卡与转交（摘自输出格式规范第四部分）"))
+        self.assertIn("## （一）转交与未安装兜底", text)
+        self.assertIn("【交接卡】示例。", text)
+        self.assertNotIn("正文要求", text)
+        self.assertEqual(build_prompts.extract_handoff("# 没有第四部分\n"), "")
+
+    def test_appended_when_not_bundled(self):
+        d = self.repo.add_skill()
+        write_text(d / "references/_shared/style/output-format.md", self.OUTPUT_FORMAT)
+        manifest = (d / "manifest.json").read_text(encoding="utf-8")
+        import json
+        data = json.loads(manifest)
+        data["prompt_bundle"] = [p for p in data.get("prompt_bundle", [])
+                                 if not p.endswith("style/output-format.md")]
+        (d / "manifest.json").write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        code, out = self.build()
+        self.assertEqual(code, 0, out)
+        text = (self.root / "dist/prompts/gongwen-demo.md").read_text(encoding="utf-8")
+        self.assertIn("交接卡与转交（摘自输出格式规范第四部分）", text)
+        self.assertIn("给交接卡和安装命令。", text)
+
+    def test_not_duplicated_when_bundled(self):
+        d = self.repo.add_skill()
+        write_text(d / "references/_shared/style/output-format.md", self.OUTPUT_FORMAT)
+        code, out = self.build()
+        self.assertEqual(code, 0, out)
+        text = (self.root / "dist/prompts/gongwen-demo.md").read_text(encoding="utf-8")
+        self.assertNotIn("摘自输出格式规范第四部分", text)

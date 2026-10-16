@@ -95,9 +95,11 @@ def apply_role(paragraph, role: str, ctx: D.Ctx, *, split: int = -1, black: bool
     elif role in ("h1", "h2", "h3", "h4"):
         el = ctx.el(role)
         body = ctx.el("body")
-        para(align=body["align"], first_line=el["first_line_chars"], line_exact=line, before_pt=0, after_pt=0,
-             outline=el["outline_level"], snap=True)
         end = len(text) if split is None or split < 0 else split
+        # 独占一行、末尾不带句号的标题设“与下段同页”，标题不落在页末；与正文同段的、以句号结尾的条目不设
+        standalone = end >= len(text) and text.rstrip()[-1:] not in "。；！？.;!?"
+        para(align=body["align"], first_line=el["first_line_chars"], line_exact=line, before_pt=0, after_pt=0,
+             outline=el["outline_level"], snap=True, keep_next=True if standalone else None)
         if end < len(text) and not _ensure_split(paragraph, end):
             end = len(text)  # 拆不开时整段按标题处理
         bold = bool(el.get("bold", False))  # 层次标题默认不加粗；三级标题可按单位规定加粗
@@ -113,6 +115,11 @@ def apply_role(paragraph, role: str, ctx: D.Ctx, *, split: int = -1, black: bool
         el = ctx.el("subtitle")
         para(align=el["align"], line_exact=line, before_pt=0, after_pt=0, snap=True)
         changes |= _font_runs(paragraph, ctx, el["font"], el["size"], bold=False, black=black)
+    elif role == "table_caption":
+        # 表题：居中，不缩进，与表格同页
+        el = ctx.el("table")
+        para(align="center", line_exact=line, before_pt=0, after_pt=0, snap=True, keep_next=True)
+        changes |= _font_runs(paragraph, ctx, el["caption_font"], el["caption_size"], bold=False, black=black)
     elif role == "recipient":
         el = ctx.el("recipient")
         para(align=el["align"], line_exact=line, before_pt=0, after_pt=0, snap=True)

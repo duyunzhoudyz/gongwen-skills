@@ -1,6 +1,6 @@
 {
   "name": "gongwen-review",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "status": "beta",
   "shared": [
     {"src": "guardrails.md"},
@@ -28,6 +28,7 @@
   ],
   "prompt_bundle": [
     "references/_shared/guardrails.md",
+    "references/_shared/style/output-format.md",
     "references/checklist-8gates.md",
     "references/tifa-risk.md",
     "references/unit-checks.md",

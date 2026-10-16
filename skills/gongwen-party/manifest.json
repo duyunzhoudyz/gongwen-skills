@@ -8,6 +8,11 @@
     {"src": "style/ai-tone.md"},
     {"src": "style/defensive.md"},
     {"src": "rules/jianfu.md"},
+    {"src": "rules/tiaoli.md"},
+    {"src": "rules/gbt9704.md"},
+    {"src": "rules/gbt15834.md"},
+    {"src": "rules/gbt15835.md"},
+    {"src": "rules/doc-types.md"},
     {"src": "profiles/roles.md"},
     {"src": "profiles/units/dangzheng.md"},
     {"src": "profiles/units/jiceng.md"},
@@ -28,7 +33,6 @@
     "references/_shared/style/output-format.md",
     "references/writing-rules.md",
     "references/frameworks.md",
-    "references/checklist.md",
-    "references/types/jilu.md"
+    "references/checklist.md"
   ]
 }

@@ -36,6 +36,18 @@ def _gap_wanted(prev_role: Optional[str], next_role: Optional[str], seal: bool) 
     return 0
 
 
+GAP_BEFORE_ATTENDANCE = ("body", "h1", "h2", "h3", "h4", "attachment")
+
+
+def _first_attendance(parsed):
+    """第一个出席（请假、列席）段；它前面是正文、层次标题或附件说明时才需要空一行，否则返回 None。"""
+    items = [it for it in parsed.items if it.src >= 0]
+    for k, it in enumerate(items):
+        if it.role == "attendance":
+            return it if k > 0 and items[k - 1].role in GAP_BEFORE_ATTENDANCE else None
+    return None
+
+
 def _is_empty(p) -> bool:
     from docx.oxml.ns import qn
     if p.text.strip():
@@ -112,7 +124,9 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None, font_fal
         report["untouched"].append(f"第 {cut + 1} 段为【起草说明】，从该段起共 {len(paras) - cut} 段未排版；"
                                    "起草说明不是正文，成稿中应删除")
         paras, texts = paras[:cut], texts[:cut]
-    parsed = parse_lines(texts, red=[D.para_is_red(p, doc) for p in paras])
+    # 正文表格（不含版记）在识别时作占位，表格上一行的表题按表题排，不当成署名或正文
+    anchors = [a for a, _ in D.body_tables(doc) if cut is None or a < cut]
+    parsed = parse_lines(texts, red=[D.para_is_red(p, doc) for p in paras], tables_after=anchors)
     kind, doc_type = doc_kind(str(parsed.fields.get("标题") or ""))
     sec0 = doc.sections[0]
     is_letter = bool(sec0.different_first_page_header_footer and
@@ -145,6 +159,8 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None, font_fal
     stats: Dict[str, Dict[str, int]] = {}
     stripped = 0
     for it in parsed.items:
+        if it.role == "table":
+            continue  # 正文表格不调整（见下文“表格”）
         p = paras[it.src]
         role_of[it.src] = it.role
         # 发文字号行的行首制表符用于“居左空一字”，版头要素不删行首空白
@@ -170,6 +186,8 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None, font_fal
         want = _gap_wanted(role_of.get(prev_i), role_of.get(i), seal) if prev_i >= 0 and i < len(paras) else 0
         if prev_i >= 0 and i < len(paras) and role_of.get(prev_i) in BODY_ROLES and role_of.get(i) in BODY_ROLES:
             want = 0
+        if role_of.get(i) == "attendance" and role_of.get(prev_i) in GAP_BEFORE_ATTENDANCE:
+            want = 1  # 纪要出席名单在正文下空一行（10.3）
         for n, j in enumerate(gap):
             if n < want:
                 if D.set_para(paras[j], line_exact=ctx.line_pt, before_pt=0, after_pt=0, reset_indent=False):
@@ -199,6 +217,11 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None, font_fal
         D.set_para(paras[atts[0].src], before_pt=ctx.line_pt, after_pt=0, reset_indent=False)
     for it in atts[:-1]:
         D.set_para(paras[it.src], reset_indent=False, keep_next=True)  # 附件说明各行不分页
+    # 纪要出席名单前空一行：前面没有空段时用段前距补足
+    first_att = _first_attendance(parsed)
+    if first_att is not None and first_att.src > 0 and not _is_empty(paras[first_att.src - 1]):
+        D.set_para(paras[first_att.src], before_pt=ctx.line_pt, after_pt=0, reset_indent=False)
+        report["notes"].append("纪要出席名单前已空一行（段前距一行，GB/T 9704-2012 10.3）")
 
     sigs = [paras[it.src] for it in parsed.find("signature")]
     dates = parsed.find("date")
@@ -307,6 +330,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--seal", choices=["是", "否"], help="署名是否按加盖印章排列；不写时法定公文按加盖处理")
     parser.add_argument("--font-fallback", action="store_true", help="本机缺标准字体时改用已安装的替代字体")
     parser.add_argument("--json", action="store_true", help="以 JSON 输出报告")
+    parser.add_argument("--allow", metavar="DOCX-050", help="修复后检查时按本单位制度保留的检查项（逗号分隔），命中降为 P2")
     args = parser.parse_args(argv)
     try:
         import docx  # noqa: F401
@@ -335,7 +359,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     except Exception as exc:
         print(f"错误：无法处理 {src}：{exc}")
         return 2
-    report["check"] = check_document(final, layout=report["layout"])
+    report["check"] = check_document(final, layout=report["layout"], allow=args.allow)
     rpath = Path(args.report) if args.report else final.with_name(final.stem + "-修复报告.md")
     rpath = D.unique_path(rpath)
     rpath.parent.mkdir(parents=True, exist_ok=True)  # --report 指定的文件夹不存在时先建好

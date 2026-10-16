@@ -15,7 +15,7 @@
   {"query": "昨天党委常委会的记录发你了，整理成会议纪要", "should_trigger": false},
   {"query": "学院党支部组织生活会的对照检查材料怎么写", "should_trigger": false},
   {"query": "巡视反馈了12个问题，帮学校写整改方案和整改台账", "should_trigger": false},
-  {"query": "教育部刚发了文件，帮学校转化成贯彻落实的实施方案", "should_trigger": false},
+  {"query": "我是辅导员，这个季度的思想汇报要交支部，要点我列好了，帮我整理成文", "should_trigger": false},
   {"query": "学校今年的本科教学质量报告要发布了，帮我把全文写出来", "should_trigger": false},
   {"query": "这篇学院总结已经写好了，帮我核一下标点、数字和格式", "should_trigger": false},
   {"query": "我是学院党委书记，给支部党员列个谈心谈话提纲", "should_trigger": false}

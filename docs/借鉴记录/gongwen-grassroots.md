@@ -66,8 +66,14 @@
 2. 自建房、燃气等专项整治的全国统一检查标准：各地方案不同，迎检材料以用户提供的检查清单为准。
 3. 带具体降雨量、风力的应急通知范文：预警数据只能来自发布单位原文，模板不提供可套用的数字。
 
-## 七、需主 Agent 处理
+## 七、需主 Agent 处理（第四阶段已处理）
 
-1. 解冻后在 `shared/rules/jianfu.md` 第二部分补第15条（明晰基层权责：村（居）委会依法履行职责，不得将村（社区）作为行政执法、城市管理、招商引资等事务的责任主体），并把第五部分第 4 条"与写作无关的条款"中的第15条去掉，然后同步。本包 redlines.md 第六条、templates/yibiaotong.md 已按核实结果引用第15条。
-2. 第四阶段边界统一：gongwen-draft 的 description 补"居民通知、告知书、倡议书和乡镇发村（社区）的防汛防火应急通知，装有 gongwen-grassroots 时交它"；`shared/profiles/units/shequ.md` 第十部分 gongwen-draft 一行改为指向本包；gongwen-brief 的转交范围改为"乡镇（街道）、村（社区）报上级的政务信息"，与本包一致。
-3. `shared/profiles/units/shequ.md` 补充两部组织法"2025 年修订、修改，2026 年 1 月 1 日起施行"和公布期限不少于十五日（见第四部分第 1 条）。
+1. 解冻后在 `shared/rules/jianfu.md` 第二部分补第15条（明晰基层权责：村（居）委会依法履行职责，不得将村（社区）作为行政执法、城市管理、招商引资等事务的责任主体），并把第五部分第 4 条"与写作无关的条款"中的第15条去掉，然后同步。本包 redlines.md 第六条、templates/yibiaotong.md 已按核实结果引用第15条。（已处理：jianfu.md 第二部分已有第15条，第五部分第 4 条已不含第15条。）
+2. 第四阶段边界统一：gongwen-draft 的 description 补"居民通知、告知书、倡议书和乡镇发村（社区）的防汛防火应急通知，装有 gongwen-grassroots 时交它"；`shared/profiles/units/shequ.md` 第十部分 gongwen-draft 一行改为指向本包；gongwen-brief 的转交范围改为"乡镇（街道）、村（社区）报上级的政务信息"，与本包一致。（已处理：按计划 Q3，核心 skill 的 description 只写一句泛指，具体清单写在 gongwen-draft、gongwen-brief 的适用范围表；shequ.md、jiceng.md 第十部分已指向本包。）
+3. `shared/profiles/units/shequ.md` 补充两部组织法"2025 年修订、修改，2026 年 1 月 1 日起施行"和公布期限不少于十五日（见第四部分第 1 条）。（已处理。）
+
+## 八、第四阶段修订（2026-10-16）
+
+1. 按计划 D11、D12、D14 至 D18、D20、Q14 修订 SKILL.md、README.md、references 和 evals：首轮交付、篇幅差距说明、未安装兜底、引号内提法原样保留、相对时间不推算日期、起草说明重新编号；manifest 补同步 `rules/tiaoli.md`、`rules/gbt9704.md`、`rules/gbt15834.md`、`profiles/units/dangzheng.md`（只为引用闭合，不进 prompt_bundle）；中文例句的半角直引号改为全角。
+2. 按 `tools/validate.py --eval-overlap` 和人工比对，改掉 references 中与评测材料重合的场景、数字和日期（停水日期与星期、楼道清理罚款、暴雨预警时间、自建房告知书、独居老人台账、5 件实事、第三季度村务公开等），例句仍为自拟。
+3. `scripts/notice_check.py`：只写星期、没有日期的提示改为"保留原话或标【待补：具体日期】，不要推算日期"（D16），`tests/grassroots/` 补对应用例。

@@ -9,7 +9,7 @@
   - 对外材料中的未公开信息、商业秘密、经营数据（SOE-011～013，只在对外材料中检查）；
   - 数据表述：比率变化用百分数、同比环比用混（SOE-014、015）；党建成效归因（SOE-016）；
   - 函数检查：议题要件和方案比选（SOE-101、102）、议案要件（SOE-103）、决议出席人数和票数（SOE-104）、
-    改革台账状态（SOE-105）、ESG 披露口径（SOE-106）、金额单位（SOE-107）、
+    改革台账状态（SOE-105）、ESG 披露口径（SOE-106）、金额单位（SOE-107，制度标准金额不计）、
     纪要议定事项和前置程序（SOE-108、109）、融合材料“两张皮”（SOE-110）。
 
 用法：
@@ -671,6 +671,27 @@ def check_esg(lines: Lines, ruleset: RuleSet) -> List[Dict[str, Any]]:
 
 
 MONEY_RE = re.compile(r"\d+(?:\.\d+)?\s*(亿元|万元|千元|元)")
+# 制度标准金额（如“5000万元以上的投资须提交党委会前置研究”）是门槛，不是本事项的金额，不计入金额单位统计。
+# 认定条件：金额后接“以上”“以下”“以内”（含“及以上”“（含）以上”），或金额前有“超过”“达到”“不足”；
+# 并且所在句有“须”“应”“需”“规定”“标准”等规定性用语（“应收”“应付”“供应”“需求”等不算）。
+STANDARD_AFTER_RE = re.compile(r"\s*(?:（含）|\(含\))?\s*及?(?:以上|以下|以内)")
+STANDARD_BEFORE_RE = re.compile(r"(?:超过|达到|不足)\s*$")
+NORMATIVE_RE = re.compile(r"须|需(?!求)|(?<![供相对反适响回呼答效])应(?![收付交税])|规定|标准")
+SENTENCE_STOPS = "。！？!?"
+
+
+def _sentence_at(text: str, start: int, end: int) -> str:
+    """取 text 中包含 [start, end) 的那一句（以句号、问号、叹号为界，分号不断句）。"""
+    left = max(text.rfind(ch, 0, start) for ch in SENTENCE_STOPS) + 1
+    rights = [i for i in (text.find(ch, end) for ch in SENTENCE_STOPS) if i != -1]
+    return text[left:min(rights) if rights else len(text)]
+
+
+def is_standard_amount(text: str, m: "re.Match[str]") -> bool:
+    """金额是否为制度规定的标准（门槛）金额。"""
+    if not (STANDARD_AFTER_RE.match(text, m.end()) or STANDARD_BEFORE_RE.search(text, 0, m.start())):
+        return False
+    return bool(NORMATIVE_RE.search(_sentence_at(text, m.start(), m.end())))
 
 
 def check_money_units(lines: Lines, ruleset: RuleSet) -> List[Dict[str, Any]]:
@@ -679,6 +700,8 @@ def check_money_units(lines: Lines, ruleset: RuleSet) -> List[Dict[str, Any]]:
     first_seen: Dict[str, Tuple[int, str]] = {}
     for number, text in lines:
         for m in MONEY_RE.finditer(text):
+            if is_standard_amount(text, m):
+                continue
             unit = m.group(1)
             counts[unit] = counts.get(unit, 0) + 1
             first_seen.setdefault(unit, (number, m.group(0)))

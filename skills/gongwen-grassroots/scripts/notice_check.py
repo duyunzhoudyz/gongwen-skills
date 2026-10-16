@@ -443,7 +443,9 @@ class Checker:
         if skipped:
             self.notes.append(f"有 {skipped} 处“日期加星期”无法确定年份，未核对星期；可用 --year 指定年份。")
         if unparsed:
-            self.notes.append(f"有 {unparsed} 处星期未核对（没有和日期写在一起，或日期写法无法识别）；如指具体某一天，请人工核对。")
+            self.notes.append(f"有 {unparsed} 处星期未核对（没有和日期写在一起，或日期写法无法识别）；"
+                              "用户只给了星期几的，保留原话或标【待补：具体日期】，不要推算日期；"
+                              "用户给了日期的，请人工核对星期。")
 
     @staticmethod
     def _weekday_matches(text: str) -> List["re.Match[str]"]:

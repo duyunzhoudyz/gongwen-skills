@@ -10,6 +10,8 @@
     {"src": "rules/jianfu.md"},
     {"src": "rules/tiaoli.md"},
     {"src": "rules/doc-types.md"},
+    {"src": "rules/gbt9704.md"},
+    {"src": "rules/gbt15834.md"},
     {"src": "rules/gbt15835.md"},
     {"src": "rules/data-expression.md"},
     {"src": "profiles/roles.md"},

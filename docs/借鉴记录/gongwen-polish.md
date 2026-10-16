@@ -24,7 +24,7 @@
 | `skills/gongwen-profile/references/maintenance.md` 第一部分（三）（四）、`skills/gongwen-profile/SKILL.md` 写入门槛 | 改偏好卡前备份到 `.gongwen/历史/`、文件末尾“维护记录”加一行；一个文件放多张卡时按职务取卡；只出现在一份稿件中的偏好标“观察中” | SKILL.md 第二步“按领导批注改稿”第 7 条；`references/annotations.md` 第四部分 |
 | `shared/rules/data-expression.md` 第三部分（百分比与百分点） | 转译“涨了3个点”时区分百分点和百分比 | `references/tone.md` 第三部分 |
 | `shared/guardrails.md` 第一条第2款 | 遇密级、内部资料标识停止后，三种可以继续的情形 | SKILL.md 开工检查第 1 条 |
-| `shared/scripts/fact_diff.py`（含 `--ledger` 模式） | 改稿前后事实比对；合并、补充材料时以拼接的参照文件做集合比对 | SKILL.md 第三步；`references/merge.md` 第五部分 |
+| `shared/scripts/fact_diff.py`（含 `--ledger`、`--ref` 参数） | 改稿前后事实比对；合并多稿、用了补充材料时用 `--ref` 追加各稿和材料作比对基准（2026-10-16 起替代先用 body 拼“参照合并.txt”的做法；fact_diff 已能按接受修订读 docx） | SKILL.md 第三步；`references/merge.md` 第五部分 |
 
 ## 三、官方依据（2026-10-16 在线核对）
 

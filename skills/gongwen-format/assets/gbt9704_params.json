@@ -34,7 +34,8 @@
     "二号": {"value": 22, "basis": "Word 字号对照（gbt9704.md 第九部分）"},
     "小二": {"value": 18, "basis": "Word 字号对照"},
     "三号": {"value": 16, "basis": "Word 字号对照（gbt9704.md 第九部分）"},
-    "四号": {"value": 14, "basis": "Word 字号对照（gbt9704.md 第九部分）"}
+    "四号": {"value": 14, "basis": "Word 字号对照（gbt9704.md 第九部分）"},
+    "小四": {"value": 12, "basis": "Word 字号对照"}
   },
   "colors": {
     "red": {"value": "FF0000", "basis": "7.2.4、7.2.7 规定为红色；色值为实践值"},
@@ -171,6 +172,12 @@
                 "rule_gap_mm": "10.1（标志下 4 mm）", "bottom_rule_from_page_mm": "10.1（距下页边 20 mm）",
                 "thick_pt": "实践值", "thin_pt": "实践值", "double_gap_pt": "实践值",
                 "blank_lines_before_title": "10.1（与其上最后一个要素相距二行）"}
+    },
+    "table": {
+      "font": "仿宋", "size": "四号", "header_bold": true, "border_pt": 0.5, "caption_font": "黑体", "caption_size": "三号",
+      "basis": {"font": "实践值：表格文字用仿宋或宋体（国标未规定，按本单位规定）", "size": "实践值：小四至四号，默认四号",
+                "header_bold": "实践值：表头加粗", "border_pt": "实践值：全框线 0.5 磅",
+                "caption_font": "实践值：表题黑体居中", "caption_size": "实践值：表题三号"}
     },
     "minutes": {
       "top_from_body_mm": 35, "blank_lines_before_number": 1,

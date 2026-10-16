@@ -22,12 +22,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import gw_fonts as F  # noqa: E402
 from gw_layout import (DATE_CN_RE, MARKERS_RE, SECRET_WORDS_RE, doc_kind, draft_note_index,  # noqa: E402
-                       parse_lines, text_width_chars)
+                       is_pipe_residue, parse_lines, text_width_chars)
 
 CJK_RE = re.compile(r"[一-鿿]")
-DOCNO_BRACKET_RE = re.compile(r"[一-鿿]{1,12}[\[［(（【﹝{｛]\s*(?:19|20)\d{2}\s*[\]］)）】﹞}｝]\s*第?\s*\d+\s*号")
+# 序号位与 gw_layout.DOCNO_PAT 一致：阿拉伯数字，或尚未编号的“【待补：序号】”
+DOCNO_SEQ = r"(?:\d+|【待补[^】]*】)"
+DOCNO_BRACKET_RE = re.compile(r"[一-鿿]{1,12}[\[［(（【﹝{｛]\s*(?:19|20)\d{2}\s*[\]］)）】﹞}｝]\s*第?\s*" + DOCNO_SEQ + r"\s*号")
 DOCNO_SHORT_YEAR_RE = re.compile(r"〔\d{2}〕")
-DOCNO_DI_RE = re.compile(r"〔\d{4}〕\s*第\s*\d+\s*号")
+DOCNO_DI_RE = re.compile(r"〔\d{4}〕\s*第\s*" + DOCNO_SEQ + r"\s*号")
 DOCNO_ZERO_RE = re.compile(r"〔\d{4}〕\s*0\d*\s*号")
 DATE_ZERO_RE = re.compile(r"\d{4}年0[1-9]月|月0[1-9]日")
 PRINT_OK_RE = re.compile(r"\d{4}年[1-9]\d?月[1-9]\d?日印发$")
@@ -44,6 +46,7 @@ BAD_ORDINALS = [
 LAYOUT_NAMES = ("红头", "信函", "纪要", "白头", "材料")  # --layout 可选值
 LEVEL_FONT = {"h1": "黑体", "h2": "楷体", "h3": "仿宋", "h4": "仿宋", "body": "仿宋", "attendance": "仿宋"}
 LEVEL_NAME = {"h1": "一级标题", "h2": "二级标题", "h3": "三级标题", "h4": "四级标题", "body": "正文"}
+ALLOW_PREFIX = "按本单位制度保留："
 
 
 class Collector:
@@ -108,8 +111,21 @@ def _part_text(part_el) -> str:
     return "".join(t.text or "" for t in part_el.iter(qn("w:t")))
 
 
-def check_document(path: Path, layout: Optional[str] = None, params: Optional[dict] = None) -> dict:
-    """检查 docx，返回机检 JSON 结构。"""
+def parse_allow(value) -> List[str]:
+    """解析 --allow：逗号或空格分隔的检查项 ID，统一为大写（与 gongwen_lint.py 的 --allow 一致）。"""
+    if not value:
+        return []
+    items = value if isinstance(value, (list, tuple, set)) else re.split(r"[,，\s]+", str(value))
+    return [str(v).strip().upper() for v in items if str(v).strip()]
+
+
+def check_document(path: Path, layout: Optional[str] = None, params: Optional[dict] = None,
+                   allow=None) -> dict:
+    """检查 docx，返回机检 JSON 结构。
+
+    allow：本单位制度明文规定、与国标不同的写法对应的检查项（如企业发文字号用方括号的 DOCX-050），
+    命中时降为 P2 并注明“按本单位制度保留”，不计入 --strict。
+    """
     import gw_docx as D
     from docx import Document
     from docx.oxml.ns import qn
@@ -182,7 +198,9 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
                 excerpt=texts[cut], suggestion="删除【起草说明】及其后的全部内容",
                 basis="references/_shared/style/output-format.md 第二部分")
         paras, texts = paras[:cut], texts[:cut]
-    parsed = parse_lines(texts, red=[D.para_is_red(p, doc) for p in paras])
+    # 正文表格（不含版记）：识别时在表格位置插入占位，表格上一行的表题不按正文检查
+    tables = [(a, el) for a, el in D.body_tables(doc) if cut is None or a < cut]
+    parsed = parse_lines(texts, red=[D.para_is_red(p, doc) for p in paras], tables_after=[a for a, _ in tables])
     kind, doc_type = doc_kind(str(parsed.fields.get("标题") or ""))
     letter_issuer = None
     sec0 = doc.sections[0]
@@ -206,6 +224,8 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
                 suggestion="标题一般以“关于”开头或以文种结尾", basis="GB/T 9704-2012 7.3.1")
 
     for it in parsed.items:
+        if it.role in ("table", "table_caption"):
+            continue  # 表格另查；表题居中、不缩进，不按正文检查
         p = paras[it.src]
         line = it.src + 1
         text = texts[it.src]
@@ -261,6 +281,18 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
                 col.add("DOCX-055", "P1", "格式要素", "发文机关标志应为红色", line=line, excerpt=text,
                         suggestion="字体颜色设为红色", basis="GB/T 9704-2012 7.2.4")
 
+    # ---- 纪要出席名单前空一行（10.3） ----
+    if layout == "纪要" or doc_type == "纪要":
+        _check_attendance_gap(col, doc, paras, parsed, line_pt)
+
+    # ---- 正文表格、未转换的 Markdown 表格行 ----
+    _check_tables(col, doc, [el for _, el in tables])
+    for i, text in enumerate(texts):
+        if is_pipe_residue(text):
+            col.agg("pipe", "DOCX-100", "P1", "结构", "正文中有未转换的 Markdown 表格行（竖线、短横线原样成段）",
+                    line=i + 1, excerpt=text.strip(), suggestion="用 build_docx.py 重新生成（支持简单管道表格），"
+                    "或在 Word 中插入表格", basis="references/_shared/style/output-format.md 第一部分")
+
     # ---- 全文文本类检查（正文、表格、页眉） ----
     all_paras = list(D.iter_all_paragraphs(doc))
     date_lines = {it.src for it in parsed.items if it.role in ("date", "print")}
@@ -270,12 +302,14 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
         for hdr in (section.header, section.first_page_header, section.even_page_header):
             if not hdr.is_linked_to_previous:
                 header_texts.append(_part_text(hdr._element))
+    scanned: List[str] = []  # 【起草说明】之前的正文段落和表格文字，用于统计待补、待核实标记
     for p in all_paras:
         if p._p is cut_el:
             break  # 【起草说明】及其后的段落、表格不检查
         text = p.text
         if not text.strip():
             continue
+        scanned.append(text)
         line = body_index.get(p._p)
         ln = line + 1 if line is not None else None
         _check_text(col, text, ln, in_signoff=(line in date_lines) if line is not None else False)
@@ -305,17 +339,114 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
 
     total = sum(len(re.sub(r"\s", "", t)) for t in texts)
     issues = col.finish()
+    notes: List[str] = []
+    allow_ids = parse_allow(allow)
+    if allow_ids:
+        issues = _apply_allow(issues, allow_ids, notes)
     summary = {"P0": 0, "P1": 0, "P2": 0}
     for item in issues:
         summary[item["level"]] += 1
-    # 待补、待核实标记单独计数，与 gongwen_lint.py 的 summary.markers 一致
+    # 待补、待核实标记单独计数（含表格中的），与 gongwen_lint.py 的 summary.markers 一致
     markers = {"待补": 0, "待核实": 0}
-    for t in texts:
+    for t in scanned:
         for m in MARKERS_RE.finditer(t):
             markers["待核实" if m.group(0).startswith("【待核实") else "待补"] += 1
     summary["markers"] = markers
     return {"file": Path(path).name, "doc_type": doc_type or "其他", "layout": layout, "char_count": total,
-            "summary": summary, "issues": issues}
+            "summary": summary, "issues": issues, "notes": notes}
+
+
+def _apply_allow(issues: List[dict], allow: Sequence[str], notes: List[str]) -> List[dict]:
+    """--allow 列出的检查项命中时降为 P2，消息前加“按本单位制度保留：”。"""
+    unknown = [a for a in allow if a not in KNOWN_IDS]
+    if unknown:
+        notes.append(f"--allow 中的检查项 {'、'.join(unknown)} 不存在，已忽略。")
+    wanted = set(allow) & KNOWN_IDS
+    changed: List[str] = []
+    for item in issues:
+        if item["id"] in wanted:
+            item["level"] = "P2"
+            if not item["message"].startswith(ALLOW_PREFIX):
+                item["message"] = ALLOW_PREFIX + item["message"]
+            changed.append(item["id"])
+    if changed:
+        notes.append(f"按 --allow 降为 P2 的问题 {len(changed)} 处（{'、'.join(sorted(set(changed)))}），"
+                     "依据本单位制度保留，不计入 --strict；交付说明中写明与国标的差异。")
+        order = {"P0": 0, "P1": 1, "P2": 2}
+        issues.sort(key=lambda x: (order[x["level"]], x["line"] or 0))
+    return issues
+
+
+def _blank_before(doc, paras, idx: int, line_pt: float) -> bool:
+    """第 idx 段前是否空了一行：前一段是空段且行高不低于半行，或本段段前距不少于大半行。"""
+    import gw_docx as D
+    from docx.oxml.ns import qn
+    ppr = paras[idx]._p.pPr
+    sp = ppr.find(qn("w:spacing")) if ppr is not None else None
+    if sp is not None and int(sp.get(qn("w:before")) or 0) >= line_pt * 20 * 0.8:
+        return True
+    if idx == 0 or paras[idx - 1].text.strip():
+        return False
+    rule, val = D.para_line_spacing(paras[idx - 1], doc)
+    return not (rule == "exact" and val is not None and val < line_pt * 0.5)
+
+
+def _check_attendance_gap(col: Collector, doc, paras, parsed, line_pt: float) -> None:
+    """纪要：第一个出席（请假、列席）段前应空一行；排在开头、前面没有正文的不查。"""
+    items = [it for it in parsed.items if it.src >= 0 or it.role == "table"]
+    for k, it in enumerate(items):
+        if it.role != "attendance":
+            continue
+        prev = items[k - 1].role if k > 0 else None
+        if prev in ("body", "h1", "h2", "h3", "h4", "attachment") and not _blank_before(doc, paras, it.src, line_pt):
+            col.add("DOCX-047", "P1", "段落", "纪要出席名单前应空一行", line=it.src + 1, excerpt=paras[it.src].text,
+                    suggestion="在第一个“出席”段前加一个空行，或运行 fix_docx.py", basis="GB/T 9704-2012 10.3")
+        break
+
+
+def _check_tables(col: Collector, doc, tables: Sequence) -> None:
+    """正文表格：宽度不超过版心；文字一般用仿宋或宋体，小四至四号（国标未规定，按实践提示）。"""
+    import gw_docx as D
+    from docx.oxml.ns import qn
+    from docx.table import Table
+    width_tw = D.ctx_text_width_pt(doc) * 20
+    for n, tbl in enumerate(tables, start=1):
+        grid = [int(c.get(qn("w:w")) or 0) for c in tbl.iter(qn("w:gridCol"))]
+        tblw = tbl.find(qn("w:tblPr") + "/" + qn("w:tblW"))
+        w = sum(grid)
+        if tblw is not None and tblw.get(qn("w:type")) == "dxa":
+            w = max(w, int(tblw.get(qn("w:w")) or 0))
+        if w > width_tw + 57:  # 容差约 1 mm
+            col.add("DOCX-101", "P1", "页面", f"第 {n} 张表格宽约 {D.twips_to_mm(w):.0f} mm，超出版心（156 mm）",
+                    excerpt=f"表格 {n}", suggestion="表格宽度设为不超过 15.6 厘米，或缩小列宽",
+                    basis="GB/T 9704-2012 5.2.1（版心）")
+        fonts: List[tuple] = []
+        sizes: List[tuple] = []
+        seen = set()
+        for row in Table(tbl, doc._body).rows:
+            for cell in row.cells:
+                if cell._tc in seen:
+                    continue  # 合并单元格会重复返回
+                seen.add(cell._tc)
+                for p in cell.paragraphs:
+                    for r in p.runs:
+                        k = len(r.text.strip())
+                        if k:
+                            fonts.append((D.run_font(r, p, doc), k))
+                            sizes.append((D.run_size(r, p, doc), k))
+        font, size = _majority(fonts), _majority(sizes)
+        bad_font = font is not None and F.font_class(font) not in ("仿宋", "宋体")
+        bad_size = size is not None and not 11.75 <= size <= 14.25
+        if bad_font or bad_size:
+            col.add("DOCX-102", "P2", "字体", f"第 {n} 张表格文字为“{font}”{size} 磅，一般用仿宋或宋体小四至四号",
+                    excerpt=f"表格 {n}", suggestion="表格文字设为仿宋或宋体，小四（12 磅）至四号（14 磅），表头加粗",
+                    basis="实践（国标未规定表格字号，按本单位规定）")
+
+
+# check_document 可能报出的检查项，--allow 只接受这些 ID
+KNOWN_IDS = {f"DOCX-{n:03d}" for n in (1, 2, 3, 4, 10, 11, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24, 30, 31, 32, 33,
+                                     40, 41, 42, 43, 44, 45, 46, 47, 50, 51, 52, 53, 54, 55, 60, 61, 70, 71, 72,
+                                     73, 74, 80, 81, 82, 90, 100, 101, 102)}
 
 
 def _majority(values: List[tuple]) -> Optional[object]:
@@ -503,6 +634,7 @@ def render_text(result: dict) -> str:
     s = result["summary"]
     out = [f"文件：{result['file']}（版式：{result.get('layout')}，文种：{result['doc_type']}）",
            f"结论：P0 {s['P0']} 项，P1 {s['P1']} 项，P2 {s['P2']} 项。" + ("可以交付。" if s["P0"] == 0 else "存在 P0，修改后再交付。")]
+    out += [f"说明：{n}" for n in result.get("notes", [])]
     for i, it in enumerate(result["issues"], start=1):
         loc = f"第 {it['line']} 段" if it.get("line") else "全文"
         out.append(f"{i}. [{it['level']}] {it['message']}（{loc}：{it['excerpt']}）")
@@ -522,6 +654,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--layout", help="版式：红头、信函、纪要、白头、材料；不写时自动判断")
     parser.add_argument("--json", action="store_true", help="以机检 JSON 输出（开发规范第 8 节）")
     parser.add_argument("--strict", action="store_true", help="存在 P0 时返回 1")
+    parser.add_argument("--allow", metavar="DOCX-050",
+                        help="本单位制度明文规定、与国标不同的写法对应的检查项（逗号分隔，如 DOCX-050 方括号文号），"
+                             "命中时降为 P2、注明“按本单位制度保留”，不计入 --strict")
     args = parser.parse_args(argv)
     try:
         import docx  # noqa: F401
@@ -536,7 +671,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"错误：无法识别的版式：{args.layout}。可选：{'、'.join(LAYOUT_NAMES)}")
         return 2
     try:
-        result = check_document(path, layout=args.layout)
+        result = check_document(path, layout=args.layout, allow=args.allow)
     except Exception as exc:  # 文件损坏、不是 docx 等
         print(f"错误：无法读取 {path}：{exc}")
         return 2

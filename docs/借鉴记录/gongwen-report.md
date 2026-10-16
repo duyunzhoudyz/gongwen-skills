@@ -27,7 +27,8 @@
 2. 下级材料汇总的口径比对（统计口径、时间范围、计量单位、数值矛盾、归属重复）和口径冲突表（`references/merge-and-versions.md` 第一部分）。
 3. 一份台账多版输出的视角转换规则和"本人角色"标记（`references/merge-and-versions.md` 第二部分）。
 4. 述职缺事例、调研缺记录、素材为零三种情形的框架交付模板（`references/frameworks.md`）。
-5. 8 类材料按单位类型的调整项（`references/units.md`）。
+5. 8 类材料按单位类型的调整项（`references/units.md`），以及装有行业包时专用文书的转交口径。
+6. 大会工作报告（职代会、教代会、党代会）的写法要点（`references/types/zongjie.md` 第七部分，v1.0 第四阶段新增）。
 
 ## 四、有意没有采用的内容
 

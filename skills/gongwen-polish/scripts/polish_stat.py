@@ -13,7 +13,8 @@
 
 count：统计正文字数，按一级标题（一、二、……）分部分统计；给了 --target 时，算出与目标的差距和各部分
        按比例分配的参考字数。默认允许目标±10%；加 --max 表示目标是上限（用户说“以内”“不超过”），
-       超过即报“超出”，低于上限七成时提示复查是否删了必保内容。
+       超过即报“超出”，低于上限七成时提示复查是否删了必保内容。判断“不足”“偏少”时，【待补】标记的字数不计入
+       （guardrails 第四条第2款：【待补】不计入字数）；判断“超出”按全部正文字数。
 compare：对照原稿和改稿：总字数和各部分字数的变化，逐段列出修改、移动、拆分、删除、新增的段落，
          用来核对每一处改动都在任务范围内（如每处改动都对应某条批注）。“新增”指在原稿中找不到来源的段落；
          “修改”“移动”“拆分”另列出改稿段比原稿段多出的文字，用来查句内追加的新事实；
@@ -23,8 +24,9 @@ compare：对照原稿和改稿：总字数和各部分字数的变化，逐段�
 trace：把合并稿逐句与各来源稿比对，标出每句来自哪一稿；找不到来源的句子可能是新增内容，须逐条核对；
        有来源的句子再按逗号切成小句，列出找不到来源的小句；同时列出来源稿中没有被采用的句子。
 comments：从 .docx 中提取 Word 批注：批注内容、所在段落、批注圈定的原文。不输出批注人姓名。
-body：导出【起草说明】之前的全部文字（含标题、版头），给几份文件时依次拼接。用于把 docx 转成文字稿，
-      或把原稿和材料拼成 fact_diff --ledger 的参照文件（每份文件的【起草说明】及其后内容都不带入）。
+body：导出【起草说明】之前的全部文字（含标题、版头），给几份文件时依次拼接（每份文件的【起草说明】及其后
+      内容都不带入）。用于把 docx 转成文字稿留底。多稿合并、原稿加补充材料的事实比对，直接用 fact_diff.py 的
+      --ref 参数追加各稿，不必先拼接。
 
 统计口径：标题之后、【起草说明】之前的正文，不含空白字符。
 标题行：开头的版头行（以“文件”结尾的发文机关标志、发文字号行）之后的第一个非空行，不超过 60 字、
@@ -371,6 +373,12 @@ class Body:
                 counts[match.group(1)] += 1
         return counts
 
+    @property
+    def todo_chars(self) -> int:
+        """【待补】标记（含方括号和说明）的非空白字数：篇幅下限判断时不计入。"""
+        return sum(nonspace_len(m.group(0)) for para in self.paras
+                   for m in MARKER_RE.finditer(para) if m.group(1) == "待补")
+
     def sections(self) -> List[Dict[str, object]]:
         """按一级标题切分：第一个一级标题之前为“开头”。"""
         result: List[Dict[str, object]] = []
@@ -411,7 +419,7 @@ def load_body(path: Path, include_title: bool = False) -> Body:
 
 def _revision_note(name: str, revisions: int) -> str:
     return (f"{name} 含修订痕迹 {revisions} 处，已按“接受全部修订”后的文字统计；"
-            f"fact_diff.py 读 docx 时会漏掉修订插入的文字，比对前先用 body 子命令另存为 .txt。")
+            f"不接受某处修订的，请先在 Word 中处理。")
 
 
 # ---------------------------------------------------------------------------
@@ -431,6 +439,8 @@ def count_report(path: Path, target: Optional[int] = None, include_title: bool =
         raise InputError("--max 需要和 --target 一起使用")
     body = load_body(path, include_title=include_title)
     total = body.char_count
+    todo = body.todo_chars
+    counted = total - todo  # 判断下限用：【待补】不计入字数
     sections = body.sections()
     for sec in sections:
         sec["share"] = round(int(sec["char_count"]) / total, 3) if total else 0.0
@@ -440,6 +450,7 @@ def count_report(path: Path, target: Optional[int] = None, include_title: bool =
         "char_count": total,
         "paragraphs": len(body.paras),
         "markers": body.markers(),
+        "todo_marker_chars": todo,
         "sections": sections,
         "target": None,
         "revisions": body.revisions,
@@ -452,8 +463,8 @@ def count_report(path: Path, target: Optional[int] = None, include_title: bool =
             low, high, mode = int(round(target * UPPER_FLOOR)), target, "上限"
             if total > high:
                 status, advice = "超出", f"比上限多 {diff} 字，至少还要删减 {diff} 字"
-            elif total < low:
-                status, advice = "偏少", (f"不到上限的七成（{low} 字），复查是否删去了事实、数据、措施、"
+            elif counted < low:
+                status, advice = "偏少", (f"不到上限的七成（{low} 字，【待补】不计入），复查是否删去了事实、数据、措施、"
                                           f"责任主体、时限等必保内容；没有误删的照常交付，不为凑字数加内容")
             else:
                 status, advice = "在范围内", "未超过上限"
@@ -463,8 +474,9 @@ def count_report(path: Path, target: Optional[int] = None, include_title: bool =
             mode = "±10%"
             if total > high:
                 status, advice = "超出", f"比目标多 {diff} 字，至少删减 {total - high} 字才进入允许范围"
-            elif total < low:
-                status, advice = "不足", f"比目标少 {-diff} 字；扩写只能展开已有事实，素材不够时按实际篇幅交付"
+            elif counted < low:
+                status, advice = "不足", (f"不计【待补】为 {counted} 字，比目标少 {target - counted} 字；扩写只能展开已有事实，"
+                                          f"差距超过三成的在回复第一段说明差距并附补料清单，不注水")
             else:
                 status, advice = "在范围内", "已在目标±10%以内"
         for sec in sections:
@@ -481,6 +493,8 @@ def render_count(report: Dict[str, object]) -> str:
     markers = report["markers"]
     lines.append(f"正文 {report['char_count']} 字，{report['paragraphs']} 段；"
                  f"【待补】{markers['待补']} 处，【待核实】{markers['待核实']} 处。")
+    if report.get("todo_marker_chars"):
+        lines.append(f"其中【待补】标记 {report['todo_marker_chars']} 字，判断是否不足时不计入。")
     target = report["target"]
     if target:
         if target["mode"] == "上限":

@@ -640,6 +640,13 @@ class FailSamplesTest(NoticeCheckTestCase):
         result = self.check(text)
         self.assertTrue(any("1 处星期未核对" in n for n in result["notes"]), result["notes"])
 
+    def test_lone_weekday_note_does_not_ask_for_inferred_date(self):
+        # D16：只给星期几的不报错，提示保留原话、不推算日期
+        text = PASS_NOTICE.replace("家里有老人行动不便的", "星期三起家里有老人行动不便的")
+        result = self.check(text)
+        self.assertNotIn("NTC-006", self.ids(result))
+        self.assertTrue(any("不要推算日期" in n for n in result["notes"]), result["notes"])
+
     def test_tail_period_after_blank_line_is_doc_level(self):
         result = self.check(FAIL_WUGONGKAI_TAIL_PERIOD)
         issues = [i for i in result["issues"] if i["id"] == "NTC-012"]

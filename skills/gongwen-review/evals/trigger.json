@@ -16,7 +16,7 @@
   {"query": "帮我给这篇汇报材料起几个小标题", "should_trigger": false},
   {"query": "检查一下这几个小标题和正文内容对不对得上", "should_trigger": false},
   {"query": "下周要交科室年终总结，素材我发你，帮我写一份", "should_trigger": false},
-  {"query": "帮我写个关于申请防汛经费的请示", "should_trigger": false},
+  {"query": "下面报上来一篇信息，看看能不能被市里采用", "should_trigger": false},
   {"query": "这篇通知写得太平了，帮我整体重写一遍", "should_trigger": false},
   {"query": "你能帮我做哪些公文方面的事？", "should_trigger": false}
 ]

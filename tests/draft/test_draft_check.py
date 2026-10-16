@@ -307,7 +307,8 @@ class FoldTitleTest(unittest.TestCase):
             "某县人民政府办公室",
         )
         self.assertEqual(result["recommended"], "某县人民政府办公室转发省人民政府办公厅关于做好秋冬季森林防火工作的通知")
-        self.assertEqual(result["alternative"], "某县人民政府办公室关于转发省人民政府办公厅做好秋冬季森林防火工作的通知")
+        # 备选为不写本机关名称的写法（计划 D19），省去被转发标题中的“关于”
+        self.assertEqual(result["alternative"], "关于转发省人民政府办公厅做好秋冬季森林防火工作的通知")
         self.assertEqual(result["skipped_levels"], ["某市人民政府办公室"])
 
     def test_opinion_drops_inner_de(self):
@@ -400,9 +401,56 @@ class FoldTitleTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("推荐标题：某县人民政府办公室转发省人民政府办公厅关于做好秋冬季森林防火工作的通知", out)
 
-    def test_cli_fold_requires_issuer(self):
-        code, _, _ = run_main("--fold-title", "某某关于……的通知")
+    def test_cli_fold_without_issuer(self):
+        # D19：不传 --issuer 时给出“关于转发……的通知”写法
+        code, out, _ = run_main("--fold-title", "省人民政府办公厅关于做好秋冬季森林防火工作的通知")
+        self.assertEqual(code, 0)
+        self.assertIn("推荐标题：关于转发省人民政府办公厅做好秋冬季森林防火工作的通知", out)
+        self.assertNotIn("备选标题", out)
+
+    def test_cli_fold_requires_title(self):
+        code, _, _ = run_main("--fold-title", "  ", "--issuer", "某局")
         self.assertEqual(code, 2)
+
+    def test_without_issuer_folds_chain(self):
+        result = self.fold("某市人民政府办公室关于转发省人民政府办公厅关于做好秋冬季森林防火工作的通知的通知", "")
+        self.assertEqual(result["recommended"], "关于转发省人民政府办公厅做好秋冬季森林防火工作的通知")
+        self.assertEqual(result["alternative"], "")
+        self.assertEqual(result["skipped_levels"], ["某市人民政府办公室"])
+        self.assertTrue(any("本机关名称" in n for n in result["notes"]))
+
+    def test_without_issuer_keeps_single_guanyu(self):
+        cases = {
+            "司法部关于审理政府信息公开行政复议案件若干问题的指导意见":
+                "关于转发司法部审理政府信息公开行政复议案件若干问题指导意见的通知",
+            "《某省安全生产条例》": "关于转发《某省安全生产条例》的通知",
+            "关于做好秋冬季森林防火工作的通知": "关于转发做好秋冬季森林防火工作的通知",
+        }
+        for title, expected in cases.items():
+            with self.subTest(title=title):
+                result = self.fold(title, "")
+                self.assertEqual(result["recommended"], expected)
+                self.assertEqual(result["recommended"].count("关于"), 1)
+
+    def test_without_issuer_title_passes_title_check(self):
+        result = self.fold("某市人民政府办公室关于转发省人民政府办公厅关于做好秋冬季森林防火工作的通知的通知", "")
+        lines = [draft_check.Line(1, result["recommended"]), draft_check.Line(3, "各乡镇人民政府："),
+                 draft_check.Line(5, "现将《……》转发给你们，请结合实际认真贯彻执行。")]
+        _dtype, issues, _ = draft_check.check_text_lines(lines, "通知")
+        self.assertEqual(issues, [])
+
+    def test_issuer_followed_by_guanyu_forward_is_flagged(self):
+        # D19：标题以本机关名称开头时直接写“转发”，不加“关于”
+        body = [draft_check.Line(3, "各中小学："), draft_check.Line(5, "现将《……》转发给你们，请结合实际认真贯彻执行。")]
+        flagged = "某区教育局关于转发省教育厅做好冬季校园安全工作的通知"
+        _dtype, issues, _ = draft_check.check_text_lines([draft_check.Line(1, flagged)] + body, "通知")
+        self.assertEqual([(i.id, i.level) for i in issues if i.id == "DRF-001"], [("DRF-001", "P2")])
+        for title in ("关于转发省教育厅做好冬季校园安全工作的通知",
+                      "某区教育局转发省教育厅关于做好冬季校园安全工作的通知",
+                      "某市人民政府关于批转市发展改革委2026年重点项目计划的通知"):
+            with self.subTest(title=title):
+                _dtype, issues, _ = draft_check.check_text_lines([draft_check.Line(1, title)] + body, "通知")
+                self.assertEqual([i.id for i in issues if i.id == "DRF-001"], [])
 
     def test_folded_title_passes_title_check(self):
         result = self.fold(

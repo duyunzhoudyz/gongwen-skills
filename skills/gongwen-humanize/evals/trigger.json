@@ -18,5 +18,5 @@
   {"query": "下周要交科室年终总结，素材我发你，帮我写一篇", "should_trigger": false},
   {"query": "给这篇汇报材料提炼几个对仗的小标题", "should_trigger": false},
   {"query": "把这篇稿子排成国标格式的 Word", "should_trigger": false},
-  {"query": "帮我起草一个开会通知，明天下午三点在三楼会议室", "should_trigger": false}
+  {"query": "这篇太长了，帮我压到2000字", "should_trigger": false}
 ]

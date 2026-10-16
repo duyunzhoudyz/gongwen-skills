@@ -4,7 +4,7 @@
 运行：python -m unittest discover -s tests/polish -t .
 
 每个子命令都有“必错标本”（脚本必须报出问题）和“必过标本”（脚本不得误报）。
-BodyTest 中与 fact_diff 联动的用例需要先运行 python tools/sync_shared.py --skill gongwen-polish。
+BodyTest、FactDiffRefTest 中与 fact_diff 联动的用例需要先运行 python tools/sync_shared.py --skill gongwen-polish。
 """
 from __future__ import annotations
 
@@ -215,17 +215,38 @@ class CountTest(PolishStatCase):
         self.assertEqual(code, 1)
         self.assertIn("超出", out)
 
+    # 必错标本：靠【待补】凑够字数的，扣除标记后低于下限，报“不足”
+    def test_todo_markers_not_counted_for_lower_bound(self) -> None:
+        text = ("某局关于2026年安全生产工作情况的报告\n"
+                "全年开展专项检查36次。【待补：检查覆盖的企业家数和主要发现，以及整改落实情况】\n"
+                "【待补：典型案例一则，写明时间、对象、做法和结果】\n")
+        path = self.write("pad.txt", text)
+        report = polish_stat.count_report(path, target=polish_stat.count_report(path)["char_count"])
+        self.assertGreater(report["todo_marker_chars"], 0)
+        self.assertEqual(report["target"]["status"], "不足")
+        self.assertIn("回复第一段", report["target"]["advice"])
+        code, out, _ = self.run_main("count", str(path), "--target", str(report["char_count"]), "--strict")
+        self.assertEqual(code, 1)
+        self.assertIn("判断是否不足时不计入", out)
+
+    # 必过标本：超出按全部正文字数判断，上限口径不因扣除【待补】而放宽
+    def test_todo_markers_still_count_for_upper_limit(self) -> None:
+        path = self.write("a.txt", REPORT)
+        report = polish_stat.count_report(path, target=polish_stat.count_report(path)["char_count"] - 1,
+                                          upper=True)
+        self.assertEqual(report["target"]["status"], "超出")
+
     def test_under_target_reported(self) -> None:
         path = self.write("a.txt", REPORT)
         total = polish_stat.count_report(path)["char_count"]
         report = polish_stat.count_report(path, target=total * 2)
         self.assertEqual(report["target"]["status"], "不足")
 
-    # 必过标本：在±10% 以内
+    # 必过标本：在±10% 以内（下限按扣除【待补】后的字数判断）
     def test_within_target_passes_strict(self) -> None:
         path = self.write("a.txt", REPORT)
-        total = polish_stat.count_report(path)["char_count"]
-        target = int(round(total * 1.05))
+        report0 = polish_stat.count_report(path)
+        target = report0["char_count"] - report0["todo_marker_chars"]
         code, _, _ = self.run_main("count", str(path), "--target", str(target), "--strict")
         self.assertEqual(code, 0)
         report = polish_stat.count_report(path, target=target)
@@ -564,6 +585,7 @@ class RevisionTest(PolishStatCase):
         code, out, _ = self.run_main("count", str(path))
         self.assertEqual(code, 0)
         self.assertIn("接受全部修订", out)
+        self.assertNotIn("fact_diff", out)  # fact_diff 已能按接受修订读 docx，不再提示漏读
 
     def test_comments_note_on_revisions(self) -> None:
         report = polish_stat.comments_report(self.make_docx_zip("c.docx"))
@@ -625,6 +647,39 @@ class BodyTest(PolishStatCase):
                                      "--out", str(self.tmp / "x.docx"))
         self.assertEqual(code, 2)
         self.assertIn(".txt", err)
+
+
+class FactDiffRefTest(PolishStatCase):
+    """第三步复核用 fact_diff 的 --ref 追加补充材料、其他各稿，不再先拼“参照合并.txt”。"""
+
+    ORIGINAL = BodyTest.ORIGINAL
+    MATERIAL = BodyTest.MATERIAL
+
+    # 必过标本：原稿带【起草说明】，--ref 追加的材料不会被截掉，材料中的事实不报为新增
+    @unittest.skipUnless(HAS_FACT_DIFF, "未找到 fact_diff.py（先运行同步脚本）")
+    def test_ref_material_not_reported_as_added(self) -> None:
+        a, b = self.write("原稿.txt", self.ORIGINAL), self.write("材料.txt", self.MATERIAL)
+        revised = self.write("正文.txt", "某社区关于垃圾分类工作的汇报\n分类准确率由62%提高到81%，"
+                                         "志愿者46人，投放点12个。\n")
+        report = fact_diff.build_report(a, revised, ledger=True, refs=[b])
+        self.assertEqual(report["added"], [])
+
+    # 必错标本：原稿和材料都没有的数字照样报为新增
+    @unittest.skipUnless(HAS_FACT_DIFF, "未找到 fact_diff.py（先运行同步脚本）")
+    def test_ref_still_catches_new_fact(self) -> None:
+        a, b = self.write("原稿.txt", self.ORIGINAL), self.write("材料.txt", self.MATERIAL)
+        revised = self.write("正文.txt", "某社区关于垃圾分类工作的汇报\n分类准确率由62%提高到81%，"
+                                         "志愿者46人，居民满意度98%。\n")
+        added = [item["value"] for item in fact_diff.build_report(a, revised, ledger=True, refs=[b])["added"]]
+        self.assertTrue(any("98%" in value for value in added), added)
+
+    # 必过标本：合并多稿时底稿在前、其余各稿用 --ref，各稿独有的事实都算有来源
+    @unittest.skipUnless(HAS_FACT_DIFF, "未找到 fact_diff.py（先运行同步脚本）")
+    def test_ref_merge_drafts(self) -> None:
+        a, b = self.write("原稿-甲.txt", DRAFT_A), self.write("原稿-乙.txt", DRAFT_B)
+        merged = self.write("正文.txt", MERGED_OK)
+        report = fact_diff.build_report(a, merged, refs=[b])
+        self.assertEqual(report["added"], [])
 
 
 class CliTest(PolishStatCase):

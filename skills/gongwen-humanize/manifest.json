@@ -1,6 +1,6 @@
 {
   "name": "gongwen-humanize",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "status": "beta",
   "shared": [
     {"src": "guardrails.md"},
@@ -8,6 +8,13 @@
     {"src": "style/ai-tone.md"},
     {"src": "style/defensive.md"},
     {"src": "profiles/roles.md"},
+    {"src": "profiles/units/dangzheng.md"},
+    {"src": "rules/jianfu.md"},
+    {"src": "rules/tiaoli.md"},
+    {"src": "rules/doc-types.md"},
+    {"src": "rules/gbt9704.md"},
+    {"src": "rules/gbt15834.md"},
+    {"src": "rules/gbt15835.md"},
     {"src": "scripts/gongwen_lint.py", "dest": "scripts/gongwen_lint.py"},
     {"src": "scripts/lint_rules.json", "dest": "scripts/lint_rules.json"},
     {"src": "scripts/style_patterns.json", "dest": "scripts/style_patterns.json"},

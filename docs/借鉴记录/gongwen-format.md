@@ -37,3 +37,14 @@
 | 页脚距边界、页码段后 | 20 mm、13 磅 | 页脚距边界取信函下双线位置（10.1）；段后距使页码下沿距纸张下边约 24.6 mm，与 gongwen-kit 实测值一致；LibreOffice 导出 PDF 测得一字线距版心下边缘约 8 mm |
 | 版头红线宽 | 1.5 磅（约 0.5 mm） | 参照 mizzlelover/gongwen-gbt9704-skill |
 | 发文机关标志字号 | 最大小初 36 磅，按版心宽 90% 自动缩小 | 实践值，标准只要求醒目、美观、庄重 |
+| 正文表格 | 仿宋四号（可选宋体、小四），表头加粗，全框线 0.5 磅，与版心同宽，单元格行距为字号的 1.5 倍、不对齐文档网格 | 实践值，GB/T 9704-2012 未规定表格字号；按计划第三节 Q9 的公文表格样式 |
+| 表题 | 黑体三号，居中，与表格同页 | 实践值 |
+| 纪要出席名单前空行 | 一行（28.9 磅） | GB/T 9704-2012 10.3 |
+
+## 四、v1.0 新增内容的来源（第四阶段）
+
+| 内容 | 来源 | 落到文件 |
+|---|---|---|
+| Markdown 管道表格转 Word 表格（计划 Q9） | 自行实现。识别口径（表头行、分隔行、未转义竖线拆格、`<br>` 换行、表题判断）与本仓库 `shared/scripts/md2xlsx.py` 一致；未阅读、未复制外部项目代码 | scripts/gw_layout.py、scripts/gw_docx.py、scripts/build_docx.py、scripts/check_docx.py、scripts/fix_docx.py、tests/format/test_table.py |
+| `--allow` 按本单位制度保留 | 与本仓库 `shared/scripts/gongwen_lint.py` 的 `--allow` 口径一致（降为 P2、注明“按本单位制度保留”、不计入 `--strict`） | scripts/check_docx.py、tests/format/test_eval_fixes.py |
+| 文号序号占位、纪要出席空行、层次标题与下段同页 | v0.1 评测待修问题 FM-1、FM-4、FM-5（`evals/results/v0.1-待修问题.md`） | scripts/gw_layout.py、scripts/build_docx.py、scripts/fix_docx.py、scripts/gw_format.py、scripts/check_docx.py（序号占位时仍查括号和“第”字）、tests/format/test_eval_fixes.py |

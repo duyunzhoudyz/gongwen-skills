@@ -9,7 +9,7 @@
 
 | 来源 | 许可证 | 读取版本 | 读取的文件 | 借鉴内容 | 方式 | 落到的文件 |
 |---|---|---|---|---|---|---|
-| [blingenf/copydetect](https://github.com/blingenf/copydetect) | MIT | ba07281 | `README.md`、`copydetect/detector.py` | 重合率按"本文件被覆盖的长度 ÷ 本文件长度"计算，两份文件各算各的；设最小匹配长度过滤偶然相同的短片段；以约三分之一作为报告阈值；工具只提示可能抄袭、不下结论 | 思路 | `shared/scripts/overlap_check.py`（重合率定义、`--min-len`、文本输出末尾的说明行）；`references/localize.md` 第四部分第6条 |
+| [blingenf/copydetect](https://github.com/blingenf/copydetect) | MIT | ba07281 | `README.md`、`copydetect/detector.py` | 重合率按"本文件被覆盖的长度 ÷ 本文件长度"计算，两份文件各算各的；设最小匹配长度过滤偶然相同的短片段；以约三分之一作为报告阈值；工具只提示可能抄袭、不下结论 | 思路 | `shared/scripts/overlap_check.py`（重合率定义、`--min-len`、文本输出末尾的说明行）；`references/localize.md` 第四部分处理要点第5条 |
 
 ## 二、权威文件与公开资料（事实来源，不涉及许可证）
 

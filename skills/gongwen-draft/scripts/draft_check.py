@@ -10,7 +10,10 @@
 
 用法：
   python draft_check.py <文件> [--doc-type 文种] [--json] [--strict]
-  python draft_check.py --fold-title "被转发文件标题" --issuer "本机关名称" [--verb 转发|批转] [--json]
+  python draft_check.py --fold-title "被转发文件标题" [--issuer "本机关名称"] [--verb 转发|批转] [--json]
+
+转发标题两种写法（计划 D19）：写本机关名称的写“本机关转发……”，不加“关于”；
+不写本机关名称的写“关于转发……的通知”，省去被转发标题中的“关于”。
 
 输出 issue 的字段与机检接口（开发规范第 8 节）一致：id、level、category、line、
 excerpt、message、suggestion、basis，另带 check="draft"。
@@ -56,6 +59,12 @@ OPENING_RE = re.compile(r"如下|^(为|根据|按照|依据|依照|经|现|关�
 STATUTE_KINDS = ("条例", "办法", "规定", "细则")
 # 政府及其办公厅（室）。它转发部门文件、批转下级文件时，转发这一层赋予文件效力，不能省略
 GOV_ISSUER_RE = re.compile(r"(人民政府|政府|办公厅|办公室)$")
+# 转发标题的两种写法（计划 D19），DRF-001 的建议和 --fold-title 的提示共用
+FORWARD_TITLE_FORMS = ("写本机关名称的写作“本机关转发原发文机关关于……的通知”，不加“关于”；"
+                       "不写本机关名称的写作“关于转发原发文机关……的通知”，省去被转发标题中的“关于”")
+# 本机关名称之后接“关于转发”：名称部分不含转发、批转动作，如“某区教育局关于转发……”。
+# “某某关于批转……的通知”是批转的惯用写法，不在此列
+ISSUER_GUANYU_FORWARD_RE = re.compile(r"^(?:(?!转发|批转).)+?关于转发")
 # 会议时间单独成行的小标题，如“一、会议时间”“（一）时间：”
 TIME_HEADING_RE = re.compile(
     r"^(?:[一二三四五六七八九十]+、|（[一二三四五六七八九十]+）|\d+[.．、])?\s*(?:会议|开会|报到)?时间[：:]?$"
@@ -272,11 +281,16 @@ class Checker:
         text = t.text
         if "关于关于" in text or text.count("关于") >= 3:
             self.add("DRF-001", "P1", "标题", t, text, "标题中“关于”重复",
-                     "层层转发时省略中间层次，全标题只留一个“关于”（可用 --fold-title 生成）",
+                     "层层转发时省略中间层次，全标题只留一个“关于”：" + FORWARD_TITLE_FORMS
+                     + "（可用 --fold-title 生成）",
                      "references/doc-types/tongzhi.md 第四部分（实务）")
         elif text.count("关于") == 2 and re.search(r"转发|批转", text):
             self.add("DRF-001", "P2", "标题", t, text, "转发标题出现两个“关于”",
-                     "去掉本文的“关于”，写作“本机关转发原发文机关关于……的通知”；本单位惯例另有规定的从其规定",
+                     FORWARD_TITLE_FORMS + "；本单位制度另有明文规定的从其规定",
+                     "references/doc-types/tongzhi.md 第四部分（实务）")
+        elif text.count("关于") == 1 and ISSUER_GUANYU_FORWARD_RE.match(text):
+            self.add("DRF-001", "P2", "标题", t, text, "本机关名称之后又写“关于转发”",
+                     FORWARD_TITLE_FORMS + "；本单位制度另有明文规定的从其规定",
                      "references/doc-types/tongzhi.md 第四部分（实务）")
         if "的通知的通知" in text:
             self.add("DRF-002", "P1", "标题", t, text, "标题出现“的通知的通知”",
@@ -844,15 +858,25 @@ def _compose(target: str, issuer: str, verb: str, keep_marks: bool) -> Tuple[str
             body = f"《{body}》"
         if not kind:
             notes.append("未识别出被转发文件的文种，请人工核对标题")
+    # 不写本机关名称的写法：关于转发……的通知，省去被转发标题中的“关于”（计划 D19）
+    without_issuer = f"关于{verb}{orig_issuer}{body}的通知"
     if has_guanyu:
-        recommended = f"{issuer}{verb}{orig_issuer}关于{body}的通知"
-        alternative = f"{issuer}关于{verb}{orig_issuer}{body}的通知" if orig_issuer else ""
+        if issuer:
+            recommended = f"{issuer}{verb}{orig_issuer}关于{body}的通知"
+            alternative = without_issuer if orig_issuer else ""
+        else:
+            recommended, alternative = without_issuer, ""
         if not orig_issuer:
-            notes.append("被转发文件的标题没有写原发文机关，推荐标题保留了“关于”；请补上原发文机关后重新生成")
+            notes.append("被转发文件的标题没有写原发文机关，"
+                         + ("推荐标题保留了“关于”；" if issuer else "")
+                         + "请补上原发文机关后重新生成")
     else:
-        recommended = f"{issuer}{verb}{body}的通知"
-        alternative = f"{issuer}关于{verb}{body}的通知"
+        recommended = f"{issuer}{verb}{body}的通知" if issuer else without_issuer
+        alternative = without_issuer if issuer else ""
         notes.append("未识别出原发文机关（标题中没有“关于”），请人工核对")
+    if not issuer:
+        notes.append(f"未提供本机关名称，只给出不写本机关名称的写法；标题写本机关名称的，写作“本机关{verb}……”，"
+                     "不加“关于”，可加 --issuer 生成")
     return recommended, alternative, notes
 
 
@@ -891,7 +915,7 @@ def fold_forward_title(title: str, issuer: str, verb: str = "转发") -> Dict[st
 def render_fold(result: Dict[str, object]) -> str:
     out = [f"推荐标题：{result['recommended']}"]
     if result["alternative"]:
-        out.append(f"备选标题（本单位惯用“关于{result['verb']}”时）：{result['alternative']}")
+        out.append(f"备选标题（标题不写本机关名称时）：{result['alternative']}")
     out.append(f"最初文件：{result['original_title']}")
     if result["forwarded_title"] != result["original_title"]:
         out.append(f"实际转发：{result['forwarded_title']}")
@@ -944,7 +968,8 @@ def make_parser() -> argparse.ArgumentParser:
     parser.add_argument("--json", action="store_true", help="输出 JSON")
     parser.add_argument("--strict", action="store_true", help="存在 P0 时返回 1")
     parser.add_argument("--fold-title", metavar="标题", help="生成转发通知标题：传入被转发文件的完整标题")
-    parser.add_argument("--issuer", default="", metavar="机关名称", help="与 --fold-title 配合：本机关名称")
+    parser.add_argument("--issuer", default="", metavar="机关名称",
+                        help="与 --fold-title 配合：本机关名称；不传时只给“关于转发……的通知”写法")
     parser.add_argument("--verb", default="转发", choices=("转发", "批转"), help="与 --fold-title 配合：转发或批转")
     return parser
 
@@ -955,8 +980,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     if args.fold_title is not None:
-        if not args.fold_title.strip() or not args.issuer.strip():
-            print("错误：--fold-title 和 --issuer 都不能为空", file=sys.stderr)
+        if not args.fold_title.strip():
+            print("错误：--fold-title 不能为空", file=sys.stderr)
             return 2
         result = fold_forward_title(args.fold_title, args.issuer.strip(), args.verb)
         print(json.dumps(result, ensure_ascii=False, indent=2) if args.json else render_fold(result))

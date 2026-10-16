@@ -215,6 +215,24 @@ def render_header(name: str, title: str, version: str, status: str, char_count: 
     return "\n".join(lines) + "\n\n---\n\n"
 
 
+HANDOFF_SOURCE = "references/_shared/style/output-format.md"
+HANDOFF_HEADING = "## 四、交接卡与转交"
+
+
+def extract_handoff(text: str) -> str:
+    """从 output-format.md 中摘出第四部分"交接卡与转交"，改写为可作附录的独立小节；找不到时返回空串。"""
+    lines = text.split("\n")
+    start = next((i for i, line in enumerate(lines) if line.strip().startswith(HANDOFF_HEADING)), None)
+    if start is None:
+        return ""
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+    section = lines[start + 1:end]
+    # 三级标题提为二级，与其他附录的层级一致
+    section = ["## " + line[4:] if line.startswith("### ") else line for line in section]
+    body = "\n".join(section).strip("\n")
+    return "# 交接卡与转交（摘自输出格式规范第四部分）\n\n" + body + "\n"
+
+
 def render_skill(skill_dir: Path) -> RenderResult:
     result = RenderResult()
     name = skill_dir.name
@@ -268,6 +286,13 @@ def render_skill(skill_dir: Path) -> RenderResult:
         files.append((rel, content))
     if result.errors:
         return result
+
+    # 网页版跨 skill 转交需要交接卡和安装命令（开发规范 D14）。没有整份打包 output-format.md 的，
+    # 自动附上它的第四部分"交接卡与转交"，避免各 skill 为此超出字数目标。
+    if HANDOFF_SOURCE not in mapping and exists_exact(skill_dir, HANDOFF_SOURCE, want_dir=False):
+        handoff = extract_handoff(normalize_newlines((skill_dir / HANDOFF_SOURCE).read_text(encoding="utf-8-sig")))
+        if handoff:
+            files.append((HANDOFF_SOURCE[:-3] + "-第四部分.md", handoff))
 
     title = find_first_h1(body)[0] or name
     content = replace_bundle_paths(body.strip("\n"), mapping) + "\n"

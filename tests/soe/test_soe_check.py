@@ -332,6 +332,36 @@ class OtherProceduralTest(SoeCheckBase):
         self.assertNotIn("SOE-007", marked_ids)
         self.assertNotIn("SOE-109", marked_ids)
 
+    def test_money_units_standard_amount_excluded(self) -> None:
+        # 制度标准金额（门槛）不计入金额单位统计（W1-SO-3）
+        cases = (
+            "5000万元以上的投资须提交党委会前置研究。本项目投资1.2亿元。",
+            "单笔3000万元（含）以上的对外投资，应经党委会前置研究讨论。本项目投资2.6亿元。",
+            "投资额超过3000万元的项目，按规定报集团公司审批。本项目投资2.6亿元。",
+            "大额度资金标准为单笔2000万元及以上。本项目借款1.5亿元。",
+        )
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertNotIn("SOE-107", ids_of(self.check(text, "议题材料")))
+
+    def test_money_units_still_reported(self) -> None:
+        cases = (
+            "收入12.3亿元、利润8600万元。",
+            "应收账款余额超过8600万元，营业收入12.3亿元。",
+            "项目投资2000万元以上，营业收入1.5亿元。",
+            "5000万元以上的投资须提交党委会前置研究。本项目投资1.2亿元，其中设备购置4500万元。",
+        )
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertIn("SOE-107", ids_of(self.check(text, "议题材料")))
+
+    def test_money_units_specimens(self) -> None:
+        passed = self.check_specimen("必过-议题材料-制度标准金额", "议题材料")
+        self.assertNotIn("SOE-107", ids_of(passed))
+        self.assertEqual(serious(passed), [], json.dumps(passed["issues"], ensure_ascii=False))
+        failed = self.check_specimen("必错-议题材料-金额单位", "议题材料")
+        self.assertIn("SOE-107", ids_of(failed))
+
     def test_soe005_board_decides_after_party(self) -> None:
         self.assertNotIn("SOE-005", ids_of(self.check("党委会研究后，董事会审议批准增资方案。")))
         self.assertIn("SOE-005", ids_of(self.check("党委会研究后决定增资1.5亿元。")))

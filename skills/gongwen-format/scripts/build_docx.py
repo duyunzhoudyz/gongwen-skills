@@ -19,8 +19,8 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from gw_layout import (UPWARD_TYPES, Parsed, break_title, doc_kind, normalize_date, parse_lines,  # noqa: E402
-                       read_body_text, summarize, text_width_chars)
+from gw_layout import (UPWARD_TYPES, Parsed, break_title, doc_kind, extract_pipe_tables,  # noqa: E402
+                       normalize_date, parse_lines, read_body_text, summarize, text_width_chars)
 
 LAYOUTS = {"红头": "红头", "文件": "红头", "文件格式": "红头", "红头文件": "红头",
            "信函": "信函", "信函格式": "信函", "函件": "信函",
@@ -29,7 +29,9 @@ LAYOUTS = {"红头": "红头", "文件": "红头", "文件格式": "红头", "�
            "材料": "材料", "普通材料": "材料"}
 META_KEYS = ("版式", "份号", "密级", "保密期限", "紧急程度", "发文机关标志", "发文字号", "签发人", "标题",
              "主送机关", "附件", "发文机关署名", "成文日期", "印章", "附注", "抄送", "印发机关", "印发日期",
-             "三级标题加粗")
+             "三级标题加粗", "表格字体", "表格字号")
+TABLE_FONTS = ("仿宋", "宋体")
+TABLE_SIZES = ("四号", "小四")
 HEAD_ROLES = ("copy_no", "secret", "urgency", "issuer", "docno", "signer")
 TITLE_ROLES = ("title", "subtitle", "title_note")
 TAIL_ROLES = ("attachment", "signature", "date", "note", "cc", "print", "banji_main")
@@ -244,6 +246,9 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None, fon
 
     params = params or D.load_params()
     report: dict = {"warnings": [], "placeholders": [], "detected": [], "notes": []}
+    # 正文中的 Markdown 管道表格先换成占位行，识别结构后在原位置生成 Word 表格
+    lines, tables, table_notes = extract_pipe_tables(lines)
+    report["warnings"] += table_notes
     parsed = parse_lines(lines)
     report["warnings"] += parsed.warnings
     report["detected"] = parsed.detected
@@ -338,7 +343,10 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None, fon
         if doc_type in UPWARD_TYPES and not signers:
             signers = [need("签发人", "签发人姓名")]
             report["warnings"].append(f"{doc_type}属上行文，红头版式须标注签发人（GB/T 9704-2012 7.2.6）")
-        p = b.docno(need("发文字号"), signers)
+        docno_text = need("发文字号")
+        if signers:
+            _warn_docno_width(docno_text, signers, ctx, report)
+        p = b.docno(docno_text, signers)
         b.red_rule_under(p)
         b.blank(ctx.el("title")["blank_lines_after_rule"])
     elif lay == "信函":
@@ -410,9 +418,25 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None, fon
             rec += "："
         b.para("recipient", rec)
 
-    # ---- 正文 ----
-    for it in body_items:
-        b.para(it.role, it.text, split=it.split)
+    # ---- 正文（含表格、表题）----
+    table_queue = list(tables)
+    table_font, table_size = _table_style(meta, report)
+    prev_role = None
+    for k, it in enumerate(body_items):
+        if it.role == "table":
+            if prev_role == "table":
+                b.blank(1)  # 两张表格紧挨着会被 Word 合成一张，中间留一个空段
+            tb = table_queue.pop(0) if table_queue else None
+            if tb is not None:
+                D.add_body_table(b.doc, ctx, tb.header, tb.rows, tb.aligns, font_role=table_font, size_name=table_size)
+        else:
+            if it.role == "attendance" and k > 0 and prev_role != "attendance":
+                b.blank(1)  # 纪要出席名单在正文下空一行（GB/T 9704-2012 10.3）
+            b.para(it.role, it.text, split=it.split)
+        prev_role = it.role
+    if tables:
+        report["notes"].append(f"正文中的 {len(tables)} 张 Markdown 表格已转为 Word 表格（全框线、表头加粗、"
+                               f"{table_font}{table_size}，与版心同宽）；不支持合并单元格，需要合并的请在 Word 中处理")
 
     # ---- 附件说明 ----
     attachments = _as_list(fields.get("附件"))
@@ -494,6 +518,12 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None, fon
         rows.append([("print", f"{org}\t{date}印发")])
         D.add_banji_table(b.doc, ctx, rows, with_lines=True)
 
+    # 文档以表格结尾时补一个 1 磅高的空段，Word 要求表格后有段落
+    last = [el for el in b.doc.element.body.iterchildren() if not el.tag.endswith("}sectPr")]
+    if last and last[-1].tag.endswith("}tbl"):
+        anchor = b.doc.add_paragraph()
+        D.set_para(anchor, line_exact=1, before_pt=0, after_pt=0, snap=False)
+
     # ---- 页码 ----
     D.setup_page_numbers(b.section, ctx, first_page_blank=(lay == "信函"))
     if lay == "信函":
@@ -504,6 +534,36 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None, fon
     report["fields"]["版式"] = lay
     report["summary"] = summarize(parsed)
     return b.doc, report
+
+
+def _warn_docno_width(docno: str, signers: List[str], ctx, report: dict) -> None:
+    """上行文发文字号与签发人同一行：估算宽度，超出版心时提示（Word 会把签发人挤到下一行）。"""
+    import gw_docx as D
+    per_line = int(D.pv(ctx.params, "grid.chars_per_line"))
+    avail = per_line - int(ctx.el("docno")["left_chars_upward"]) - int(ctx.el("signer")["right_chars"])
+    last_row = signers[-2:] if len(signers) % 2 == 0 else signers[-1:]
+    need = text_width_chars(docno) + text_width_chars("签发人：" + "　".join(last_row)) + 1
+    if need > avail:
+        report["warnings"].append(
+            f"发文字号“{docno}”与签发人同一行约需 {need:g} 字，超过可排的 {avail} 字，签发人会被挤到下一行；"
+            "序号未定的请写成“代字〔年份〕【待补：序号】号”，不要用整段长占位（GB/T 9704-2012 7.2.5、7.2.6）")
+
+
+def _table_style(meta: dict, report: dict) -> Tuple[str, str]:
+    """表格字体字号：默认仿宋四号；版式信息可写“表格字体”（仿宋、宋体）、“表格字号”（四号、小四）。"""
+    font, size = "仿宋", "四号"
+    for key, allowed in (("表格字体", TABLE_FONTS), ("表格字号", TABLE_SIZES)):
+        val = str(meta.get(key) or "").strip()
+        if not val:
+            continue
+        if val in allowed:
+            if key == "表格字体":
+                font = val
+            else:
+                size = val
+        else:
+            report["warnings"].append(f"版式信息“{key}”只能写{'、'.join(allowed)}，“{val}”未采用，按默认处理")
+    return font, size
 
 
 def render_text(report: dict) -> str:
@@ -552,6 +612,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--font-fallback", action="store_true", help="本机缺标准字体时改用已安装的替代字体")
     parser.add_argument("--json", action="store_true", help="以 JSON 输出报告")
     parser.add_argument("--no-check", action="store_true", help="生成后不自动回读检查")
+    parser.add_argument("--allow", metavar="DOCX-050", help="回读检查时按本单位制度保留的检查项（逗号分隔），命中降为 P2")
     args = parser.parse_args(argv)
 
     try:
@@ -612,7 +673,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     report["output"] = str(final)
     if not args.no_check:
         from check_docx import check_document
-        report["check"] = check_document(final, layout=report["layout"])
+        report["check"] = check_document(final, layout=report["layout"], allow=args.allow)
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:

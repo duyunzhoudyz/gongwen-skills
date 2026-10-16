@@ -14,7 +14,7 @@
   {"query": "职代会上院长要作工作报告，帮我写报告", "should_trigger": false},
   {"query": "市领导来调研，给我们局长准备一份10分钟的汇报材料", "should_trigger": false},
   {"query": "帮我写个召开全市安全生产工作会议的通知", "should_trigger": false},
-  {"query": "把昨天推进会的录音转写稿整理成会议纪要", "should_trigger": false},
+  {"query": "局长下周开新闻发布会，帮我写个发布词", "should_trigger": false},
   {"query": "这篇讲话稿太长了，帮我从6000字压到3000字", "should_trigger": false},
   {"query": "帮我核一下这篇讲话稿的提法、标点和数字", "should_trigger": false},
   {"query": "这篇讲话稿是 AI 写的，AI 味太重，帮我改改", "should_trigger": false},

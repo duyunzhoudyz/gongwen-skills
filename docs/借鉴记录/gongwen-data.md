@@ -10,7 +10,7 @@
 |---|---|---|---|---|---|
 | [alchaincyf/huashu-excel](https://github.com/alchaincyf/huashu-excel) | MIT | 5b88312 | SKILL.md 和 README：把表中自带的"合计、小计"行当作免费的校验和，与清洗后的明细对账，不通过就不交付；先读原始单元格再计算（合并单元格只有左上角有值、文本型数字求和被跳过）；口径要声明（同比的分母是哪一期）；小基数的百分比增长、0% 和 100% 先查分母；不画双坐标轴。`scripts/profile_table.py`：表头前说明行、多级表头、"注："等说明行前缀、伪装成数值的空值词表（"—""/""暂无"等）、会计负数"(123)"、千分位、单位后缀、CSV 编码按 utf-8-sig、gb18030 依次尝试、按文件头字节识别旧版 .xls、隐藏行列提示 | 改写、思路 | `scripts/data_tool.py` 的 `parse_cell`、`analyze`、`check_totals`、`inspect_table`；`references/inspect-checklist.md` 第二部分；`references/chart-guide.md` 第一部分；`shared/rules/data-expression.md` 第八部分第 4 条 |
 | [hustcc/mcp-echarts](https://github.com/hustcc/mcp-echarts) | MIT | 3ed2496 | README：图表完全在本地生成、不依赖远程服务的设计取向 | 思路 | `scripts/chart_tool.py` 只用 openpyxl 生成 Excel 原生图表，matplotlib 可选；SKILL.md 开工检查第 2 条 |
-| [antvis/mcp-server-chart](https://github.com/antvis/mcp-server-chart) | MIT | e2a8fb7 | `src/utils/env.ts`：未设置 `VIS_REQUEST_SERVER` 时默认把图表数据发到服务方的远程渲染接口 | 反例 | SKILL.md 开工检查第 2 条"不调用会把数据发到远程服务器渲染的图表插件"；`references/chart-guide.md` 第四部分；README 注意事项第 2 条 |
+| [antvis/mcp-server-chart](https://github.com/antvis/mcp-server-chart) | MIT | e2a8fb7 | `src/utils/env.ts`：未设置 `VIS_REQUEST_SERVER` 时默认把图表数据发到服务方的远程渲染接口 | 反例 | SKILL.md 开工检查第 2 条“不用……远程渲染的图表插件”；`references/chart-guide.md` 第三部分第 4 条；README 注意事项第 2 条 |
 
 ## 二、公开资料（事实性依据，非开源项目）
 

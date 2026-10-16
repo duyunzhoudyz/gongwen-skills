@@ -45,7 +45,9 @@ H3_BAD_RE = re.compile(r"^\d{1,2}、")
 DATE_AR_RE = re.compile(r"^(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日$")
 DATE_CN_RE = re.compile(r"^[〇○零一二三四五六七八九]{4}年[一二三四五六七八九十]{1,2}月[一二三四五六七八九十]{1,3}日$")
 DATE_MARK_RE = re.compile(r"^【待补[：:][^】]*日期[^】]*】$")
-DOCNO_PAT = r"[\u4e00-\u9fffA-Za-z]{1,15}\s*[〔\[［(（【﹝{｛]\s*(?:19|20)?\d{2,4}\s*[〕\]］)）】﹞}｝]\s*第?\s*\d+\s*号"
+# 顺序号可以是数字，也可以是还没编号时的占位“【待补：序号】”（推荐写法：代字〔年份〕【待补：序号】号）
+DOCNO_PAT = (r"[\u4e00-\u9fffA-Za-z]{1,15}\s*[〔\[［(（【﹝{｛]\s*(?:19|20)?\d{2,4}\s*[〕\]］)）】﹞}｝]\s*第?\s*"
+             r"(?:\d+|【待补[^】]*】)\s*号")
 DOCNO_RE = re.compile(DOCNO_PAT)
 # 发文字号行：可带份号（信函格式同一行）和签发人（上行文）
 DOCNO_LINE_RE = re.compile(rf"^(?:(?P<copy>\d{{1,6}})\s+)?(?P<docno>{DOCNO_PAT})\s*(?:签发人\s*[：:]\s*(?P<signer>.+))?$")
@@ -72,6 +74,15 @@ SENT_PUNCT = "。，；！？、"
 MARKERS_RE = re.compile(r"【(待补|待核实)[：:][^】]*】")
 SECRET_WORDS_RE = re.compile(r"(绝密|机密|秘密)\s*★|★\s*\d+\s*年|内部资料|工作秘密|不得外传|涉密")
 DRAFT_NOTE_LINE = "【起草说明】"
+# 正文表格在行列表中的占位（私用区字符，用户文字中不会出现）。build 把管道表格换成它，
+# check、fix 在 docx 正文表格的位置插入它；识别时作“table”角色，不参与标题、署名等判断。
+TABLE_MARK = "表格"
+# 表题：表格上一行，“表1”“附表2”开头，或以“表”“清单”“台账”结尾（可带括注，如“（单位：万元）”）
+CAPTION_RE = re.compile(r"^(?:附表|表)\s*[0-9０-９一二三四五六七八九十]|(?:表|清单|台账)(?:[（(][^（）()]*[）)])?$")
+# Markdown 管道表格：分隔行（|---|:---:|）和数据行（首尾都是竖线、至少两格）
+PIPE_DELIM_CELL_RE = re.compile(r"^:?-{3,}:?$")
+PIPE_ROW_RE = re.compile(r"^\|.*\|.*\|$")
+BR_RE = re.compile(r"<br\s*/?>", re.IGNORECASE)
 
 ROLE_LABELS = {
     "copy_no": "份号", "secret": "密级和保密期限", "urgency": "紧急程度",
@@ -81,6 +92,7 @@ ROLE_LABELS = {
     "h4": "四级标题", "body": "正文", "attendance": "出席列席", "attachment": "附件说明",
     "signature": "发文机关署名", "date": "成文日期", "note": "附注",
     "banji_main": "版记主送", "cc": "抄送", "print": "印发机关和印发日期", "blank": "空行",
+    "table": "表格", "table_caption": "表题",
 }
 HEADING_ROLES = ("h1", "h2", "h3", "h4")
 BODY_ROLES = ("body", "h1", "h2", "h3", "h4", "attendance")
@@ -177,6 +189,131 @@ def is_heading(text: str) -> Optional[str]:
     return None
 
 
+# ---------------------------------------------------------------------------
+# Markdown 管道表格（只支持简单表格：表头行、分隔行、数据行，不支持合并单元格）
+# ---------------------------------------------------------------------------
+
+@dataclass
+class PipeTable:
+    header: List[str]
+    rows: List[List[str]]
+    aligns: List[Optional[str]]  # left、center、right；分隔行没写冒号的为 None
+    line: int = 0  # 表头在输入中的行号（从 1 起）
+
+
+def split_pipe_row(line: str) -> List[str]:
+    """按未转义的竖线拆分一行，去掉首尾竖线；“\\|”还原为竖线文字。"""
+    text = line.strip()
+    cells: List[str] = []
+    buf: List[str] = []
+    i = 0
+    while i < len(text):
+        ch = text[i]
+        if ch == "\\" and text[i + 1:i + 2] == "|":
+            buf.append("|")
+            i += 2
+            continue
+        if ch == "|":
+            cells.append("".join(buf))
+            buf = []
+        else:
+            buf.append(ch)
+        i += 1
+    cells.append("".join(buf))
+    if text.startswith("|"):
+        cells = cells[1:]
+    if text.endswith("|") and not text.endswith("\\|") and cells:
+        cells = cells[:-1]
+    return [c.strip() for c in cells]
+
+
+def _has_pipe(line: str) -> bool:
+    return "|" in line.replace("\\|", "")
+
+
+def parse_pipe_delimiter(line: str) -> Optional[List[Optional[str]]]:
+    """分隔行返回各列对齐方式，不是分隔行返回 None。"""
+    if not _has_pipe(line):
+        return None
+    cells = split_pipe_row(line)
+    aligns: List[Optional[str]] = []
+    for cell in cells:
+        cell = cell.replace(" ", "")
+        if not PIPE_DELIM_CELL_RE.match(cell):
+            return None
+        if cell.startswith(":") and cell.endswith(":"):
+            aligns.append("center")
+        elif cell.endswith(":"):
+            aligns.append("right")
+        elif cell.startswith(":"):
+            aligns.append("left")
+        else:
+            aligns.append(None)
+    return aligns or None
+
+
+def clean_cell(text: str) -> str:
+    """去掉单元格中的 Markdown 加粗、行内代码记号，<br> 换成换行；文字不改。"""
+    value = BR_RE.sub("\n", text)
+    parts = []
+    for part in value.split("\n"):
+        part = re.sub(r"(\*\*|__)(.+?)\1", r"\2", part.strip())
+        part = re.sub(r"`([^`]+)`", r"\1", part)
+        parts.append(part)
+    return "\n".join(parts).strip()
+
+
+def is_pipe_residue(text: str) -> bool:
+    """段落是不是没转换的 Markdown 表格行（分隔行，或首尾都是竖线的数据行）。"""
+    t = text.strip()
+    return bool(PIPE_ROW_RE.match(t)) or (t.count("|") >= 2 and parse_pipe_delimiter(t) is not None)
+
+
+def extract_pipe_tables(lines: Sequence[str]) -> Tuple[List[str], List[PipeTable], List[str]]:
+    """把行列表中的管道表格换成 TABLE_MARK 占位行。返回 (新行列表, 表格列表, 提示)。
+
+    表格须有表头行和分隔行，数据行连续、中间不空行。各行格数不一致时按最多的一行补空格，不丢文字。
+    """
+    out: List[str] = []
+    tables: List[PipeTable] = []
+    notes: List[str] = []
+    i = 0
+    n = len(lines)
+    while i < n:
+        line = lines[i]
+        if _has_pipe(line) and i + 1 < n and line.strip() and parse_pipe_delimiter(lines[i + 1]) is not None:
+            header = [clean_cell(c) for c in split_pipe_row(line)]
+            aligns = parse_pipe_delimiter(lines[i + 1]) or []
+            rows: List[List[str]] = []
+            j = i + 2
+            while j < n and lines[j].strip() and _has_pipe(lines[j]):
+                rows.append([clean_cell(c) for c in split_pipe_row(lines[j])])
+                j += 1
+            width = max([len(header), len(aligns)] + [len(r) for r in rows])
+            if any(len(r) != width for r in [header] + rows):
+                notes.append(f"第 {i + 1} 行起的表格各行格数不一致，已按 {width} 列排，缺的格留空，请核对")
+            header += [""] * (width - len(header))
+            aligns = list(aligns) + [None] * (width - len(aligns))
+            rows = [r + [""] * (width - len(r)) for r in rows]
+            tables.append(PipeTable(header, rows, aligns[:width], line=i + 1))
+            out.append(TABLE_MARK)
+            i = j
+            continue
+        if PIPE_ROW_RE.match(line.strip()):
+            notes.append(f"第 {i + 1} 行像表格行，但缺少分隔行（|---|），未转换为表格：{line.strip()[:30]}")
+        out.append(line)
+        i += 1
+    return out, tables, notes
+
+
+def is_table_caption(text: str) -> bool:
+    """表格上一行是不是表题：“表1”“附表2”开头，或以“表”“清单”“台账”结尾，短且没有句末标点。"""
+    t = text.strip()
+    if not t or len(t) > 40 or any(ch in t for ch in "。；！？") or is_heading(t) or ATTACH_RE.match(t):
+        return False
+    return bool(CAPTION_RE.search(t))
+
+
 def heading_split(text: str) -> int:
     """标题与正文同段时，返回标题部分的结束位置（含句号）；整段是标题时返回全长。"""
     idx = text.find("。")
@@ -202,6 +339,7 @@ TITLE_WORDS = set("""
 税务 审计 统计 市场 监管 食品 药品 文化 旅游 体育 民政 残疾人 退役 军人 水利 自然 林业 粮食 能源 电力 燃气 供水
 工程 设备 采购 招标 合同 绩效 薪酬 任期制 契约化 经理层 安全生产 大检查 实施方案 工作方案 工作要点 年终 情况
 冬春季 冬春 传染病 卫生健康委 住宿费 收费 医保 慢特病 联合 审核
+学年 学期 第一学期 第二学期 期中 期末 考试 监考 学校 校园 平安
 """.split())
 
 
@@ -381,6 +519,8 @@ class Parsed:
 # ---------------------------------------------------------------------------
 
 def _is_signature_line(text: str) -> bool:
+    if text == TABLE_MARK:
+        return False
     text = MARKERS_RE.sub("某", text)
     if len(text) > 40 or has_sentence_punct(text) or "：" in text or ":" in text:
         return False
@@ -389,20 +529,28 @@ def _is_signature_line(text: str) -> bool:
     return not looks_like_date(text)
 
 
-def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None) -> Parsed:
+def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
+                tables_after: Optional[Sequence[int]] = None) -> Parsed:
     """识别各行角色。raw_lines 可含空行，空行不进入结果。
 
     red：与 raw_lines 对应的“整段为红色”标记（读已有 docx 时传入），开头的红色短行按发文机关标志处理。
+    tables_after：读已有 docx 时传入，每张正文表格前一段的下标（表格在最前面时为 -1）；
+    识别时在该段之后插入一个表格占位（角色 table，src 为 -1），表格上一行像表题的识别为 table_caption。
     """
     res = Parsed()
     lines: List[Tuple[int, str]] = []
     indent_hit = False
+    anchors: Dict[int, int] = {}
+    for a in tables_after or ():
+        anchors[a] = anchors.get(a, 0) + 1
+    lines.extend((-1, TABLE_MARK) for _ in range(anchors.get(-1, 0)))
     for idx, raw in enumerate(raw_lines):
         text = clean_line(raw)
         if text:
             if raw[:1] in (" ", "　", "\t"):
                 indent_hit = True
             lines.append((idx, text))
+        lines.extend((-1, TABLE_MARK) for _ in range(anchors.get(idx, 0)))
     if indent_hit:
         res.warnings.append("部分段落用空格缩进，排版时已去掉行首空格，缩进统一按首行缩进 2 字处理")
     if not lines:
@@ -425,7 +573,7 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None) 
         elif URGENCY_RE.match(text):
             head.append(Item("urgency", text, idx))
             res.fields["紧急程度"] = text
-        elif _is_issuer(text, lines[pos + 1][1] if pos + 1 < n else "") or                 (red is not None and idx < len(red) and red[idx] and pos < 4 and len(text) <= 40):
+        elif _is_issuer(text, lines[pos + 1][1] if pos + 1 < n else "") or                 (red is not None and 0 <= idx < len(red) and red[idx] and pos < 4 and len(text) <= 40):
             head.append(Item("issuer", text, idx))
             res.fields["发文机关标志"] = text
         elif DOCNO_LINE_RE.match(text) or QIHAO_RE.match(text) or DOCNO_MARK_RE.match(text):
@@ -451,7 +599,7 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None) 
                 look = pos
                 while look < n and look < pos + 2:
                     t2 = lines[look][1]
-                    if has_sentence_punct(t2) or t2.endswith(("：", ":")) or is_heading(t2) or len(t2) > 40:
+                    if t2 == TABLE_MARK or has_sentence_punct(t2) or t2.endswith(("：", ":")) or is_heading(t2) or len(t2) > 40:
                         break
                     if ends_with_doc_type(t2):
                         for k in range(pos, look + 1):
@@ -491,7 +639,7 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None) 
         elif TITLE_NOTE_RE.match(text):
             title_items.append(Item("title_note", text, idx))
             pos += 1
-        elif len(text) <= 25 and not has_sentence_punct(text) and not is_heading(text)                 and not text.endswith(("：", ":")) and (nxt.endswith(("：", ":")) or TITLE_NOTE_RE.match(nxt)):
+        elif text != TABLE_MARK and len(text) <= 25 and not has_sentence_punct(text) and not is_heading(text)                 and not text.endswith(("：", ":")) and (nxt.endswith(("：", ":")) or TITLE_NOTE_RE.match(nxt)):
             title_items.append(Item("title_note", text, idx))
             pos += 1
         else:
@@ -581,12 +729,16 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None) 
         res.fields["附件"] = names
         res.detected.append("附件说明：以“附件：”开头的行")
 
-    # 5. 主体：层次标题、出席列席、正文
+    # 5. 主体：层次标题、出席列席、表格和表题、正文
     body: List[Item] = []
     for k in range(pos, end):
         idx, text = lines[k]
         level = is_heading(text)
-        if ATTENDANCE_RE.match(text):
+        if text == TABLE_MARK:
+            body.append(Item("table", text, idx))
+        elif k + 1 < end and lines[k + 1][1] == TABLE_MARK and is_table_caption(text):
+            body.append(Item("table_caption", text, idx))
+        elif ATTENDANCE_RE.match(text):
             body.append(Item("attendance", text, idx))
         elif level:
             body.append(Item(level, text, idx, split=heading_split(text)))
@@ -637,7 +789,7 @@ def _is_issuer(text: str, nxt: str) -> bool:
 
 def _looks_title(text: str) -> bool:
     """标题兜底判断：短、无句末标点、不是层次标题、不以冒号结尾。"""
-    return (len(text) <= 40 and not has_sentence_punct(text) and not is_heading(text)
+    return (text != TABLE_MARK and len(text) <= 40 and not has_sentence_punct(text) and not is_heading(text)
             and not text.endswith(("：", ":")) and not looks_like_date(text)
             and not DOCNO_RE.search(text) and not ATTACH_RE.match(text))
 
@@ -658,6 +810,7 @@ def summarize(parsed: Parsed) -> List[str]:
     for it in parsed.items:
         counts[it.role] = counts.get(it.role, 0) + 1
     parts = [f"{ROLE_LABELS[r]} {counts[r]} 段" for r in ("h1", "h2", "h3", "h4", "body", "attendance") if counts.get(r)]
+    parts += [f"{ROLE_LABELS[r]} {counts[r]} 个" for r in ("table", "table_caption") if counts.get(r)]
     if parts:
         out.append("主体：" + "，".join(parts))
     if parsed.doc_type:

@@ -29,8 +29,6 @@
   "prompt_bundle": [
     "references/_shared/guardrails.md",
     "references/_shared/style/output-format.md",
-    "references/decision.md",
-    "references/rules-check.md",
     "references/quick-ref.md",
     "references/checklist.md"
   ]

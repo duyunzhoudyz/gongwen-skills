@@ -4,7 +4,7 @@
   {"query": "三季度医疗质量分析报告，质控科的数据表我贴给你", "should_trigger": true},
   {"query": "上周住院患者跌倒骨折了，护理部要做RCA，上报单和谈话记录都在这", "should_trigger": true},
   {"query": "我们科降低术后肺部感染的PDCA项目，帮我整理成评比用的成果材料", "should_trigger": true},
-  {"query": "我是骨科主任，年度述职要写DRG和CMI，这是科室数据和我做的几件事", "should_trigger": true},
+  {"query": "我是骨科主任，年度述职要上台讲10分钟，得写DRG和CMI，这是科室数据和我做的几件事", "should_trigger": true},
   {"query": "新建日间手术中心要提交党委会议研究，帮我写个议题材料", "should_trigger": true},
   {"query": "纪检要九项准则落实情况自查报告，行风办的素材在这", "should_trigger": true},
   {"query": "市卫健委院感专项检查反馈了8个问题，帮我出整改台账和整改报告", "should_trigger": true},

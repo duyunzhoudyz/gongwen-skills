@@ -568,6 +568,122 @@ def add_banji_table(doc, ctx: Ctx, rows: List[List[Tuple[str, str]]], *, with_li
     return table
 
 
+# ---------------------------------------------------------------------------
+# 正文表格（Markdown 管道表格转换而来）
+# ---------------------------------------------------------------------------
+
+NUMERIC_CELL_RE = re.compile(r"^[-+±]?[\d.,，%％‰～~—\-/（）()万亿元个人次项件家所座台]*\d[\d.,，%％‰～~—\-/（）()万亿元个人次项件家所座台]*$")
+
+
+def _text_width(text: str) -> float:
+    """按字估算宽度，与 gw_layout.text_width_chars 口径一致（此处不依赖 gw_layout）。"""
+    full = "—…“”‘’"
+    return sum(0.5 if ord(ch) < 0x2E80 and ch not in full else 1.0 for ch in text)
+
+
+def column_widths_twips(header: Sequence[str], rows: Sequence[Sequence[str]], total: int) -> List[int]:
+    """按各列最长文字分配列宽，合计等于 total（版心宽）。每列至少 2 字宽，长列封顶，避免挤压短列。"""
+    cols = len(header)
+    weights = []
+    for c in range(cols):
+        texts = [header[c]] + [r[c] for r in rows if c < len(r)]
+        longest = max((_text_width(line) for t in texts for line in (t or "").split("\n")), default=0.0)
+        weights.append(min(max(longest, 2.0), 16.0))
+    s = sum(weights) or 1.0
+    widths = [int(total * w / s) for w in weights]
+    widths[-1] += total - sum(widths)
+    return widths
+
+
+def add_body_table(doc, ctx: Ctx, header: Sequence[str], rows: Sequence[Sequence[str]],
+                   aligns: Sequence[Optional[str]], *, font_role: str = "仿宋", size_name="四号"):
+    """在文末加一张正文表格：与版心同宽、居中，全框线，表头加粗、居中并在跨页时重复，单元格垂直居中。
+
+    单元格段落不对齐文档网格、行距为字号的 1.5 倍、无缩进；数字格居中，文字格居左，分隔行写了对齐方式的从其规定。
+    """
+    tb = ctx.el("table")
+    width = ctx.text_width_twips
+    cols = len(header)
+    widths = column_widths_twips(header, rows, width)
+    table = doc.add_table(rows=1 + len(rows), cols=cols)
+    tbl = table._tbl
+    tblpr = tbl.tblPr
+    for child in list(tblpr):
+        if _local(child.tag) in ("tblStyle", "tblW", "tblLook", "tblBorders", "jc", "tblLayout", "tblInd"):
+            tblpr.remove(child)
+    set_attrs(get_or_add(tblpr, "tblW", TBLPR_ORDER), {"w": str(width), "type": "dxa"})
+    set_attrs(get_or_add(tblpr, "jc", TBLPR_ORDER), {"val": "center"})
+    borders = get_or_add(tblpr, "tblBorders", TBLPR_ORDER)
+    sz = int(round(float(tb["border_pt"]) * 8))
+    for tag in ("top", "left", "bottom", "right", "insideH", "insideV"):
+        borders.append(_border_el(tag, "single", sz))
+    set_attrs(get_or_add(tblpr, "tblLayout", TBLPR_ORDER), {"type": "fixed"})
+    for col, w in zip(tbl.tblGrid.findall(qn("w:gridCol")), widths):
+        col.set(qn("w:w"), str(w))
+    font, extra_bold = ctx.font(font_role)
+    size = ctx.size(size_name)
+    for r_idx, values in enumerate([list(header)] + [list(r) for r in rows]):
+        row = table.rows[r_idx]
+        trpr = row._tr.get_or_add_trPr()
+        trpr.append(OxmlElement("w:cantSplit"))  # 一行不跨页拆开
+        if r_idx == 0:
+            trpr.append(OxmlElement("w:tblHeader"))  # 表格跨页时重复表头
+        for c_idx, cell in enumerate(row.cells):
+            tcpr = cell._tc.get_or_add_tcPr()
+            tcw = tcpr.find(qn("w:tcW"))
+            if tcw is None:
+                tcw = OxmlElement("w:tcW")
+                tcpr.insert(0, tcw)
+            tcw.set(qn("w:w"), str(widths[c_idx]))
+            tcw.set(qn("w:type"), "dxa")
+            valign = OxmlElement("w:vAlign")
+            valign.set(qn("w:val"), "center")
+            tcpr.append(valign)
+            text = values[c_idx] if c_idx < len(values) else ""
+            if r_idx == 0:
+                align = "center"
+            elif aligns[c_idx] if c_idx < len(aligns) else None:
+                align = aligns[c_idx]
+            else:
+                align = "center" if NUMERIC_CELL_RE.match(text.replace(" ", "")) else "left"
+            para = cell.paragraphs[0]
+            set_para(para, align=align, char_pt=size, line_exact=round(size * 1.5, 1), before_pt=0, after_pt=0,
+                     snap=False, chars=False)
+            lines = text.split("\n") if text else [""]
+            for k, line in enumerate(lines):
+                run = para.add_run(line)
+                format_run(run, font=font, size=size, bold=True if (r_idx == 0 and tb["header_bold"]) or extra_bold
+                           else None)
+                if k < len(lines) - 1:
+                    add_break(run)
+    return table
+
+
+def is_banji_table(tbl_el) -> bool:
+    """版记表格：浮动定位（本工具生成的版记），或含“抄送”、以“印发”结尾。"""
+    tblpr = tbl_el.find(qn("w:tblPr"))
+    if tblpr is not None and tblpr.find(qn("w:tblpPr")) is not None:
+        return True
+    text = "".join(t.text or "" for t in tbl_el.iter(qn("w:t"))).strip()
+    return "抄送" in text or text.endswith("印发")
+
+
+def body_tables(doc) -> List[Tuple[int, object]]:
+    """正文中的表格（不含版记表格），按文档顺序返回 (表格前一段在 doc.paragraphs 中的下标, w:tbl 元素)。
+
+    表格在最前面时下标为 -1。供 check、fix 识别段落角色时插入表格占位（gw_layout.parse_lines 的 tables_after）。
+    """
+    out: List[Tuple[int, object]] = []
+    count = 0
+    for child in doc.element.body.iterchildren():
+        tag = _local(child.tag)
+        if tag == "p":
+            count += 1
+        elif tag == "tbl" and not is_banji_table(child):
+            out.append((count - 1, child))
+    return out
+
+
 def ctx_text_width_pt(doc) -> float:
     """读取第一节的版心宽度（磅）。"""
     sect = doc.sections[0]._sectPr

@@ -12,7 +12,7 @@
 | [hexiecs/talk-normal](https://github.com/hexiecs/talk-normal) | MIT | d89cf32 | `prompt.md` | 第 7 条"比较类问题直接给推荐和简短理由，不写平衡论述"；第 12 条"结尾不附条件式提议和'告诉我 X 我再……'" | 思路、改写 | rewrite-guide.md 第四部分（平衡腔按文种改，请示写倾向）、第八部分（删结尾征询）；certainty-by-doctype.md 第一、五部分（条件式请求改直接请求） |
 | [molang163/chinese-natural-reply](https://github.com/molang163/chinese-natural-reply) | MIT | 8f4ea91 | `README.md`、`skills/chinese-natural-reply/SKILL.md` | 防御性回复分类中的"划边界""提前纠正对方没有的误解""汇报没动什么"；"删掉后对方得到的信息不减少就删"的判定；"不确定且影响对方下一步的，说一次；不影响的，不说"；"只改说话方式，不减少该做的核查" | 思路 | rewrite-guide.md 第二部分判断句、第三部分按顺序判断、第八部分第 3 条；SKILL.md 第四步总规则第 4 条和第五步（去对冲不跳过事实核对） |
 | [blader/humanizer](https://github.com/blader/humanizer) | MIT | 默认分支 HEAD（当日 API 限流未取得树 SHA；style.md 同日记录为 225a6f3） | `SKILL.md` | §9 限定词叠加（多为修补前文的过度断言，只在有依据且意思需要时保留一个限定）；§22 聊天残留（去掉包装、保留内容）；§23 知识边界免责与猜测填充（写明来源未记载，或删去该句）；"改写后核对没有增删事实"的终检步骤 | 思路、改写 | rewrite-guide.md 第二部分改法第 2、3 条，第三部分第 5 条，第八部分第 1 条；SKILL.md 第五步 |
-| [MohamedAbdallah-14/unslop](https://github.com/MohamedAbdallah-14/unslop) | MIT | 29d4360 | `.cursor/skills/unslop/SKILL.md`、`anti-aiisms.md` | 反映真实不确定性的限定词保留；数字、人名、引文、安全警示原样不动；改后逐项回核事实，核不实的打待核标记，不编细节；对冲词"组合出现才报"的分级 | 思路 | rewrite-guide.md 第一部分第 1、4 条，第九部分；SKILL.md 第五步人工核对清单；速查表的级别设定 |
+| [MohamedAbdallah-14/unslop](https://github.com/MohamedAbdallah-14/unslop) | MIT | 29d4360 | `.cursor/skills/unslop/SKILL.md`、`anti-aiisms.md` | 反映真实不确定性的限定词保留；数字、人名、引文、安全警示原样不动；改后逐项回核事实，核不实的打待核标记，不编细节；对冲词"组合出现才报"的分级 | 思路 | SKILL.md 第四步总规则第 1、4 条（v1.0 起 rewrite-guide.md 第一部分不再重复总规则，只留第 1 条“删对冲词之前先问”）；rewrite-guide.md 第九部分；SKILL.md 第五步人工核对清单；速查表的级别设定 |
 
 ## 二、只学思路的来源
 

@@ -29,8 +29,6 @@ REPO = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from skill_list import select_skills  # noqa: E402
-# 用户说"画像我放在工作目录里了"的用例，按单位画像约定放到 .gongwen/ 下
-SPECIAL_DEST = {("gongwen", 5, "evals/files/已有单位画像.md"): ".gongwen/单位画像.md"}
 
 
 def token(skill, eid, group, tag="v0.1"):
@@ -128,7 +126,7 @@ def main():
                     shown = []
                     for rel in c["files"]:
                         src = REPO / "skills" / skill / rel
-                        dest_rel = (c.get("file_dest") or {}).get(rel)                             or SPECIAL_DEST.get((skill, eid, rel), Path(rel).name)
+                        dest_rel = (c.get("file_dest") or {}).get(rel) or Path(rel).name
                         dest = wdir / dest_rel
                         dest.parent.mkdir(parents=True, exist_ok=True)
                         shutil.copy2(src, dest)
