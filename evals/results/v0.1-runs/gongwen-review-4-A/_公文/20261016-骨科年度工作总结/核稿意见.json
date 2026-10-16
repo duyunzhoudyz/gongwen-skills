@@ -1,0 +1,100 @@
+{
+  "source_file": "骨科年度工作总结.txt",
+  "issues": [
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "隐私与保密",
+      "excerpt": "9月收治的患者",
+      "message": "写了患者真实姓名（王某），又和性别、年龄写在一起，能对上具体是哪位患者",
+      "suggestion": "改为“患者王某，男，72岁”",
+      "basis": "guardrails.md 第一条第3款；yiyuan.md 第六部分第1条",
+      "rule_id": "PRI-009"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "隐私与保密",
+      "excerpt": "住院号",
+      "message": "写了住院号（20****34），凭这个号能直接调出病历",
+      "suggestion": "删去住院号",
+      "basis": "guardrails.md 第一条第3款；yiyuan.md 第六部分第1条",
+      "rule_id": "PRI-004"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "隐私与保密",
+      "excerpt": "12床",
+      "message": "床号和患者真实姓名（李某）写在一起，能对上具体是哪位患者",
+      "suggestion": "删去床号，姓名改为“患者李某”，或写“另1例患者”",
+      "basis": "yiyuan.md 第六部分第1条；unit-checks.md 第四部分",
+      "rule_id": "PRI-010"
+    },
+    {
+      "level": "P1",
+      "gate": "文字关",
+      "category": "指标口径",
+      "excerpt": "其中大手术比例达到38%",
+      "message": "“大手术比例”不是医院绩效考核用的指标名称；第五部分目标又写“四级手术占比”，前后两个说法，读的人没法拿今年的数和明年的目标比",
+      "suggestion": "请按病案首页的统计口径核实：38%就是四级手术占比的，改称“四级手术占比”；不是的，写明“大手术”指什么，并补上四级手术占比的实际值（请核实）",
+      "basis": "unit-checks.md 第四部分；yiyuan.md 第九部分第1条"
+    },
+    {
+      "level": "P1",
+      "gate": "法规关",
+      "category": "疗效表述",
+      "excerpt": "治愈率达到100%，打造全省一流骨科",
+      "message": "绝对化目标：治疗效果不可能保证100%治愈，“全省一流”也没有评价依据；这类话一旦被摘进对外材料，就是不允许的疗效表述",
+      "suggestion": "删去这两项，改用能统计、能考核的指标（由科室按医院口径确定）",
+      "basis": "yiyuan.md 第六部分第4条；unit-checks.md 第四部分；checklist-8gates.md 第四部分"
+    },
+    {
+      "level": "P2",
+      "gate": "文风关",
+      "category": "首尾对应",
+      "excerpt": "围绕“提质量、保安全、强学科”目标",
+      "message": "开头提了三个目标，正文没有“保安全”方面的内容（如医疗安全不良事件、院感等），首尾对不上",
+      "suggestion": "补上“保安全”方面的工作和数据（由科室提供），或调整开头的提法",
+      "basis": "doc-types.md 4.1；yiyuan.md 第十部分"
+    },
+    {
+      "level": "P2",
+      "gate": "文字关",
+      "category": "数据口径",
+      "excerpt": "全年出院患者2860人次，同比增长12%",
+      "message": "只写了“同比增长12%”，没写去年是多少，看的人核对不了",
+      "suggestion": "写明2025年出院人次（请核实）",
+      "basis": "yiyuan.md 第九部分第3条；unit-checks.md 第四部分"
+    },
+    {
+      "level": "P2",
+      "gate": "文字关",
+      "category": "数字",
+      "excerpt": "较去年提高了5%",
+      "message": "两个比例相减要写“百分点”。比如去年33%、今年38%，应写“提高5个百分点”；写“提高5%”的意思是比去年的比例再多5%（去年约36.2%），意思不同",
+      "suggestion": "请核对去年的实际比例：是33%的，改为“提高5个百分点”",
+      "basis": "checklist-8gates.md 第六部分；yiyuan.md 第九部分第3条",
+      "rule_id": "NUM-012"
+    },
+    {
+      "level": "P2",
+      "gate": "文字关",
+      "category": "待补标记",
+      "excerpt": "全年发表论文【待补：篇数】篇",
+      "message": "待补标记，全文共 2 处（论文篇数、SCI论文篇数），交稿前要补齐",
+      "suggestion": "按科室或科研管理部门登记的数据补齐",
+      "basis": "guardrails.md 第二条第2款",
+      "rule_id": "MRK-001"
+    },
+    {
+      "level": "P2",
+      "gate": "文风关",
+      "category": "下一步打算",
+      "excerpt": "2027年，科室将力争使四级手术占比达到40%以上",
+      "message": "下一步工作只有目标，没有措施和时间安排",
+      "suggestion": "补上实现目标的主要措施和时间安排（由科室提供）",
+      "basis": "doc-types.md 4.1"
+    }
+  ]
+}

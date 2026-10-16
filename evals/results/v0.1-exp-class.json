@@ -1,0 +1,4349 @@
+[
+ {
+  "skill": "gongwen",
+  "id": 1,
+  "idx": 0,
+  "class": "约定",
+  "reason": "要求给出skill路线"
+ },
+ {
+  "skill": "gongwen",
+  "id": 1,
+  "idx": 1,
+  "class": "约定",
+  "reason": "涉及skill划分"
+ },
+ {
+  "skill": "gongwen",
+  "id": 1,
+  "idx": 2,
+  "class": "约定",
+  "reason": "提问不超过3个属模式量化要求"
+ },
+ {
+  "skill": "gongwen",
+  "id": 1,
+  "idx": 3,
+  "class": "约定",
+  "reason": "回显格式与单位类型为项目约定"
+ },
+ {
+  "skill": "gongwen",
+  "id": 1,
+  "idx": 4,
+  "class": "通用",
+  "reason": "不编造督查内容和数据"
+ },
+ {
+  "skill": "gongwen",
+  "id": 2,
+  "idx": 0,
+  "class": "通用",
+  "reason": "文种判断并引用条例条款"
+ },
+ {
+  "skill": "gongwen",
+  "id": 2,
+  "idx": 1,
+  "class": "通用",
+  "reason": "函的标题写法"
+ },
+ {
+  "skill": "gongwen",
+  "id": 2,
+  "idx": 2,
+  "class": "通用",
+  "reason": "函的主送与结语"
+ },
+ {
+  "skill": "gongwen",
+  "id": 2,
+  "idx": 3,
+  "class": "通用",
+  "reason": "数据保持，缺失标待补"
+ },
+ {
+  "skill": "gongwen",
+  "id": 2,
+  "idx": 4,
+  "class": "约定",
+  "reason": "要求【起草说明】及写作要点"
+ },
+ {
+  "skill": "gongwen",
+  "id": 2,
+  "idx": 5,
+  "class": "约定",
+  "reason": "单位类型属项目画像分类"
+ },
+ {
+  "skill": "gongwen",
+  "id": 2,
+  "idx": 6,
+  "class": "约定",
+  "reason": "涉及项目写作日历功能"
+ },
+ {
+  "skill": "gongwen",
+  "id": 3,
+  "idx": 0,
+  "class": "通用",
+  "reason": "报告不夹带请示并引条例"
+ },
+ {
+  "skill": "gongwen",
+  "id": 3,
+  "idx": 1,
+  "class": "通用",
+  "reason": "报告结语规范"
+ },
+ {
+  "skill": "gongwen",
+  "id": 3,
+  "idx": 2,
+  "class": "通用",
+  "reason": "请示一文一事"
+ },
+ {
+  "skill": "gongwen",
+  "id": 3,
+  "idx": 3,
+  "class": "通用",
+  "reason": "不编造数据，缺失标待补"
+ },
+ {
+  "skill": "gongwen",
+  "id": 3,
+  "idx": 4,
+  "class": "约定",
+  "reason": "起草说明固定栏目"
+ },
+ {
+  "skill": "gongwen",
+  "id": 4,
+  "idx": 0,
+  "class": "约定",
+  "reason": "单位画像字段"
+ },
+ {
+  "skill": "gongwen",
+  "id": 4,
+  "idx": 1,
+  "class": "约定",
+  "reason": "按画像字段提问且限3个"
+ },
+ {
+  "skill": "gongwen",
+  "id": 4,
+  "idx": 2,
+  "class": "约定",
+  "reason": "画像文件路径与结构"
+ },
+ {
+  "skill": "gongwen",
+  "id": 4,
+  "idx": 3,
+  "class": "约定",
+  "reason": "写作日历条数与措辞"
+ },
+ {
+  "skill": "gongwen",
+  "id": 4,
+  "idx": 4,
+  "class": "约定",
+  "reason": "涉及v0.1现有skill说明"
+ },
+ {
+  "skill": "gongwen",
+  "id": 5,
+  "idx": 0,
+  "class": "约定",
+  "reason": "画像文件维护规则"
+ },
+ {
+  "skill": "gongwen",
+  "id": 5,
+  "idx": 1,
+  "class": "约定",
+  "reason": "画像字段与模式名"
+ },
+ {
+  "skill": "gongwen",
+  "id": 5,
+  "idx": 2,
+  "class": "约定",
+  "reason": "画像修改确认流程"
+ },
+ {
+  "skill": "gongwen",
+  "id": 5,
+  "idx": 3,
+  "class": "约定",
+  "reason": "画像字段保持"
+ },
+ {
+  "skill": "gongwen",
+  "id": 5,
+  "idx": 4,
+  "class": "约定",
+  "reason": "项目模式叠加规则"
+ },
+ {
+  "skill": "gongwen",
+  "id": 6,
+  "idx": 0,
+  "class": "约定",
+  "reason": "需判定项目模式名"
+ },
+ {
+  "skill": "gongwen",
+  "id": 6,
+  "idx": 1,
+  "class": "约定",
+  "reason": "路线编号与skill名"
+ },
+ {
+  "skill": "gongwen",
+  "id": 6,
+  "idx": 2,
+  "class": "约定",
+  "reason": "总入口职责划分"
+ },
+ {
+  "skill": "gongwen",
+  "id": 6,
+  "idx": 3,
+  "class": "约定",
+  "reason": "dist提示词文件与交接卡"
+ },
+ {
+  "skill": "gongwen",
+  "id": 7,
+  "idx": 0,
+  "class": "约定",
+  "reason": "模式名与单位类型分类"
+ },
+ {
+  "skill": "gongwen",
+  "id": 7,
+  "idx": 1,
+  "class": "约定",
+  "reason": "要求skill路线"
+ },
+ {
+  "skill": "gongwen",
+  "id": 7,
+  "idx": 2,
+  "class": "约定",
+  "reason": "提问上限属模式量化要求"
+ },
+ {
+  "skill": "gongwen",
+  "id": 7,
+  "idx": 3,
+  "class": "通用",
+  "reason": "用户自称不会写公文可推断"
+ },
+ {
+  "skill": "gongwen",
+  "id": 7,
+  "idx": 4,
+  "class": "通用",
+  "reason": "不添加材料外数据"
+ },
+ {
+  "skill": "gongwen",
+  "id": 8,
+  "idx": 0,
+  "class": "约定",
+  "reason": "日历提示条数与行业排序"
+ },
+ {
+  "skill": "gongwen",
+  "id": 8,
+  "idx": 1,
+  "class": "通用",
+  "reason": "不编造具体截止日期"
+ },
+ {
+  "skill": "gongwen",
+  "id": 8,
+  "idx": 2,
+  "class": "约定",
+  "reason": "v0.1 skill说明"
+ },
+ {
+  "skill": "gongwen",
+  "id": 8,
+  "idx": 3,
+  "class": "约定",
+  "reason": "日历交互流程约定"
+ },
+ {
+  "skill": "gongwen",
+  "id": 8,
+  "idx": 4,
+  "class": "约定",
+  "reason": "需知高效模式"
+ },
+ {
+  "skill": "gongwen",
+  "id": 9,
+  "idx": 0,
+  "class": "约定",
+  "reason": "v0.1 skill清单"
+ },
+ {
+  "skill": "gongwen",
+  "id": 9,
+  "idx": 1,
+  "class": "约定",
+  "reason": "v0.1能力边界"
+ },
+ {
+  "skill": "gongwen",
+  "id": 9,
+  "idx": 2,
+  "class": "约定",
+  "reason": "项目不做事项清单"
+ },
+ {
+  "skill": "gongwen",
+  "id": 9,
+  "idx": 3,
+  "class": "约定",
+  "reason": "示例说法数量格式"
+ },
+ {
+  "skill": "gongwen",
+  "id": 9,
+  "idx": 4,
+  "class": "约定",
+  "reason": "建简版画像"
+ },
+ {
+  "skill": "gongwen",
+  "id": 10,
+  "idx": 0,
+  "class": "约定",
+  "reason": "六条红线名称"
+ },
+ {
+  "skill": "gongwen",
+  "id": 10,
+  "idx": 1,
+  "class": "通用",
+  "reason": "对照检查材料须本人撰写"
+ },
+ {
+  "skill": "gongwen",
+  "id": 10,
+  "idx": 2,
+  "class": "约定",
+  "reason": "后续skill计划"
+ },
+ {
+  "skill": "gongwen",
+  "id": 10,
+  "idx": 3,
+  "class": "约定",
+  "reason": "需知严谨模式流程"
+ },
+ {
+  "skill": "gongwen",
+  "id": 10,
+  "idx": 4,
+  "class": "通用",
+  "reason": "需本人填写处标待补"
+ },
+ {
+  "skill": "gongwen",
+  "id": 11,
+  "idx": 0,
+  "class": "通用",
+  "reason": "不作不实承诺"
+ },
+ {
+  "skill": "gongwen",
+  "id": 11,
+  "idx": 1,
+  "class": "约定",
+  "reason": "skill路线"
+ },
+ {
+  "skill": "gongwen",
+  "id": 11,
+  "idx": 2,
+  "class": "约定",
+  "reason": "总入口职责划分"
+ },
+ {
+  "skill": "gongwen",
+  "id": 11,
+  "idx": 3,
+  "class": "通用",
+  "reason": "保留事实，缺数据请用户补"
+ },
+ {
+  "skill": "gongwen",
+  "id": 12,
+  "idx": 0,
+  "class": "通用",
+  "reason": "识别内部资料标识停止处理"
+ },
+ {
+  "skill": "gongwen",
+  "id": 12,
+  "idx": 1,
+  "class": "通用",
+  "reason": "不转述敏感材料"
+ },
+ {
+  "skill": "gongwen",
+  "id": 12,
+  "idx": 2,
+  "class": "通用",
+  "reason": "建议内网模型或删减"
+ },
+ {
+  "skill": "gongwen",
+  "id": 12,
+  "idx": 3,
+  "class": "通用",
+  "reason": "说明停止原因"
+ },
+ {
+  "skill": "gongwen",
+  "id": 13,
+  "idx": 0,
+  "class": "通用",
+  "reason": "保护个人敏感信息"
+ },
+ {
+  "skill": "gongwen",
+  "id": 13,
+  "idx": 1,
+  "class": "通用",
+  "reason": "议定事项准确"
+ },
+ {
+  "skill": "gongwen",
+  "id": 13,
+  "idx": 2,
+  "class": "通用",
+  "reason": "时限缺失标待补"
+ },
+ {
+  "skill": "gongwen",
+  "id": 13,
+  "idx": 3,
+  "class": "约定",
+  "reason": "要求起草说明列出"
+ },
+ {
+  "skill": "gongwen",
+  "id": 13,
+  "idx": 4,
+  "class": "约定",
+  "reason": "要求【起草说明】"
+ },
+ {
+  "skill": "gongwen",
+  "id": 14,
+  "idx": 0,
+  "class": "约定",
+  "reason": "要求起草说明提示"
+ },
+ {
+  "skill": "gongwen",
+  "id": 14,
+  "idx": 1,
+  "class": "通用",
+  "reason": "未决事项不写成议定"
+ },
+ {
+  "skill": "gongwen",
+  "id": 14,
+  "idx": 2,
+  "class": "通用",
+  "reason": "责任分工准确，时限标待补"
+ },
+ {
+  "skill": "gongwen",
+  "id": 14,
+  "idx": 3,
+  "class": "通用",
+  "reason": "数据保持"
+ },
+ {
+  "skill": "gongwen",
+  "id": 14,
+  "idx": 4,
+  "class": "通用",
+  "reason": "不添加记录外内容"
+ },
+ {
+  "skill": "gongwen",
+  "id": 15,
+  "idx": 0,
+  "class": "通用",
+  "reason": "用户要求不提问"
+ },
+ {
+  "skill": "gongwen",
+  "id": 15,
+  "idx": 1,
+  "class": "约定",
+  "reason": "要求起草说明写估算依据"
+ },
+ {
+  "skill": "gongwen",
+  "id": 15,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不编造数据事例"
+ },
+ {
+  "skill": "gongwen",
+  "id": 15,
+  "idx": 3,
+  "class": "通用",
+  "reason": "减负规定不设考核事项"
+ },
+ {
+  "skill": "gongwen",
+  "id": 15,
+  "idx": 4,
+  "class": "约定",
+  "reason": "起草说明假设与写作要点"
+ },
+ {
+  "skill": "gongwen",
+  "id": 16,
+  "idx": 0,
+  "class": "通用",
+  "reason": "信息标题规范"
+ },
+ {
+  "skill": "gongwen",
+  "id": 16,
+  "idx": 1,
+  "class": "通用",
+  "reason": "信息导语要素"
+ },
+ {
+  "skill": "gongwen",
+  "id": 16,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不编造事实"
+ },
+ {
+  "skill": "gongwen",
+  "id": 16,
+  "idx": 3,
+  "class": "约定",
+  "reason": "800字上限为项目工具约定"
+ },
+ {
+  "skill": "gongwen",
+  "id": 16,
+  "idx": 4,
+  "class": "约定",
+  "reason": "起草说明与下一步路线"
+ },
+ {
+  "skill": "gongwen",
+  "id": 17,
+  "idx": 0,
+  "class": "约定",
+  "reason": "skill路线"
+ },
+ {
+  "skill": "gongwen",
+  "id": 17,
+  "idx": 1,
+  "class": "约定",
+  "reason": "交接卡"
+ },
+ {
+  "skill": "gongwen",
+  "id": 17,
+  "idx": 2,
+  "class": "约定",
+  "reason": "dist提示词文件"
+ },
+ {
+  "skill": "gongwen",
+  "id": 17,
+  "idx": 3,
+  "class": "通用",
+  "reason": "提醒删除涉密和敏感信息"
+ },
+ {
+  "skill": "gongwen",
+  "id": 18,
+  "idx": 0,
+  "class": "约定",
+  "reason": "模式切换与画像字段"
+ },
+ {
+  "skill": "gongwen",
+  "id": 18,
+  "idx": 1,
+  "class": "通用",
+  "reason": "通知要素齐全"
+ },
+ {
+  "skill": "gongwen",
+  "id": 18,
+  "idx": 2,
+  "class": "通用",
+  "reason": "缺失信息标待补"
+ },
+ {
+  "skill": "gongwen",
+  "id": 18,
+  "idx": 3,
+  "class": "约定",
+  "reason": "起草说明固定栏目"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 1,
+  "idx": 0,
+  "class": "约定",
+  "reason": "素材台账规定列"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 1,
+  "idx": 1,
+  "class": "约定",
+  "reason": "素材台账对应"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 1,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不编造数值"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 1,
+  "idx": 3,
+  "class": "通用",
+  "reason": "存疑数标待核实（台账为可选）"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 1,
+  "idx": 4,
+  "class": "通用",
+  "reason": "统计口径不可比"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 1,
+  "idx": 5,
+  "class": "通用",
+  "reason": "存疑事项标待核实"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 1,
+  "idx": 6,
+  "class": "通用",
+  "reason": "如实表述进展"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 1,
+  "idx": 7,
+  "class": "通用",
+  "reason": "问题具体，不用万能句"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 1,
+  "idx": 8,
+  "class": "通用",
+  "reason": "篇幅符合用户要求"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 1,
+  "idx": 9,
+  "class": "约定",
+  "reason": "起草说明汇总待补待核实"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 2,
+  "idx": 0,
+  "class": "约定",
+  "reason": "口径冲突表规定列"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 2,
+  "idx": 1,
+  "class": "通用",
+  "reason": "识别数据冲突不相加"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 2,
+  "idx": 2,
+  "class": "通用",
+  "reason": "识别计量单位不一致"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 2,
+  "idx": 3,
+  "class": "通用",
+  "reason": "识别重复计数与归属冲突"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 2,
+  "idx": 4,
+  "class": "约定",
+  "reason": "台账写明换算"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 2,
+  "idx": 5,
+  "class": "通用",
+  "reason": "如实表述完成情况"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 2,
+  "idx": 6,
+  "class": "通用",
+  "reason": "删去无依据评价"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 2,
+  "idx": 7,
+  "class": "通用",
+  "reason": "按板块组织，主语统一"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 2,
+  "idx": 8,
+  "class": "约定",
+  "reason": "起草说明待补事项"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 3,
+  "idx": 0,
+  "class": "约定",
+  "reason": "素材台账与角色标记"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 3,
+  "idx": 1,
+  "class": "通用",
+  "reason": "两份材料主语正确"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 3,
+  "idx": 2,
+  "class": "通用",
+  "reason": "区分本人与单位职责"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 3,
+  "idx": 3,
+  "class": "通用",
+  "reason": "区分承办与牵头"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 3,
+  "idx": 4,
+  "class": "通用",
+  "reason": "述职结构与篇幅分配"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 3,
+  "idx": 5,
+  "class": "约定",
+  "reason": "起草说明填写指引"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 3,
+  "idx": 6,
+  "class": "通用",
+  "reason": "不编造不足"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 3,
+  "idx": 7,
+  "class": "通用",
+  "reason": "数据前后一致"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 3,
+  "idx": 8,
+  "class": "约定",
+  "reason": "任务卡写入起草说明"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 4,
+  "idx": 0,
+  "class": "通用",
+  "reason": "说明调研报告须基于调研"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 4,
+  "idx": 1,
+  "class": "通用",
+  "reason": "提供调研提纲"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 4,
+  "idx": 2,
+  "class": "通用",
+  "reason": "问题不预设结论"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 4,
+  "idx": 3,
+  "class": "通用",
+  "reason": "框架不预填结论"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 4,
+  "idx": 4,
+  "class": "通用",
+  "reason": "不生成完整报告"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 4,
+  "idx": 5,
+  "class": "约定",
+  "reason": "教学模式写作要点"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 5,
+  "idx": 0,
+  "class": "通用",
+  "reason": "高校总结板块组织"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 5,
+  "idx": 1,
+  "class": "约定",
+  "reason": "要求起草说明写明口径"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 5,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不编造评估结果"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 5,
+  "idx": 3,
+  "class": "通用",
+  "reason": "如实表述进展"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 5,
+  "idx": 4,
+  "class": "通用",
+  "reason": "荣誉标待核实"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 5,
+  "idx": 5,
+  "class": "通用",
+  "reason": "提法只用材料表述"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 5,
+  "idx": 6,
+  "class": "约定",
+  "reason": "提法核对清单"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 5,
+  "idx": 7,
+  "class": "通用",
+  "reason": "保护学生个人信息"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 6,
+  "idx": 0,
+  "class": "约定",
+  "reason": "要求起草说明写估算依据"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 6,
+  "idx": 1,
+  "class": "通用",
+  "reason": "汇报结构合理"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 6,
+  "idx": 2,
+  "class": "约定",
+  "reason": "口径差异写进起草说明"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 6,
+  "idx": 3,
+  "class": "通用",
+  "reason": "不编造数值"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 6,
+  "idx": 4,
+  "class": "通用",
+  "reason": "协调事项写清对象金额"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 6,
+  "idx": 5,
+  "class": "约定",
+  "reason": "要求起草说明提醒"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 6,
+  "idx": 6,
+  "class": "通用",
+  "reason": "删去无依据评价"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 6,
+  "idx": 7,
+  "class": "约定",
+  "reason": "标题备选3套为模式要求"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 7,
+  "idx": 0,
+  "class": "通用",
+  "reason": "提醒脱敏"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 7,
+  "idx": 1,
+  "class": "通用",
+  "reason": "不出现个人信息"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 7,
+  "idx": 2,
+  "class": "约定",
+  "reason": "起草说明保密提示"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 7,
+  "idx": 3,
+  "class": "通用",
+  "reason": "如实表述整改进度"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 7,
+  "idx": 4,
+  "class": "通用",
+  "reason": "数据不改动"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 7,
+  "idx": 5,
+  "class": "通用",
+  "reason": "篇幅符合用户要求"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 7,
+  "idx": 6,
+  "class": "约定",
+  "reason": "提问上限属模式量化要求"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 8,
+  "idx": 0,
+  "class": "通用",
+  "reason": "识别密级标识"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 8,
+  "idx": 1,
+  "class": "通用",
+  "reason": "停止处理"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 8,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不复述涉密内容"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 8,
+  "idx": 3,
+  "class": "通用",
+  "reason": "提示不得输入联网AI"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 9,
+  "idx": 0,
+  "class": "通用",
+  "reason": "如实报告完成情况"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 9,
+  "idx": 1,
+  "class": "通用",
+  "reason": "经费如实不编造"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 9,
+  "idx": 2,
+  "class": "通用",
+  "reason": "缺失数据标待补"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 9,
+  "idx": 3,
+  "class": "通用",
+  "reason": "居民个人信息保护"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 9,
+  "idx": 4,
+  "class": "通用",
+  "reason": "反映群众意见"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 9,
+  "idx": 5,
+  "class": "通用",
+  "reason": "用户要求大白话"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 9,
+  "idx": 6,
+  "class": "通用",
+  "reason": "正文不含Markdown"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 10,
+  "idx": 0,
+  "class": "通用",
+  "reason": "用户要求先给框架"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 10,
+  "idx": 1,
+  "class": "通用",
+  "reason": "对应检查通知内容"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 10,
+  "idx": 2,
+  "class": "通用",
+  "reason": "指出材料矛盾"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 10,
+  "idx": 3,
+  "class": "约定",
+  "reason": "待补清单属汇总清单"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 10,
+  "idx": 4,
+  "class": "通用",
+  "reason": "按语速估算篇幅"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 10,
+  "idx": 5,
+  "class": "通用",
+  "reason": "如实表述处置状态"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 11,
+  "idx": 0,
+  "class": "约定",
+  "reason": "教学模式先提纲后成稿"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 11,
+  "idx": 1,
+  "class": "通用",
+  "reason": "学校计划板块组织"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 11,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不写成绩排名"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 11,
+  "idx": 3,
+  "class": "通用",
+  "reason": "缺失日期标待补"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 11,
+  "idx": 4,
+  "class": "通用",
+  "reason": "任务落实到部门时间"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 11,
+  "idx": 5,
+  "class": "通用",
+  "reason": "回应教师负担问题"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 11,
+  "idx": 6,
+  "class": "约定",
+  "reason": "起草说明写作要点"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 12,
+  "idx": 0,
+  "class": "通用",
+  "reason": "减负规定专项文件字数"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 12,
+  "idx": 1,
+  "class": "通用",
+  "reason": "开门见山"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 12,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不照抄上位文件"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 12,
+  "idx": 3,
+  "class": "通用",
+  "reason": "任务要素准确"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 12,
+  "idx": 4,
+  "class": "通用",
+  "reason": "缺失措施标待补"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 12,
+  "idx": 5,
+  "class": "通用",
+  "reason": "缺失内容标待补"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 12,
+  "idx": 6,
+  "class": "约定",
+  "reason": "要求起草说明提示"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 12,
+  "idx": 7,
+  "class": "通用",
+  "reason": "部署措辞规范"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 13,
+  "idx": 0,
+  "class": "约定",
+  "reason": "要求起草说明列出"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 13,
+  "idx": 1,
+  "class": "通用",
+  "reason": "不编造数值"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 13,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不编造群众评价"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 13,
+  "idx": 3,
+  "class": "约定",
+  "reason": "要求起草说明提醒"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 13,
+  "idx": 4,
+  "class": "通用",
+  "reason": "如实保留问题"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 13,
+  "idx": 5,
+  "class": "通用",
+  "reason": "主副标题与破折号规范"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 14,
+  "idx": 0,
+  "class": "通用",
+  "reason": "说明须基于真实经历"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 14,
+  "idx": 1,
+  "class": "通用",
+  "reason": "述职提纲结构"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 14,
+  "idx": 2,
+  "class": "通用",
+  "reason": "逐部分给填写指引"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 14,
+  "idx": 3,
+  "class": "通用",
+  "reason": "不编造事例"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 14,
+  "idx": 4,
+  "class": "通用",
+  "reason": "不代作廉洁表态"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 14,
+  "idx": 5,
+  "class": "通用",
+  "reason": "提示提法对照原文"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 15,
+  "idx": 0,
+  "class": "约定",
+  "reason": "要求输出素材台账"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 15,
+  "idx": 1,
+  "class": "通用",
+  "reason": "不误触发保密处理"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 15,
+  "idx": 2,
+  "class": "通用",
+  "reason": "数据保持"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 15,
+  "idx": 3,
+  "class": "通用",
+  "reason": "如实表述进展"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 15,
+  "idx": 4,
+  "class": "通用",
+  "reason": "问题具体"
+ },
+ {
+  "skill": "gongwen-report",
+  "id": 15,
+  "idx": 5,
+  "class": "约定",
+  "reason": "要求【起草说明】"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 1,
+  "idx": 0,
+  "class": "通用",
+  "reason": "指出缺少文种"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 1,
+  "idx": 1,
+  "class": "通用",
+  "reason": "补全文种不改事由"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 1,
+  "idx": 2,
+  "class": "通用",
+  "reason": "标题三要素并引条款"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 1,
+  "idx": 3,
+  "class": "约定",
+  "reason": "起草说明写作要点"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 1,
+  "idx": 4,
+  "class": "通用",
+  "reason": "标题无标点无Markdown"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 2,
+  "idx": 0,
+  "class": "通用",
+  "reason": "介词叠用"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 2,
+  "idx": 1,
+  "class": "通用",
+  "reason": "文种叠用与语义重复"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 2,
+  "idx": 2,
+  "class": "通用",
+  "reason": "删除重复与句号"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 2,
+  "idx": 3,
+  "class": "通用",
+  "reason": "引GB/T 15834条款"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 2,
+  "idx": 4,
+  "class": "通用",
+  "reason": "用户要求别解释太多"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 2,
+  "idx": 5,
+  "class": "通用",
+  "reason": "标题规范"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 3,
+  "idx": 0,
+  "class": "通用",
+  "reason": "转发标题只留一个关于"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 3,
+  "idx": 1,
+  "class": "通用",
+  "reason": "转发标题省略中间层次"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 3,
+  "idx": 2,
+  "class": "通用",
+  "reason": "转发标题不加书名号"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 3,
+  "idx": 3,
+  "class": "通用",
+  "reason": "补充要求在正文交代"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 3,
+  "idx": 4,
+  "class": "通用",
+  "reason": "说明属实务做法"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 3,
+  "idx": 5,
+  "class": "通用",
+  "reason": "新手询问可推断需解释"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 4,
+  "idx": 0,
+  "class": "约定",
+  "reason": "三套固定样式为项目默认"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 4,
+  "idx": 1,
+  "class": "约定",
+  "reason": "适用推荐行"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 4,
+  "idx": 2,
+  "class": "通用",
+  "reason": "对仗标题结构规范"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 4,
+  "idx": 3,
+  "class": "通用",
+  "reason": "用户只要一二三部分"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 4,
+  "idx": 4,
+  "class": "约定",
+  "reason": "条数核对行"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 4,
+  "idx": 5,
+  "class": "通用",
+  "reason": "标题有正文依据"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 4,
+  "idx": 6,
+  "class": "通用",
+  "reason": "保留业务用语"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 4,
+  "idx": 7,
+  "class": "通用",
+  "reason": "不改正文，无Markdown"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 5,
+  "idx": 0,
+  "class": "通用",
+  "reason": "标题大而无当"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 5,
+  "idx": 1,
+  "class": "通用",
+  "reason": "标题无依据"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 5,
+  "idx": 2,
+  "class": "通用",
+  "reason": "标题与正文脱节"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 5,
+  "idx": 3,
+  "class": "约定",
+  "reason": "要求定为P0"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 5,
+  "idx": 4,
+  "class": "通用",
+  "reason": "引GB/T 15834条款"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 5,
+  "idx": 5,
+  "class": "通用",
+  "reason": "不硬找问题"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 5,
+  "idx": 6,
+  "class": "约定",
+  "reason": "问题清单规定列"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 5,
+  "idx": 7,
+  "class": "约定",
+  "reason": "一页纸摘要"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 6,
+  "idx": 0,
+  "class": "约定",
+  "reason": "要求定为P0"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 6,
+  "idx": 1,
+  "class": "通用",
+  "reason": "标题涵盖不全"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 6,
+  "idx": 2,
+  "class": "通用",
+  "reason": "给出合理改法"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 6,
+  "idx": 3,
+  "class": "通用",
+  "reason": "不编造内容"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 6,
+  "idx": 4,
+  "class": "通用",
+  "reason": "保留数字与国企习惯"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 6,
+  "idx": 5,
+  "class": "通用",
+  "reason": "给出修改后标题"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 7,
+  "idx": 0,
+  "class": "通用",
+  "reason": "不编造数据"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 7,
+  "idx": 1,
+  "class": "通用",
+  "reason": "说明无数据并标待补"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 7,
+  "idx": 2,
+  "class": "约定",
+  "reason": "起草说明待补事项"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 7,
+  "idx": 3,
+  "class": "通用",
+  "reason": "副标题格式规范"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 7,
+  "idx": 4,
+  "class": "通用",
+  "reason": "语言平实无新八股"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 7,
+  "idx": 5,
+  "class": "约定",
+  "reason": "3个备选加推荐为项目约定"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 8,
+  "idx": 0,
+  "class": "通用",
+  "reason": "述职述廉结构"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 8,
+  "idx": 1,
+  "class": "通用",
+  "reason": "给填写指引不编造"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 8,
+  "idx": 2,
+  "class": "约定",
+  "reason": "注明来源属素材台账约定"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 8,
+  "idx": 3,
+  "class": "通用",
+  "reason": "不代作廉洁表态"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 8,
+  "idx": 4,
+  "class": "通用",
+  "reason": "用户不常写材料可推断"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 8,
+  "idx": 5,
+  "class": "约定",
+  "reason": "转交gongwen-report"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 8,
+  "idx": 6,
+  "class": "约定",
+  "reason": "3000字篇幅为项目默认"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 9,
+  "idx": 0,
+  "class": "通用",
+  "reason": "提醒脱敏"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 9,
+  "idx": 1,
+  "class": "通用",
+  "reason": "不出现个人信息"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 9,
+  "idx": 2,
+  "class": "通用",
+  "reason": "替代写法"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 9,
+  "idx": 3,
+  "class": "约定",
+  "reason": "素材编号"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 9,
+  "idx": 4,
+  "class": "通用",
+  "reason": "未落实措施如实标注"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 9,
+  "idx": 5,
+  "class": "约定",
+  "reason": "起草说明保密提示"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 10,
+  "idx": 0,
+  "class": "通用",
+  "reason": "识别密级标识"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 10,
+  "idx": 1,
+  "class": "通用",
+  "reason": "停止处理"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 10,
+  "idx": 2,
+  "class": "通用",
+  "reason": "提示不得输入联网AI"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 10,
+  "idx": 3,
+  "class": "通用",
+  "reason": "不复述涉密内容"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 11,
+  "idx": 0,
+  "class": "通用",
+  "reason": "不编造上级提法"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 11,
+  "idx": 1,
+  "class": "通用",
+  "reason": "请用户提供原文并标待核实"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 11,
+  "idx": 2,
+  "class": "约定",
+  "reason": "条数核对行"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 11,
+  "idx": 3,
+  "class": "通用",
+  "reason": "保留原有表述"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 11,
+  "idx": 4,
+  "class": "约定",
+  "reason": "严谨模式提法核对清单"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 11,
+  "idx": 5,
+  "class": "通用",
+  "reason": "小标题具体"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 12,
+  "idx": 0,
+  "class": "通用",
+  "reason": "书名号与括注规范"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 12,
+  "idx": 1,
+  "class": "通用",
+  "reason": "引GB/T 15834条款"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 12,
+  "idx": 2,
+  "class": "通用",
+  "reason": "引GB/T 15834条款"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 12,
+  "idx": 3,
+  "class": "通用",
+  "reason": "回行排法"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 12,
+  "idx": 4,
+  "class": "通用",
+  "reason": "引GB/T 9704条款"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 12,
+  "idx": 5,
+  "class": "通用",
+  "reason": "用户提问可推断需解释"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 13,
+  "idx": 0,
+  "class": "通用",
+  "reason": "对应检查通知"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 13,
+  "idx": 1,
+  "class": "约定",
+  "reason": "素材编号"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 13,
+  "idx": 2,
+  "class": "通用",
+  "reason": "缺失数字标待补"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 13,
+  "idx": 3,
+  "class": "通用",
+  "reason": "如实表述进展"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 13,
+  "idx": 4,
+  "class": "通用",
+  "reason": "问题列入差距"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 13,
+  "idx": 5,
+  "class": "通用",
+  "reason": "按语速估算篇幅"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 13,
+  "idx": 6,
+  "class": "通用",
+  "reason": "不设背景意义，不写正文"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 13,
+  "idx": 7,
+  "class": "约定",
+  "reason": "起草说明固定栏目"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 14,
+  "idx": 0,
+  "class": "通用",
+  "reason": "学校总结板块组织"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 14,
+  "idx": 1,
+  "class": "通用",
+  "reason": "标题备选与同级一致"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 14,
+  "idx": 2,
+  "class": "约定",
+  "reason": "素材编号"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 14,
+  "idx": 3,
+  "class": "通用",
+  "reason": "存疑数标待核实（或起草说明）"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 14,
+  "idx": 4,
+  "class": "约定",
+  "reason": "转交gongwen-report"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 14,
+  "idx": 5,
+  "class": "通用",
+  "reason": "不设重要意义标题"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 15,
+  "idx": 0,
+  "class": "通用",
+  "reason": "标题写清事项时间"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 15,
+  "idx": 1,
+  "class": "通用",
+  "reason": "不编造日期"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 15,
+  "idx": 2,
+  "class": "通用",
+  "reason": "文种完整无标点"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 15,
+  "idx": 3,
+  "class": "通用",
+  "reason": "用户要求别太官腔"
+ },
+ {
+  "skill": "gongwen-title",
+  "id": 15,
+  "idx": 4,
+  "class": "通用",
+  "reason": "用户要求别太官腔可推断"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 1,
+  "idx": 0,
+  "class": "通用",
+  "reason": "无Markdown，层次序数规范"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 1,
+  "idx": 1,
+  "class": "通用",
+  "reason": "删除AI套话"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 1,
+  "idx": 2,
+  "class": "通用",
+  "reason": "改翻案句破折号"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 1,
+  "idx": 3,
+  "class": "通用",
+  "reason": "删喻体不补编"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 1,
+  "idx": 4,
+  "class": "通用",
+  "reason": "数字保持"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 1,
+  "idx": 5,
+  "class": "通用",
+  "reason": "保留待补与引号"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 1,
+  "idx": 6,
+  "class": "通用",
+  "reason": "公文常规表述保留"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 1,
+  "idx": 7,
+  "class": "约定",
+  "reason": "修改说明按类别计数"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 1,
+  "idx": 8,
+  "class": "约定",
+  "reason": "修改说明格式与写作要点"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 2,
+  "idx": 0,
+  "class": "通用",
+  "reason": "保留排比小标题"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 2,
+  "idx": 1,
+  "class": "通用",
+  "reason": "保留部署并列"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 2,
+  "idx": 2,
+  "class": "通用",
+  "reason": "保留规范表述"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 2,
+  "idx": 3,
+  "class": "通用",
+  "reason": "保留条件句"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 2,
+  "idx": 4,
+  "class": "通用",
+  "reason": "改写套话不新增措施"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 2,
+  "idx": 5,
+  "class": "通用",
+  "reason": "数字文号不变"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 2,
+  "idx": 6,
+  "class": "约定",
+  "reason": "修改说明行数上限"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 3,
+  "idx": 0,
+  "class": "通用",
+  "reason": "保留讲话口语"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 3,
+  "idx": 1,
+  "class": "通用",
+  "reason": "讲话稿适度保留"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 3,
+  "idx": 2,
+  "class": "通用",
+  "reason": "删网络用语"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 3,
+  "idx": 3,
+  "class": "通用",
+  "reason": "改写网络用语"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 3,
+  "idx": 4,
+  "class": "通用",
+  "reason": "删AI套话"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 3,
+  "idx": 5,
+  "class": "通用",
+  "reason": "删空泛结尾保留语气"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 3,
+  "idx": 6,
+  "class": "通用",
+  "reason": "数字保持"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 3,
+  "idx": 7,
+  "class": "约定",
+  "reason": "起草说明说明放宽项目"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 4,
+  "idx": 0,
+  "class": "约定",
+  "reason": "fact_diff脚本"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 4,
+  "idx": 1,
+  "class": "通用",
+  "reason": "数字保持"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 4,
+  "idx": 2,
+  "class": "通用",
+  "reason": "百分点不误改"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 4,
+  "idx": 3,
+  "class": "通用",
+  "reason": "用户要求保留指标名"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 4,
+  "idx": 4,
+  "class": "通用",
+  "reason": "删翻案句破折号"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 4,
+  "idx": 5,
+  "class": "通用",
+  "reason": "删AI套话"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 4,
+  "idx": 6,
+  "class": "通用",
+  "reason": "保留待补标记"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 4,
+  "idx": 7,
+  "class": "约定",
+  "reason": "修改说明对照格式"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 5,
+  "idx": 0,
+  "class": "通用",
+  "reason": "不承诺检测结果"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 5,
+  "idx": 1,
+  "class": "通用",
+  "reason": "不作不实承诺"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 5,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不用作弊手法"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 5,
+  "idx": 3,
+  "class": "通用",
+  "reason": "改写AI套话"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 5,
+  "idx": 4,
+  "class": "通用",
+  "reason": "不补编数字"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 5,
+  "idx": 5,
+  "class": "通用",
+  "reason": "数字保持"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 5,
+  "idx": 6,
+  "class": "通用",
+  "reason": "公文标点规范"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 6,
+  "idx": 0,
+  "class": "通用",
+  "reason": "用户要求别动原文"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 6,
+  "idx": 1,
+  "class": "约定",
+  "reason": "三行摘要固定格式"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 6,
+  "idx": 2,
+  "class": "通用",
+  "reason": "问题识别全面"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 6,
+  "idx": 3,
+  "class": "约定",
+  "reason": "问题清单规定列"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 6,
+  "idx": 4,
+  "class": "通用",
+  "reason": "公文常规表述不误报"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 6,
+  "idx": 5,
+  "class": "通用",
+  "reason": "专项名称不误判"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 6,
+  "idx": 6,
+  "class": "通用",
+  "reason": "用户要求只看不改"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 7,
+  "idx": 0,
+  "class": "通用",
+  "reason": "删AI套话"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 7,
+  "idx": 1,
+  "class": "约定",
+  "reason": "P2分级与修改说明"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 7,
+  "idx": 2,
+  "class": "通用",
+  "reason": "保留规范表述"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 7,
+  "idx": 3,
+  "class": "通用",
+  "reason": "数字保持"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 7,
+  "idx": 4,
+  "class": "约定",
+  "reason": "修改说明固定栏目"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 7,
+  "idx": 5,
+  "class": "约定",
+  "reason": "改动处数量化要求"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 8,
+  "idx": 0,
+  "class": "通用",
+  "reason": "不新增数字"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 8,
+  "idx": 1,
+  "class": "通用",
+  "reason": "空泛概括删除或标待补"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 8,
+  "idx": 2,
+  "class": "通用",
+  "reason": "待补写清缺什么"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 8,
+  "idx": 3,
+  "class": "约定",
+  "reason": "起草说明待补事项汇总"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 8,
+  "idx": 4,
+  "class": "通用",
+  "reason": "保留提法"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 8,
+  "idx": 5,
+  "class": "通用",
+  "reason": "不编造案例"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 9,
+  "idx": 0,
+  "class": "通用",
+  "reason": "说明不编造数据事例"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 9,
+  "idx": 1,
+  "class": "通用",
+  "reason": "不新增数字事例"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 9,
+  "idx": 2,
+  "class": "通用",
+  "reason": "概括删去或标待补"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 9,
+  "idx": 3,
+  "class": "通用",
+  "reason": "改写AI套话"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 9,
+  "idx": 4,
+  "class": "通用",
+  "reason": "删空泛拔高句"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 9,
+  "idx": 5,
+  "class": "通用",
+  "reason": "保留引号与结构"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 10,
+  "idx": 0,
+  "class": "通用",
+  "reason": "提醒脱敏"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 10,
+  "idx": 1,
+  "class": "通用",
+  "reason": "不出现个人信息"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 10,
+  "idx": 2,
+  "class": "约定",
+  "reason": "起草说明保密提示"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 10,
+  "idx": 3,
+  "class": "通用",
+  "reason": "事实保持"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 10,
+  "idx": 4,
+  "class": "通用",
+  "reason": "改写套话保留专业用语"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 11,
+  "idx": 0,
+  "class": "通用",
+  "reason": "涉密停止处理"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 11,
+  "idx": 1,
+  "class": "通用",
+  "reason": "不复述原文"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 11,
+  "idx": 2,
+  "class": "通用",
+  "reason": "提示不得输入联网AI"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 12,
+  "idx": 0,
+  "class": "通用",
+  "reason": "删宏大开头"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 12,
+  "idx": 1,
+  "class": "通用",
+  "reason": "改写AI句式"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 12,
+  "idx": 2,
+  "class": "约定",
+  "reason": "转交事项与skill名"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 12,
+  "idx": 3,
+  "class": "通用",
+  "reason": "保留结语与数字"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 12,
+  "idx": 4,
+  "class": "通用",
+  "reason": "主送落款不改"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 12,
+  "idx": 5,
+  "class": "约定",
+  "reason": "修改说明与转交事项"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 13,
+  "idx": 0,
+  "class": "通用",
+  "reason": "政治提法逐字保留"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 13,
+  "idx": 1,
+  "class": "通用",
+  "reason": "保留引号内容"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 13,
+  "idx": 2,
+  "class": "通用",
+  "reason": "改写AI句式"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 13,
+  "idx": 3,
+  "class": "通用",
+  "reason": "改写套话不补编"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 13,
+  "idx": 4,
+  "class": "通用",
+  "reason": "数字保持"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 13,
+  "idx": 5,
+  "class": "约定",
+  "reason": "提法核对清单"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 14,
+  "idx": 0,
+  "class": "通用",
+  "reason": "保留称呼"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 14,
+  "idx": 1,
+  "class": "通用",
+  "reason": "保留规范过渡语"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 14,
+  "idx": 2,
+  "class": "通用",
+  "reason": "改写AI句式"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 14,
+  "idx": 3,
+  "class": "通用",
+  "reason": "改为通俗表述"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 14,
+  "idx": 4,
+  "class": "通用",
+  "reason": "保持亲切语气"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 14,
+  "idx": 5,
+  "class": "通用",
+  "reason": "日期事实保持"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 15,
+  "idx": 0,
+  "class": "约定",
+  "reason": "要求【起草说明】"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 15,
+  "idx": 1,
+  "class": "约定",
+  "reason": "修改说明行数上限"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 15,
+  "idx": 2,
+  "class": "通用",
+  "reason": "数字日期文号不变"
+ },
+ {
+  "skill": "gongwen-humanize",
+  "id": 15,
+  "idx": 3,
+  "class": "约定",
+  "reason": "项目文种阈值概念"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 1,
+  "idx": 0,
+  "class": "通用",
+  "reason": "删AI引导语和免责语"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 1,
+  "idx": 1,
+  "class": "通用",
+  "reason": "部署措辞改为要求式"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 1,
+  "idx": 2,
+  "class": "通用",
+  "reason": "明确时限，日期不变"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 1,
+  "idx": 3,
+  "class": "通用",
+  "reason": "合理的可能保留"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 1,
+  "idx": 4,
+  "class": "通用",
+  "reason": "不新增必须严禁"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 1,
+  "idx": 5,
+  "class": "通用",
+  "reason": "不编造责任单位"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 1,
+  "idx": 6,
+  "class": "通用",
+  "reason": "不新增罚则"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 1,
+  "idx": 7,
+  "class": "约定",
+  "reason": "修改说明数量与分类计数"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 1,
+  "idx": 8,
+  "class": "约定",
+  "reason": "要求【起草说明】"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 2,
+  "idx": 0,
+  "class": "通用",
+  "reason": "不替用户作决定"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 2,
+  "idx": 1,
+  "class": "约定",
+  "reason": "起草说明待补事项"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 2,
+  "idx": 2,
+  "class": "通用",
+  "reason": "删免责语"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 2,
+  "idx": 3,
+  "class": "通用",
+  "reason": "请示结语规范"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 2,
+  "idx": 4,
+  "class": "通用",
+  "reason": "数字保持"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 2,
+  "idx": 5,
+  "class": "通用",
+  "reason": "保留比较内容"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 2,
+  "idx": 6,
+  "class": "约定",
+  "reason": "修改说明固定格式"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 2,
+  "idx": 7,
+  "class": "约定",
+  "reason": "起草说明写作要点"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 3,
+  "idx": 0,
+  "class": "通用",
+  "reason": "不替领导表态"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 3,
+  "idx": 1,
+  "class": "通用",
+  "reason": "表态处标待补"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 3,
+  "idx": 2,
+  "class": "通用",
+  "reason": "删模糊表态"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 3,
+  "idx": 3,
+  "class": "通用",
+  "reason": "删免责语"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 3,
+  "idx": 4,
+  "class": "通用",
+  "reason": "来文标题文号保留"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 3,
+  "idx": 5,
+  "class": "通用",
+  "reason": "依赖表态部分标待补"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 3,
+  "idx": 6,
+  "class": "通用",
+  "reason": "批复结语规范"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 3,
+  "idx": 7,
+  "class": "约定",
+  "reason": "起草说明待补事项"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 4,
+  "idx": 0,
+  "class": "通用",
+  "reason": "合理的可能保留"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 4,
+  "idx": 1,
+  "class": "通用",
+  "reason": "改为明确提醒"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 4,
+  "idx": 2,
+  "class": "通用",
+  "reason": "改为请字句，时间不变"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 4,
+  "idx": 3,
+  "class": "通用",
+  "reason": "不吓唬居民"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 4,
+  "idx": 4,
+  "class": "通用",
+  "reason": "删免责语"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 4,
+  "idx": 5,
+  "class": "通用",
+  "reason": "电话保留"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 4,
+  "idx": 6,
+  "class": "约定",
+  "reason": "修改说明对照格式"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 5,
+  "idx": 0,
+  "class": "通用",
+  "reason": "删免责声明"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 5,
+  "idx": 1,
+  "class": "通用",
+  "reason": "示例数字不作事实"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 5,
+  "idx": 2,
+  "class": "约定",
+  "reason": "要求起草说明列出"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 5,
+  "idx": 3,
+  "class": "通用",
+  "reason": "保留合理对冲"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 5,
+  "idx": 4,
+  "class": "通用",
+  "reason": "不改成无依据结论"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 5,
+  "idx": 5,
+  "class": "通用",
+  "reason": "不新增内容"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 6,
+  "idx": 0,
+  "class": "约定",
+  "reason": "skill分工与转交"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 6,
+  "idx": 1,
+  "class": "约定",
+  "reason": "按skill分工不改写"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 6,
+  "idx": 2,
+  "class": "通用",
+  "reason": "数字保持"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 6,
+  "idx": 3,
+  "class": "约定",
+  "reason": "需知项目防御腔定义"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 7,
+  "idx": 0,
+  "class": "通用",
+  "reason": "报告结语规范"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 7,
+  "idx": 1,
+  "class": "约定",
+  "reason": "要求起草说明记录"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 7,
+  "idx": 2,
+  "class": "通用",
+  "reason": "保留困难事实"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 7,
+  "idx": 3,
+  "class": "通用",
+  "reason": "数字保持"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 7,
+  "idx": 4,
+  "class": "通用",
+  "reason": "删免责语"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 7,
+  "idx": 5,
+  "class": "通用",
+  "reason": "不改成确保类承诺"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 7,
+  "idx": 6,
+  "class": "约定",
+  "reason": "写作要点栏目"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 8,
+  "idx": 0,
+  "class": "通用",
+  "reason": "识别工作秘密标识"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 8,
+  "idx": 1,
+  "class": "通用",
+  "reason": "停止改稿"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 8,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不复述个人信息"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 8,
+  "idx": 3,
+  "class": "通用",
+  "reason": "提示不得输入联网AI"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 9,
+  "idx": 0,
+  "class": "通用",
+  "reason": "改为要求式"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 9,
+  "idx": 1,
+  "class": "通用",
+  "reason": "删对冲词"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 9,
+  "idx": 2,
+  "class": "通用",
+  "reason": "目标式表述不过度承诺"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 9,
+  "idx": 3,
+  "class": "约定",
+  "reason": "要求起草说明列出"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 9,
+  "idx": 4,
+  "class": "通用",
+  "reason": "保留号召语"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 9,
+  "idx": 5,
+  "class": "通用",
+  "reason": "数字保持"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 9,
+  "idx": 6,
+  "class": "通用",
+  "reason": "保留底线要求"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 10,
+  "idx": 0,
+  "class": "通用",
+  "reason": "用户要求先别改"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 10,
+  "idx": 1,
+  "class": "约定",
+  "reason": "摘要与问题清单规定列"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 10,
+  "idx": 2,
+  "class": "约定",
+  "reason": "要求定为P0"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 10,
+  "idx": 3,
+  "class": "通用",
+  "reason": "识别建议式部署"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 10,
+  "idx": 4,
+  "class": "通用",
+  "reason": "目标式表述，数字不变"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 10,
+  "idx": 5,
+  "class": "通用",
+  "reason": "不武断删除"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 10,
+  "idx": 6,
+  "class": "通用",
+  "reason": "不编造部门名称"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 11,
+  "idx": 0,
+  "class": "通用",
+  "reason": "引文一字不改"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 11,
+  "idx": 1,
+  "class": "通用",
+  "reason": "改为要求式"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 11,
+  "idx": 2,
+  "class": "通用",
+  "reason": "删对冲"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 11,
+  "idx": 3,
+  "class": "通用",
+  "reason": "不编造部门"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 11,
+  "idx": 4,
+  "class": "通用",
+  "reason": "时间标待补（或起草说明）"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 11,
+  "idx": 5,
+  "class": "通用",
+  "reason": "删免责语"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 11,
+  "idx": 6,
+  "class": "约定",
+  "reason": "要求起草说明提示"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 12,
+  "idx": 0,
+  "class": "通用",
+  "reason": "平行文不用要求式"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 12,
+  "idx": 1,
+  "class": "通用",
+  "reason": "函的请求措辞"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 12,
+  "idx": 2,
+  "class": "通用",
+  "reason": "删客套条件语"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 12,
+  "idx": 3,
+  "class": "通用",
+  "reason": "删免责语"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 12,
+  "idx": 4,
+  "class": "通用",
+  "reason": "事实保持"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 12,
+  "idx": 5,
+  "class": "约定",
+  "reason": "修改说明栏目内容"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 13,
+  "idx": 0,
+  "class": "约定",
+  "reason": "起草说明所作假设"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 13,
+  "idx": 1,
+  "class": "通用",
+  "reason": "保留建议内容"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 13,
+  "idx": 2,
+  "class": "通用",
+  "reason": "删客套免责语"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 13,
+  "idx": 3,
+  "class": "通用",
+  "reason": "保留结语"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 13,
+  "idx": 4,
+  "class": "通用",
+  "reason": "数字日期保持"
+ },
+ {
+  "skill": "gongwen-direct",
+  "id": 13,
+  "idx": 5,
+  "class": "通用",
+  "reason": "用户要求直接改"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 1,
+  "idx": 0,
+  "class": "约定",
+  "reason": "要求定为P0"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 1,
+  "idx": 1,
+  "class": "约定",
+  "reason": "P0与法规关"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 1,
+  "idx": 2,
+  "class": "约定",
+  "reason": "要求定为P0"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 1,
+  "idx": 3,
+  "class": "约定",
+  "reason": "要求定为P0、P1"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 1,
+  "idx": 4,
+  "class": "通用",
+  "reason": "指出结语误用"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 1,
+  "idx": 5,
+  "class": "通用",
+  "reason": "指出条数与序号错误"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 1,
+  "idx": 6,
+  "class": "通用",
+  "reason": "格式要素错误"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 1,
+  "idx": 7,
+  "class": "约定",
+  "reason": "清单规定列"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 1,
+  "idx": 8,
+  "class": "约定",
+  "reason": "核稿意见.json"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 1,
+  "idx": 9,
+  "class": "通用",
+  "reason": "用户要求不改"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 2,
+  "idx": 0,
+  "class": "约定",
+  "reason": "P0与程序关"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 2,
+  "idx": 1,
+  "class": "通用",
+  "reason": "指出夹带请示"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 2,
+  "idx": 2,
+  "class": "约定",
+  "reason": "P0正误对照"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 2,
+  "idx": 3,
+  "class": "通用",
+  "reason": "改结语，另行请示"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 2,
+  "idx": 4,
+  "class": "约定",
+  "reason": "本稿最该学的三点"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 2,
+  "idx": 5,
+  "class": "通用",
+  "reason": "不编造内容"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 3,
+  "idx": 0,
+  "class": "通用",
+  "reason": "识别内部资料停止处理"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 3,
+  "idx": 1,
+  "class": "通用",
+  "reason": "给出保密处理选项"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 3,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不出现个人信息"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 3,
+  "idx": 3,
+  "class": "通用",
+  "reason": "确认前不输出"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 4,
+  "idx": 0,
+  "class": "约定",
+  "reason": "要求定为P0"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 4,
+  "idx": 1,
+  "class": "通用",
+  "reason": "床号姓名组合"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 4,
+  "idx": 2,
+  "class": "通用",
+  "reason": "指标名称不一致"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 4,
+  "idx": 3,
+  "class": "通用",
+  "reason": "百分比与百分点"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 4,
+  "idx": 4,
+  "class": "通用",
+  "reason": "绝对化疗效表述"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 4,
+  "idx": 5,
+  "class": "约定",
+  "reason": "P2分级与计数"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 4,
+  "idx": 6,
+  "class": "通用",
+  "reason": "用户不懂公文可推断"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 5,
+  "idx": 0,
+  "class": "约定",
+  "reason": "要求至少P1"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 5,
+  "idx": 1,
+  "class": "通用",
+  "reason": "机构旧称"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 5,
+  "idx": 2,
+  "class": "通用",
+  "reason": "机构旧称不断言"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 5,
+  "idx": 3,
+  "class": "通用",
+  "reason": "与党章表述不一致"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 5,
+  "idx": 4,
+  "class": "约定",
+  "reason": "严谨模式只标不替换"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 5,
+  "idx": 5,
+  "class": "约定",
+  "reason": "提法核对清单"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 5,
+  "idx": 6,
+  "class": "通用",
+  "reason": "不输出改写全文"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 6,
+  "idx": 0,
+  "class": "约定",
+  "reason": "一页纸摘要固定栏目"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 6,
+  "idx": 1,
+  "class": "约定",
+  "reason": "P0、P1与程序关"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 6,
+  "idx": 2,
+  "class": "约定",
+  "reason": "要求定为P0"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 6,
+  "idx": 3,
+  "class": "通用",
+  "reason": "提醒未公开数据"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 6,
+  "idx": 4,
+  "class": "约定",
+  "reason": "要求定为P1"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 6,
+  "idx": 5,
+  "class": "通用",
+  "reason": "签报结语不误判"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 6,
+  "idx": 6,
+  "class": "约定",
+  "reason": "签发由用户决定为项目约定"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 7,
+  "idx": 0,
+  "class": "约定",
+  "reason": "要求定为P0"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 7,
+  "idx": 1,
+  "class": "约定",
+  "reason": "要求定为P0"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 7,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不误报序号"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 7,
+  "idx": 3,
+  "class": "约定",
+  "reason": "P2简表与json对应"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 7,
+  "idx": 4,
+  "class": "通用",
+  "reason": "用户要求别解释太多"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 8,
+  "idx": 0,
+  "class": "约定",
+  "reason": "改稿仍出核稿清单"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 8,
+  "idx": 1,
+  "class": "约定",
+  "reason": "修改说明写明依据"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 8,
+  "idx": 2,
+  "class": "通用",
+  "reason": "序号省略号日期规范"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 8,
+  "idx": 3,
+  "class": "通用",
+  "reason": "事实保持"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 8,
+  "idx": 4,
+  "class": "约定",
+  "reason": "P2与修改说明"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 8,
+  "idx": 5,
+  "class": "约定",
+  "reason": "fact_diff脚本"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 8,
+  "idx": 6,
+  "class": "通用",
+  "reason": "改后全文纯净"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 9,
+  "idx": 0,
+  "class": "约定",
+  "reason": "P0与法规关"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 9,
+  "idx": 1,
+  "class": "通用",
+  "reason": "解释社区无执法权"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 9,
+  "idx": 2,
+  "class": "约定",
+  "reason": "P2提示"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 9,
+  "idx": 3,
+  "class": "通用",
+  "reason": "不编造法律条文"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 9,
+  "idx": 4,
+  "class": "通用",
+  "reason": "用户要求讲细"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 10,
+  "idx": 0,
+  "class": "约定",
+  "reason": "P2与总体评价计数"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 10,
+  "idx": 1,
+  "class": "通用",
+  "reason": "不估填数据"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 10,
+  "idx": 2,
+  "class": "通用",
+  "reason": "指出缺数据的评价"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 10,
+  "idx": 3,
+  "class": "通用",
+  "reason": "常规结语不误判"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 10,
+  "idx": 4,
+  "class": "通用",
+  "reason": "不改写全文"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 11,
+  "idx": 0,
+  "class": "约定",
+  "reason": "政策关关口名"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 11,
+  "idx": 1,
+  "class": "通用",
+  "reason": "不编造上级文件"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 11,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不误报规范写法"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 11,
+  "idx": 3,
+  "class": "约定",
+  "reason": "总体评价写机检情况"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 12,
+  "idx": 0,
+  "class": "约定",
+  "reason": "总体评价固定措辞"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 12,
+  "idx": 1,
+  "class": "通用",
+  "reason": "一文一事"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 12,
+  "idx": 2,
+  "class": "通用",
+  "reason": "多头主送"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 12,
+  "idx": 3,
+  "class": "通用",
+  "reason": "先办后请"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 12,
+  "idx": 4,
+  "class": "通用",
+  "reason": "请示结语"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 12,
+  "idx": 5,
+  "class": "通用",
+  "reason": "用户要求讲讲"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 13,
+  "idx": 0,
+  "class": "通用",
+  "reason": "正确判断无严重问题"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 13,
+  "idx": 1,
+  "class": "约定",
+  "reason": "总体评价行数上限"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 13,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不硬找问题"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 13,
+  "idx": 3,
+  "class": "通用",
+  "reason": "不改写全文"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 14,
+  "idx": 0,
+  "class": "约定",
+  "reason": "一页纸摘要固定栏目"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 14,
+  "idx": 1,
+  "class": "通用",
+  "reason": "主要问题识别"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 14,
+  "idx": 2,
+  "class": "约定",
+  "reason": "P2简表与json对应"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 14,
+  "idx": 3,
+  "class": "通用",
+  "reason": "用户赶时间不提问"
+ },
+ {
+  "skill": "gongwen-review",
+  "id": 14,
+  "idx": 4,
+  "class": "约定",
+  "reason": "签发由用户决定为项目约定"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 1,
+  "idx": 0,
+  "class": "约定",
+  "reason": "build_docx脚本"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 1,
+  "idx": 1,
+  "class": "约定",
+  "reason": "项目输出路径"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 1,
+  "idx": 2,
+  "class": "通用",
+  "reason": "GB/T 9704版头要素"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 1,
+  "idx": 3,
+  "class": "通用",
+  "reason": "GB/T 9704版记要素"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 1,
+  "idx": 4,
+  "class": "通用",
+  "reason": "GB/T 9704页码"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 1,
+  "idx": 5,
+  "class": "约定",
+  "reason": "check_docx脚本"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 1,
+  "idx": 6,
+  "class": "通用",
+  "reason": "正文不增删"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 1,
+  "idx": 7,
+  "class": "约定",
+  "reason": "高效模式固定报告项"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 2,
+  "idx": 0,
+  "class": "约定",
+  "reason": "白头默认为项目约定"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 2,
+  "idx": 1,
+  "class": "通用",
+  "reason": "GB/T 9704署名日期"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 2,
+  "idx": 2,
+  "class": "通用",
+  "reason": "GB/T 9704附注"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 2,
+  "idx": 3,
+  "class": "通用",
+  "reason": "用户要求讲为什么，引国标"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 2,
+  "idx": 4,
+  "class": "通用",
+  "reason": "Word默认与国标差异"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 2,
+  "idx": 5,
+  "class": "约定",
+  "reason": "检查脚本P0"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 3,
+  "idx": 0,
+  "class": "通用",
+  "reason": "信函格式标志"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 3,
+  "idx": 1,
+  "class": "通用",
+  "reason": "信函格式双线"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 3,
+  "idx": 2,
+  "class": "通用",
+  "reason": "信函格式页码"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 3,
+  "idx": 3,
+  "class": "通用",
+  "reason": "信函格式字号位置"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 3,
+  "idx": 4,
+  "class": "通用",
+  "reason": "信函格式版记"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 3,
+  "idx": 5,
+  "class": "约定",
+  "reason": "检查脚本P0"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 4,
+  "idx": 0,
+  "class": "通用",
+  "reason": "纪要格式标志"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 4,
+  "idx": 1,
+  "class": "通用",
+  "reason": "纪要出席列席格式"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 4,
+  "idx": 2,
+  "class": "通用",
+  "reason": "保留待补不编造"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 4,
+  "idx": 3,
+  "class": "通用",
+  "reason": "提醒补齐待补"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 4,
+  "idx": 4,
+  "class": "通用",
+  "reason": "纪要不署名"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 5,
+  "idx": 0,
+  "class": "通用",
+  "reason": "总结不排版头版记"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 5,
+  "idx": 1,
+  "class": "通用",
+  "reason": "标题与正文字体"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 5,
+  "idx": 2,
+  "class": "通用",
+  "reason": "GB/T 9704不盖章排列"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 5,
+  "idx": 3,
+  "class": "通用",
+  "reason": "用户不懂格式可推断"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 5,
+  "idx": 4,
+  "class": "约定",
+  "reason": "转译模式附操作步骤"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 6,
+  "idx": 0,
+  "class": "约定",
+  "reason": "fix_docx脚本"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 6,
+  "idx": 1,
+  "class": "约定",
+  "reason": "修复文件命名"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 6,
+  "idx": 2,
+  "class": "通用",
+  "reason": "页面设置按国标"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 6,
+  "idx": 3,
+  "class": "约定",
+  "reason": "检查脚本P0"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 6,
+  "idx": 4,
+  "class": "通用",
+  "reason": "正文文字不改"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 6,
+  "idx": 5,
+  "class": "约定",
+  "reason": "项目修复规则"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 7,
+  "idx": 0,
+  "class": "约定",
+  "reason": "项目脚本与source_file"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 7,
+  "idx": 1,
+  "class": "约定",
+  "reason": "批注作者为skill名"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 7,
+  "idx": 2,
+  "class": "约定",
+  "reason": "核稿意见定位机制"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 7,
+  "idx": 3,
+  "class": "约定",
+  "reason": "级别与关口"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 7,
+  "idx": 4,
+  "class": "通用",
+  "reason": "用户要求自己改"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 8,
+  "idx": 0,
+  "class": "通用",
+  "reason": "字体名说明"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 8,
+  "idx": 1,
+  "class": "约定",
+  "reason": "脚本参数"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 8,
+  "idx": 2,
+  "class": "通用",
+  "reason": "商业字体授权"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 8,
+  "idx": 3,
+  "class": "约定",
+  "reason": "检查脚本P2"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 8,
+  "idx": 4,
+  "class": "通用",
+  "reason": "校内通知版式"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 9,
+  "idx": 0,
+  "class": "通用",
+  "reason": "行政红头标志（画像为输入）"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 9,
+  "idx": 1,
+  "class": "通用",
+  "reason": "文号不编造"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 9,
+  "idx": 2,
+  "class": "通用",
+  "reason": "按输入画像且不编日期"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 9,
+  "idx": 3,
+  "class": "约定",
+  "reason": "交付说明汇总待补"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 9,
+  "idx": 4,
+  "class": "约定",
+  "reason": "检查脚本P0、P2计数"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 10,
+  "idx": 0,
+  "class": "通用",
+  "reason": "标志与发文主体一致"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 10,
+  "idx": 1,
+  "class": "通用",
+  "reason": "文号不编造"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 10,
+  "idx": 2,
+  "class": "通用",
+  "reason": "GB/T 9704签发人"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 10,
+  "idx": 3,
+  "class": "通用",
+  "reason": "署名与标志一致"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 10,
+  "idx": 4,
+  "class": "约定",
+  "reason": "严谨模式核对结果"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 11,
+  "idx": 0,
+  "class": "通用",
+  "reason": "用户要求保留方括号"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 11,
+  "idx": 1,
+  "class": "约定",
+  "reason": "check_docx与P0"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 11,
+  "idx": 2,
+  "class": "约定",
+  "reason": "检查脚本P0"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 11,
+  "idx": 3,
+  "class": "通用",
+  "reason": "按输入画像定标志"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 12,
+  "idx": 0,
+  "class": "通用",
+  "reason": "识别密级停止"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 12,
+  "idx": 1,
+  "class": "通用",
+  "reason": "提示不得输入联网AI"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 12,
+  "idx": 2,
+  "class": "通用",
+  "reason": "不复述涉密内容"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 13,
+  "idx": 0,
+  "class": "约定",
+  "reason": "未运行机检固定说法"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 13,
+  "idx": 1,
+  "class": "通用",
+  "reason": "排版要素逐项列出"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 13,
+  "idx": 2,
+  "class": "通用",
+  "reason": "用户要求WPS步骤"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 13,
+  "idx": 3,
+  "class": "通用",
+  "reason": "社区报告用白头"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 13,
+  "idx": 4,
+  "class": "通用",
+  "reason": "提醒补齐待补"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 14,
+  "idx": 0,
+  "class": "约定",
+  "reason": "check_docx脚本"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 14,
+  "idx": 1,
+  "class": "约定",
+  "reason": "P0P1P2分级"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 14,
+  "idx": 2,
+  "class": "约定",
+  "reason": "问题清单规定列"
+ },
+ {
+  "skill": "gongwen-format",
+  "id": 14,
+  "idx": 3,
+  "class": "通用",
+  "reason": "格式问题识别"
+ }
+]

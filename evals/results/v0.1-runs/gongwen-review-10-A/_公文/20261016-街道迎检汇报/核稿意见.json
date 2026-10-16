@@ -1,0 +1,73 @@
+{
+  "source_file": "街道迎检汇报材料.txt",
+  "issues": [
+    {
+      "level": "P1",
+      "gate": "文字关",
+      "category": "语病与数据",
+      "excerpt": "全年调解各类矛盾纠纷大幅增加，调解成功率显著提高",
+      "message": "主谓搭配不当，“纠纷大幅增加”容易被理解为辖区纠纷变多；整段只有评价，没有件数和成功率",
+      "suggestion": "改为“全年调解矛盾纠纷【待补：件数】件，调解成功率【待补：百分比】”，数字从调解台账取，请核实",
+      "basis": "《党政机关公文处理工作条例》第二十条（四）；ai-tone.md 第一部分（七）；jiceng.md 第十部分",
+      "rule_id": "AI-023"
+    },
+    {
+      "level": "P2",
+      "gate": "文风关",
+      "category": "概括代替数据",
+      "excerpt": "扎实推进基层治理各项工作，取得了明显成效",
+      "message": "概括代替数据，全文共 3 处（另有“办结率明显提升”“居民满意度大幅提升”）",
+      "suggestion": "有台账数据的换成数据，没有的删去评价词",
+      "basis": "ai-tone.md 第一部分（七）",
+      "rule_id": "AI-023"
+    },
+    {
+      "level": "P2",
+      "gate": "文字关",
+      "category": "待补标记",
+      "excerpt": "【待补：网格数】",
+      "message": "待补标记尚未补齐",
+      "suggestion": "按网格化管理台账补齐，不估填",
+      "basis": "guardrails.md 第二条第 2 款、第三条第 4 款",
+      "rule_id": "MRK-001"
+    },
+    {
+      "level": "P2",
+      "gate": "文字关",
+      "category": "统计口径",
+      "excerpt": "全年网格员上报事件",
+      "message": "“全年”与首段“今年以来”口径不一致，当前为10月，全年数据尚未结束，全文共 2 处",
+      "suggestion": "写明统计截止日期，与台账口径一致",
+      "basis": "《党政机关公文处理工作条例》第二十条（四）"
+    },
+    {
+      "level": "P2",
+      "gate": "文字关",
+      "category": "待补标记",
+      "excerpt": "【待补：件数】",
+      "message": "待补标记尚未补齐",
+      "suggestion": "按网格平台或事件台账补齐，不估填",
+      "basis": "guardrails.md 第二条第 2 款、第三条第 4 款",
+      "rule_id": "MRK-001"
+    },
+    {
+      "level": "P2",
+      "gate": "文字关",
+      "category": "待补标记",
+      "excerpt": "【待补：个数】",
+      "message": "待补标记尚未补齐",
+      "suggestion": "按停车位建设项目验收资料补齐，不估填",
+      "basis": "guardrails.md 第二条第 2 款、第三条第 4 款",
+      "rule_id": "MRK-001"
+    },
+    {
+      "level": "P2",
+      "gate": "文风关",
+      "category": "结构",
+      "excerpt": "以上汇报，不妥之处，请批评指正。",
+      "message": "只讲成效，没有困难问题和下一步打算",
+      "suggestion": "是否补写由用户决定，需要补写的可转 gongwen-report",
+      "basis": "doc-types.md 4.4；jiceng.md 第四部分第3条"
+    }
+  ]
+}

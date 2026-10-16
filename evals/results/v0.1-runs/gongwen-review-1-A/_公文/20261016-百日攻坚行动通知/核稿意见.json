@@ -1,0 +1,321 @@
+{
+  "source_file": "问题密集通知.txt",
+  "issues": [
+    {
+      "level": "P0",
+      "gate": "格式关",
+      "category": "格式要素",
+      "excerpt": "某农发[2026]第05号",
+      "message": "发文字号用了方括号，顺序号加了“第”字，并编了虚位“05”",
+      "suggestion": "改为“某农发〔2026〕5号”",
+      "basis": "GB/T 9704-2012 7.2.5",
+      "rule_id": "FMT-001"
+    },
+    {
+      "level": "P0",
+      "gate": "文字关",
+      "category": "标点",
+      "excerpt": "建筑垃圾、废旧农膜……等",
+      "message": "省略号与“等”同时使用",
+      "suggestion": "保留其一，如“建筑垃圾、废旧农膜等”",
+      "basis": "GB/T 15834-2011 附录 A.9.2",
+      "rule_id": "PUN-007"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "法规",
+      "excerpt": "由村委会处以200元罚款，情节严重的直接拘留",
+      "message": "村委会是群众性自治组织，没有行政处罚权；拘留只能由公安机关依法决定；县农业农村局以通知设定罚款、拘留，也超出发文权限",
+      "suggestion": "删去处罚表述，改为宣传引导、劝导整改等措施；确需处罚的，写明执法主体和法律依据（请提供依据原文）",
+      "basis": "shequ.md 第六部分第1条；jiceng.md 第六部分第2条；checklist-8gates.md 第四部分",
+      "rule_id": "LEG-001"
+    },
+    {
+      "level": "P0",
+      "gate": "文风关",
+      "category": "免责声明",
+      "excerpt": "以上内容仅供参考，请根据实际情况调整",
+      "message": "正文残留免责声明",
+      "suggestion": "删去整句",
+      "basis": "guardrails.md 第三条第2款；defensive.md 第一部分",
+      "rule_id": "DEF-001"
+    },
+    {
+      "level": "P1",
+      "gate": "文字关",
+      "category": "结构",
+      "excerpt": "关于开展秋冬季农村人居环境整治“百日攻坚”行动的通知。",
+      "message": "标题末尾加了句号",
+      "suggestion": "删去末尾“。”",
+      "basis": "GB/T 15834-2011 附录 B.4",
+      "rule_id": "STR-005"
+    },
+    {
+      "level": "P1",
+      "gate": "格式关",
+      "category": "格式要素",
+      "excerpt": "各乡镇人民政府、县直有关部门",
+      "message": "主送机关后缺全角冒号",
+      "suggestion": "末尾加“：”",
+      "basis": "GB/T 9704-2012 7.3.2",
+      "rule_id": "FMT-007"
+    },
+    {
+      "level": "P1",
+      "gate": "文风关",
+      "category": "减负",
+      "excerpt": "随着乡村振兴战略的深入推进，农村人居环境整治具有十分重要的意义",
+      "message": "首段铺垫形势背景和重要意义，没有开门见山",
+      "suggestion": "删去该句，首段从“为切实做好……”写起",
+      "basis": "减负规定第2条（jianfu.md JF-02）；ai-tone.md 第一部分（十）",
+      "rule_id": "JFU-001"
+    },
+    {
+      "level": "P1",
+      "gate": "权限关",
+      "category": "行文权限",
+      "excerpt": "经研究决定，在全县开展为期一百天的“百日攻坚”行动",
+      "message": "县农业农村局是县政府工作部门，主送乡镇人民政府，并用“各乡镇要”“实行一票否决”提出指令性要求；文中未注明已经县政府同意",
+      "suggestion": "请核实该行动是否已经县政府同意：已同意的，在首段写明“经县政府同意”；未经同意的，报请县政府或县政府办公室行文，或删去对乡镇人民政府的指令性要求",
+      "basis": "条例第十六条（二）；减负规定第1条（jianfu.md JF-16）"
+    },
+    {
+      "level": "P1",
+      "gate": "文字关",
+      "category": "标点",
+      "excerpt": "现将有关事项通知如下:",
+      "message": "冒号用了半角",
+      "suggestion": "改为全角“：”",
+      "basis": "GB/T 15834-2011 第5章；output-format.md 第一部分第5条",
+      "rule_id": "PUN-012"
+    },
+    {
+      "level": "P1",
+      "gate": "文字关",
+      "category": "标点",
+      "excerpt": "（一）、垃圾清理",
+      "message": "带括号的序数后多加了顿号，全文共 2 处（另一处为“（二）、”）",
+      "suggestion": "删去顿号，写作“（一）”“（二）”",
+      "basis": "GB/T 15834-2011 附录 B.3.4",
+      "rule_id": "PUN-002"
+    },
+    {
+      "level": "P1",
+      "gate": "格式关",
+      "category": "格式要素",
+      "excerpt": "(三)厕所改造",
+      "message": "序数用了半角括号",
+      "suggestion": "改为全角“（三）”",
+      "basis": "GB/T 9704-2012 7.3.3；output-format.md 第一部分第2条",
+      "rule_id": "FMT-012"
+    },
+    {
+      "level": "P1",
+      "gate": "文字关",
+      "category": "标点",
+      "excerpt": "二，工作目标",
+      "message": "一级序数后用了逗号",
+      "suggestion": "改为“二、”",
+      "basis": "GB/T 15834-2011 4.5.3.3、附录 B.3.2",
+      "rule_id": "PUN-001"
+    },
+    {
+      "level": "P1",
+      "gate": "文字关",
+      "category": "数字",
+      "excerpt": "到26年12月底",
+      "message": "年份简写为两位",
+      "suggestion": "改为“到2026年12月底”",
+      "basis": "GB/T 15835-2011 5.1.4",
+      "rule_id": "NUM-001"
+    },
+    {
+      "level": "P1",
+      "gate": "文字关",
+      "category": "数字",
+      "excerpt": "卫生厕所普及率提高10～15%",
+      "message": "百分数范围前一个数缺“%”；普及率本身是比率，其变化疑似应写“百分点”",
+      "suggestion": "请核对口径：指普及率增加的幅度，写作“提高10～15个百分点”；指相对增长，写作“提高10%～15%”",
+      "basis": "GB/T 15835-2011 5.1.3；checklist-8gates.md 第六部分",
+      "rule_id": "NUM-003"
+    },
+    {
+      "level": "P1",
+      "gate": "文字关",
+      "category": "数字",
+      "excerpt": "完成投资约3-5亿元",
+      "message": "带“亿”的数值范围两端未写全，且用了短横线",
+      "suggestion": "改为“完成投资约3亿～5亿元”",
+      "basis": "GB/T 15835-2011 5.1.3；GB/T 15834-2011 4.13.3.2",
+      "rule_id": "NUM-002"
+    },
+    {
+      "level": "P1",
+      "gate": "格式关",
+      "category": "层次序数",
+      "excerpt": "1、各乡镇要建立工作台账",
+      "message": "阿拉伯数字序数后用了顿号，全文共 2 处（另一处为“3、”）；“二，工作目标”之下直接用“1.”，越过了“（一）”",
+      "suggestion": "序数后改用下脚点；这两条写的是工作措施而非目标，请核对归属，按“一、（一）1.”逐级使用",
+      "basis": "GB/T 15834-2011 附录 B.3.3、B.3.8；GB/T 9704-2012 7.3.3",
+      "rule_id": "PUN-003"
+    },
+    {
+      "level": "P1",
+      "gate": "格式关",
+      "category": "层次序数",
+      "excerpt": "3、县农业农村局",
+      "message": "序号跳号，“1”之后直接是“3”",
+      "suggestion": "请核实是否漏了第2条：漏了的补上，没漏的改为“2.”",
+      "basis": "GB/T 9704-2012 7.3.3；GB/T 15834-2011 附录 B.3.8",
+      "rule_id": "STR-001"
+    },
+    {
+      "level": "P1",
+      "gate": "格式关",
+      "category": "层次序数",
+      "excerpt": "四、工作要求",
+      "message": "一级序号跳号，“二，”之后直接是“四、”，缺第三部分",
+      "suggestion": "请核实是否漏了第三部分：漏了的补上，没漏的改为“三、”",
+      "basis": "GB/T 9704-2012 7.3.3；GB/T 15834-2011 附录 B.3.8",
+      "rule_id": "STR-001"
+    },
+    {
+      "level": "P1",
+      "gate": "文字关",
+      "category": "标点",
+      "excerpt": "整治三年行动方案》、《某县村庄清洁行动实施办法》",
+      "message": "并列书名号之间加了顿号",
+      "suggestion": "删去顿号，写作“》《”",
+      "basis": "GB/T 15834-2011 4.5.3.5",
+      "rule_id": "PUN-005"
+    },
+    {
+      "level": "P1",
+      "gate": "文字关",
+      "category": "数字",
+      "excerpt": "请各乡镇于11-30前",
+      "message": "没有年份的日期不能用短横线表示（机检为 P2，人工确认是日期）",
+      "suggestion": "改为“11月30日前”",
+      "basis": "GB/T 15835-2011 5.1.4",
+      "rule_id": "NUM-007"
+    },
+    {
+      "level": "P1",
+      "gate": "程序关",
+      "category": "结构",
+      "excerpt": "妥否，请批示",
+      "message": "通知是下行文，用了请示的结语",
+      "suggestion": "删去；需要结语的用“特此通知。”",
+      "basis": "条例第八条；doc-types.md 2.8",
+      "rule_id": "STR-011"
+    },
+    {
+      "level": "P1",
+      "gate": "格式关",
+      "category": "格式要素",
+      "excerpt": "附件：某县农村人居环境整治“百日攻坚”行动任务分解表。",
+      "message": "附件名称后加了句号",
+      "suggestion": "删去末尾“。”；只有一个附件的不编序号",
+      "basis": "GB/T 9704-2012 7.3.4",
+      "rule_id": "FMT-008"
+    },
+    {
+      "level": "P1",
+      "gate": "格式关",
+      "category": "格式要素",
+      "excerpt": "二〇二六年十月十六日",
+      "message": "成文日期用了汉字数字",
+      "suggestion": "改为“2026年10月16日”，以签发日期为准",
+      "basis": "GB/T 9704-2012 7.3.5.4",
+      "rule_id": "FMT-006"
+    },
+    {
+      "level": "P1",
+      "gate": "格式关",
+      "category": "格式要素",
+      "excerpt": "抄送:县委办公室,县政府办公室",
+      "message": "冒号、逗号用了半角，末尾缺句号",
+      "suggestion": "改为“抄送：县委办公室，县政府办公室。”",
+      "basis": "GB/T 9704-2012 7.4.2；GB/T 15834-2011 第5章",
+      "rule_id": "FMT-009"
+    },
+    {
+      "level": "P2",
+      "gate": "文字关",
+      "category": "时间表述",
+      "excerpt": "为切实做好今冬明春农村人居环境整治工作",
+      "message": "标题写“秋冬季”，正文写“今冬明春”，时段说法不一致；“为期一百天”没有写起止日期",
+      "suggestion": "请核实后统一时段说法，写明行动起止日期",
+      "basis": "条例第二十条（四）"
+    },
+    {
+      "level": "P2",
+      "gate": "文字关",
+      "category": "结构",
+      "excerpt": "重点抓好以下三个方面工作",
+      "message": "写的是“三个方面”，其后列了（一）至（四）共4项",
+      "suggestion": "核对条数，改正概括数字或调整条目",
+      "basis": "条例第二十条（四）",
+      "rule_id": "STR-002"
+    },
+    {
+      "level": "P2",
+      "gate": "政策关",
+      "category": "政策口径",
+      "excerpt": "全县农村生活垃圾无害化处理率达到95%以上",
+      "message": "未提供上级文件，目标值和时限无法核对",
+      "suggestion": "请对照《某县农村人居环境整治三年行动方案》原文确认",
+      "basis": "条例第十九条（一）、第二十条（二）；checklist-8gates.md 第二部分"
+    },
+    {
+      "level": "P2",
+      "gate": "文风关",
+      "category": "减负",
+      "excerpt": "每月通报一次排名，排名靠后的乡镇实行一票否决",
+      "message": "按月排名通报、设“一票否决”",
+      "suggestion": "建议删去",
+      "basis": "减负规定第3条、第8条（jianfu.md JF-06、JF-11）",
+      "rule_id": "JFU-007"
+    },
+    {
+      "level": "P2",
+      "gate": "程序关",
+      "category": "会签",
+      "excerpt": "各乡镇、县直各部门要高度重视",
+      "message": "污水治理、改厕、乱搭乱建整治等事项涉及其他部门职权，稿中未见会签或协商一致的说明",
+      "suggestion": "请确认已与相关部门会签；未会签的，送签前补会签",
+      "basis": "条例第十九条（六）、第二十条（三）"
+    },
+    {
+      "level": "P2",
+      "gate": "文风关",
+      "category": "机关套话堆砌",
+      "excerpt": "压实责任，落实落细，推动工作走深走实、见行见效",
+      "message": "一句连用4个机关套话",
+      "suggestion": "只留一处，其余换成具体措施",
+      "basis": "ai-tone.md 第一部分（九）",
+      "rule_id": "AI-027"
+    },
+    {
+      "level": "P2",
+      "gate": "文风关",
+      "category": "减负",
+      "excerpt": "将工作方案报县农业农村局，同时报送纸质版和电子版",
+      "message": "要求乡镇另报工作方案，且纸质版、电子版重复报送",
+      "suggestion": "请核实是否确需报送；确需的只写一种报送渠道",
+      "basis": "减负规定第3条、第12条（jianfu.md JF-05、JF-09）",
+      "rule_id": "JFU-006"
+    },
+    {
+      "level": "P2",
+      "gate": "法规关",
+      "category": "隐私与保密",
+      "excerpt": "联系人：王某，电话",
+      "message": "联系电话为个人手机号（139****5678）",
+      "suggestion": "内部印发可保留；对外公开的改用办公电话",
+      "basis": "guardrails.md 第一条第3款",
+      "rule_id": "PRI-002"
+    }
+  ]
+}

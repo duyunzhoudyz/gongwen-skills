@@ -1,0 +1,91 @@
+{
+  "source_file": "居民垃圾分类通知.txt",
+  "issues": [
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "法规",
+      "excerpt": "对屡次不分类投放的居民，社区将处以200元罚款",
+      "message": "社区（居委会）是基层群众性自治组织，没有行政执法权，无权罚款",
+      "suggestion": "删去罚款表述；需要提示法律责任的，写明执法部门和本市规定名称（请提供原文）",
+      "basis": "shequ.md 第一部分、第六部分第1条；checklist-8gates.md 第三部分、第四部分",
+      "rule_id": "LEG-001"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "法规",
+      "excerpt": "并在小区公示栏曝光",
+      "message": "公开点名曝光没有依据，社区无权设定惩戒，且会超范围公开居民个人信息",
+      "suggestion": "删去曝光表述，改为不点名的现场指导、上门提醒",
+      "basis": "shequ.md 第六部分第1、2条；guardrails.md 第一条第3款",
+      "rule_id": "LEG-004"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "法规",
+      "excerpt": "拒不整改的，取消其低保资格",
+      "message": "社区无权取消低保，低保资格与垃圾分类无关，不能作为惩罚手段",
+      "suggestion": "整句删去",
+      "basis": "shequ.md 第六部分第1条；unit-checks.md 第三部分法规关",
+      "rule_id": "LEG-003"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "法规",
+      "excerpt": "情节严重的移交公安机关拘留",
+      "message": "拘留只能由公安机关依法决定，社区不能在通知中预设拘留后果",
+      "suggestion": "删去拘留表述",
+      "basis": "checklist-8gates.md 第四部分示例；shequ.md 第六部分第1条",
+      "rule_id": "LEG-001"
+    },
+    {
+      "level": "P1",
+      "gate": "程序关",
+      "category": "前置程序",
+      "excerpt": "经社区研究决定",
+      "message": "涉及全体居民利益的事项，没有写明经居民会议或居民代表会议讨论",
+      "suggestion": "已经讨论的写明会议名称（请核实）；尚未讨论的，先履行程序再张贴",
+      "basis": "shequ.md 第四部分第2条；unit-checks.md 第三部分程序关"
+    },
+    {
+      "level": "P1",
+      "gate": "格式关",
+      "category": "受文对象",
+      "excerpt": "物业公司要安排专人值守",
+      "message": "通知主送居民，这一条却给物业公司布置任务，受文对象不一致",
+      "suggestion": "删去第四条，值守安排与物业公司另行商定；可改写为“投放时段各投放点有专人值守指导”",
+      "basis": "《党政机关公文处理工作条例》第九条（八）（tiaoli.md 第四部分）"
+    },
+    {
+      "level": "P2",
+      "gate": "文风关",
+      "category": "要素缺失",
+      "excerpt": "其他时间投放点不开放",
+      "message": "没写投放点在哪里",
+      "suggestion": "补写各小区投放点位置（请核实后补充）",
+      "basis": "shequ.md 第八部分第2条、第九部分第1条"
+    },
+    {
+      "level": "P2",
+      "gate": "文风关",
+      "category": "语气",
+      "excerpt": "未按要求分类的，一律退回",
+      "message": "口气生硬，也没说清怎么退、退给谁",
+      "suggestion": "可改为由值守人员现场指导分拣，请结合实际决定",
+      "basis": "shequ.md 第九部分第2条；checklist-8gates.md 第四部分"
+    },
+    {
+      "level": "P2",
+      "gate": "文风关",
+      "category": "减负",
+      "excerpt": "每天拍照上传投放情况",
+      "message": "每天拍照上传属于留痕要求，照片还可能拍到居民",
+      "suggestion": "随第6条一并删去；确需留存的，限定必要的少量材料，不外传",
+      "basis": "《整治形式主义为基层减负若干规定》第8条、第14条（jianfu.md JF-08）",
+      "rule_id": "JFU-005"
+    }
+  ]
+}

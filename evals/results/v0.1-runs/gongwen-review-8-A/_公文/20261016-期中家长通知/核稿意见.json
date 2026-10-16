@@ -1,0 +1,90 @@
+{
+  "source_file": "期中家长通知.txt",
+  "issues": [
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "双减",
+      "excerpt": "请家长每天检查孩子作业并在作业本上签字",
+      "message": "要求家长检查作业并签字",
+      "suggestion": "删去",
+      "basis": "zhongxiaoxue.md 第六部分第3条；unit-checks.md 第六部分；checklist-8gates.md 第四部分"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "双减",
+      "excerpt": "督促孩子完成3-5套复习试卷",
+      "message": "通过家长变相布置家庭作业；“3-5”范围写法亦不规范",
+      "suggestion": "删去；第3条删后无内容，整条删去",
+      "basis": "zhongxiaoxue.md 第六部分第3条；unit-checks.md 第六部分；GB/T 15834-2011 4.13.3.2",
+      "rule_id": "PUN-017"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "考试管理",
+      "excerpt": "学校将在家长群公布各班成绩排名",
+      "message": "义务教育学校不公布考试成绩和排名，不在家长群传播",
+      "suggestion": "删去；第4条删后无内容，整条删去。需告知成绩反馈方式的，按不公布成绩和排名的做法另写",
+      "basis": "zhongxiaoxue.md 第六部分第2条；unit-checks.md 第六部分；checklist-8gates.md 第四部分"
+    },
+    {
+      "level": "P0",
+      "gate": "文字关",
+      "category": "标点",
+      "excerpt": "......等",
+      "message": "省略号与“等”连用；省略号写成六个半角点",
+      "suggestion": "二者留一，省略号用“……”；随第3条一并删去",
+      "basis": "GB/T 15834-2011 附录 A.9.2、4.11.2",
+      "rule_id": "PUN-007"
+    },
+    {
+      "level": "P1",
+      "gate": "文字关",
+      "category": "标点",
+      "excerpt": "1、检测科目",
+      "message": "阿拉伯数字序数后应用下脚点，全文共4处",
+      "suggestion": "改为“1.”“2.”等",
+      "basis": "GB/T 15834-2011 附录 B.3.3",
+      "rule_id": "PUN-003"
+    },
+    {
+      "level": "P1",
+      "gate": "格式关",
+      "category": "格式要素",
+      "excerpt": "二○二六年十月十六日",
+      "message": "成文日期应用阿拉伯数字",
+      "suggestion": "改为“2026年10月16日”",
+      "basis": "GB/T 9704-2012 7.3.5.4",
+      "rule_id": "FMT-006"
+    },
+    {
+      "level": "P2",
+      "gate": "法规关",
+      "category": "考试管理",
+      "excerpt": "一、二年级检测语文、数学",
+      "message": "一、二年级组织语文、数学检测",
+      "suggestion": "请对照上级教育行政部门关于义务教育考试管理的文件，确认一、二年级的检测形式",
+      "basis": "zhongxiaoxue.md 第一部分（“双减”意见）、第六部分第2条；checklist-8gates.md 第四部分"
+    },
+    {
+      "level": "P2",
+      "gate": "文字关",
+      "category": "数字",
+      "excerpt": "下午15:30放学",
+      "message": "“下午”与24小时制重复",
+      "suggestion": "可写“15:30”或“下午3:30”",
+      "basis": "GB/T 15835-2011 5.1.5"
+    },
+    {
+      "level": "P2",
+      "gate": "法规关",
+      "category": "隐私与保密",
+      "excerpt": "联系电话",
+      "message": "工作电话（0571-****0000）可以公开",
+      "suggestion": "发出前核对号码",
+      "basis": "SKILL.md 第二步（工作联系电话为 P2）"
+    }
+  ]
+}

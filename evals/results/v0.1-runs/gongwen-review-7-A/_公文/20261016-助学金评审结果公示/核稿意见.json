@@ -1,0 +1,60 @@
+{
+  "source_file": "学院助学金评审结果公示.txt",
+  "issues": [
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "隐私与保密",
+      "excerpt": "学号",
+      "message": "公开学号（20****15），全文共3处",
+      "suggestion": "3处学号全部删去",
+      "basis": "gaoxiao.md 第六部分第2条；unit-checks.md 第五部分；guardrails.md 第一条第3款",
+      "rule_id": "PRI-004"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "个人信息公开范围",
+      "excerpt": "家庭经济特别困难，父亲患尿毒症长期透析，母亲无固定工作",
+      "message": "公开困难认定等级、家庭成员病情和就业情况",
+      "suggestion": "删去",
+      "basis": "gaoxiao.md 第六部分第2条；unit-checks.md 第五部分；checklist-8gates.md 第四部分"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "个人信息公开范围",
+      "excerpt": "家庭经济特别困难，单亲家庭，本人有抑郁症病史",
+      "message": "公开困难认定等级、家庭结构和本人心理健康信息",
+      "suggestion": "删去",
+      "basis": "gaoxiao.md 第六部分第2条；unit-checks.md 第五部分；checklist-8gates.md 第四部分"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "个人信息公开范围",
+      "excerpt": "家庭经济困难。",
+      "message": "公开困难认定等级",
+      "suggestion": "删去",
+      "basis": "gaoxiao.md 第六部分第2条；unit-checks.md 第五部分"
+    },
+    {
+      "level": "P2",
+      "gate": "政策关",
+      "category": "政策依据",
+      "excerpt": "根据《某大学家庭经济困难学生认定办法》和学校资助工作安排",
+      "message": "评审依据只列了困难认定办法",
+      "suggestion": "请确认是否应同时列学校助学金评审或管理办法",
+      "basis": "checklist-8gates.md 第二部分；《党政机关公文处理工作条例》第二十条（一）"
+    },
+    {
+      "level": "P2",
+      "gate": "法规关",
+      "category": "隐私与保密",
+      "excerpt": "联系电话",
+      "message": "工作电话（0571-****0000）可以公开",
+      "suggestion": "挂出前核对号码",
+      "basis": "SKILL.md 第二步（工作联系电话为 P2）"
+    }
+  ]
+}
