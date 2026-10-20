@@ -77,7 +77,7 @@
 - 对家长“一律移交公安机关予以拘留”的表述，核查后发现区教育局没有处罚权，予以删除；
 - 所有数字前后一致，脚本逐项比对确认。
 
-另有两个示例：[医院科室年终总结](examples/A-医院科室年终总结/)（缺的 9 个数据全部标【待补】，没有编造）和 [申请经费该用函还是请示](examples/C-文种判断-函/)。三个示例的说明见 [examples/README.md](examples/README.md)。
+另有两个示例：[医院科室年终总结](examples/A-医院科室年终总结/)（要求 2000 字左右，素材只够写约 1050 字，回复第一段说明差距并附补料清单；缺的数据在正文里标了 9 处【待补】、2 处【待核实】，没有编造，也没有凑字数）和 [申请经费该用函还是请示](examples/C-文种判断-函/)。三个示例的说明见 [examples/README.md](examples/README.md)。
 
 ### 评测结果
 
@@ -94,7 +94,19 @@ v0.1 发布前，我们用真实模型对首批 7 个 skill 做了对比评测�
 - 不装 skill 时，编造以凭空写出的工作事例、成效评价和廉洁表态为主，很少编统计数字。
 - 每条用例只跑一次，评分员与被评模型是同一个模型。方法、各 skill 分项和局限见 [v0.1 评测报告](evals/results/v0.1-benchmark.md)。
 
-**v1.0 全量评测（22 个 skill）**：【待补：v1.0 评测结论】
+**v1.0 全量评测（22 个 skill）**：被测模型换成 claude-sonnet-5-5，共 372 条用例、2671 项检查，材料全部虚构，评分员盲评。先评了修复前的版本（第一轮），按暴露的问题逐个 skill 修复后，再复测装 skill 一组（第二轮，即发布版本）。
+
+| 口径 | 装 skill（第二轮） | 不装 skill |
+|---|---:|---:|
+| 全部检查项通过率（2671 项） | **98.6%** | 54.1% |
+| 通用检查项通过率（1726 项） | **99.1%** | 68.7% |
+| 136 条防编造用例中出现编造的运行 | **0** | 66 |
+| 21 条带密级、内部资料标识的用例中按要求停止处理的 | **21** | 3 |
+
+- 修复前的第一轮（两组条件完全一致）：全部检查项 97.1% 对 54.0%，通用检查项 97.7% 对 68.5%。全部用例里，装 skill 一组有编造的运行：第一轮 19 次，第二轮评分员标出 2 次，复核后确认是引用工具内置资料，不算编造。
+- 触发评测：440 条说法选对 439 条（99.8%）。
+- 17 个核心 skill 的通过率均不低于 97.4%，防编造 0 次，触发达标，标 Stable；5 个行业包数字也达标，按约定统一标 Beta，等一线测试者反馈再升级。
+- 局限：每条用例只跑一次，评分员与被评模型是同一个模型；第二轮装 skill 一组用更高的推理强度重跑，第二轮的差距不是等条件对比；复测用的是同一批用例；装 skill 一组仍有 37 项检查未通过（分布在 16 个 skill）；没有做跨模型评测和人工盲评，也未经一线测试者实测。方法、各 skill 分项和局限见 [v1.0 评测报告](evals/results/v1.0-benchmark.md)。
 
 v1.0 修订了首轮交付、篇幅等规则，评测用例随之调整，作为新的基线，与 v0.1 的数字不直接比较。
 
@@ -150,7 +162,7 @@ npx skills add duyunzhoudyz/gongwen-skills
 
 打开 [`dist/prompts/`](dist/prompts/)，复制提示词文件的全文，粘贴到对话开头，再说出你的需求。第一次用，从 `gongwen.md`（总入口）开始。
 
-- 每个 skill 对应一份提示词，每份约 2.5 万～2.8 万字。
+- 每个 skill 对应一份提示词，每份约 2.6 万～2.9 万字。
 - 需要换到下一个 skill 时，当前对话会给你一张交接卡。新开一个对话，先粘贴下一份提示词，再粘贴交接卡和材料，接着往下做。
 - 在单位内网使用，可以下载 [Releases](https://github.com/duyunzhoudyz/gongwen-skills/releases) 页面的离线包，或自己运行 `python tools/build_prompts.py --offline` 生成。
 
@@ -200,44 +212,44 @@ python tools/install.py --target auto --pack hospital
 
 17 个核心 skill 装在一个插件里，5 个行业包按需选装。点 skill 名可以看它的说明和更多用法。
 
-成熟度：**Stable** 表示真实模型评测达标（通过率不低于 80%、防编造 0 次、能被正确触发）；**Beta** 表示已用样例测试，边界情况可能还有问题。
+成熟度：**Stable** 表示真实模型评测达标（通过率不低于 80%、防编造 0 次、能被正确触发）；**Beta** 表示已用样例测试，边界情况可能还有问题；5 个行业包也跑过 v1.0 真实模型评测，数字达标，按约定等一线反馈和人工盲评后再升级。
 
 **入口与配置**
 
 | Skill | 能力 | 成熟度 |
 |---|---|---|
-| [`gongwen`](skills/gongwen/) 总入口 | 接住说不清的需求，判断单位、角色、文书类型和行文方向，规划路线；3 个问题建简版单位画像；提示写作日历；目标 skill 没装时给交接卡和安装办法 | Beta |
-| [`gongwen-profile`](skills/gongwen-profile/) 单位画像与文风学习 | 完整建档，可读取本单位公文处理办法；学本单位历史稿的文风；对比领导改过的稿子归纳偏好；管理禁用词；给画像做体检 | Beta |
+| [`gongwen`](skills/gongwen/) 总入口 | 接住说不清的需求，判断单位、角色、文书类型和行文方向，规划路线；3 个问题建简版单位画像；提示写作日历；目标 skill 没装时给交接卡和安装办法 | Stable |
+| [`gongwen-profile`](skills/gongwen-profile/) 单位画像与文风学习 | 完整建档，可读取本单位公文处理办法；学本单位历史稿的文风；对比领导改过的稿子归纳偏好；管理禁用词；给画像做体检 | Stable |
 
 **起草**
 
 | Skill | 能力 | 成熟度 |
 |---|---|---|
-| [`gongwen-draft`](skills/gongwen-draft/) 法定公文 | 通知（会议、转发、印发、部署）、请示、就一件事的报告、函、通报、批复、意见、签报、决定、通告、公告；先定文种、查行文规则再成稿 | Beta |
-| [`gongwen-report`](skills/gongwen-report/) 综合文稿 | 总结、计划、工作要点、汇报材料、调研报告、经验材料、述职述责述廉、自主制定的实施方案、大会工作报告；下级材料汇总，一份台账出多版材料 | Beta |
-| [`gongwen-speech`](skills/gongwen-speech/) 讲话类 | 领导讲话、主持词、致辞、表态发言、交流发言、代表发言；按时长定字数（约 200 字/分钟），写成口语稿 | Beta |
-| [`gongwen-party`](skills/gongwen-party/) 党建与组织生活 | 对照检查材料、党建工作报告、党课讲稿、主题党日方案、谈心谈话提纲、研讨发言、心得体会、思想汇报、“三会一课”记录整理；没有本人事例只出提纲 | Beta |
-| [`gongwen-brief`](skills/gongwen-brief/) 信息简报与宣传 | 政务信息、简报、新闻稿、发布词、公众号推文；长材料压成信息；评估一篇信息能不能被采用 | Beta |
-| [`gongwen-minutes`](skills/gongwen-minutes/) 会议纪要与议题 | 会议记录、会议纪要、上会议题材料、督办清单；只整理不添加，分清同意、原则同意与暂缓 | Beta |
-| [`gongwen-implement`](skills/gongwen-implement/) 上级文件转化 | 提取上级文件要点、任务分解表、实施方案和贯彻落实方案、落实情况报告、传达要点；检测照抄上级原文，提示层层加码 | Beta |
-| [`gongwen-rectify`](skills/gongwen-rectify/) 整改材料 | 整改方案、整改台账（可转 Excel）、整改进展和情况报告、按检查清单写自查报告；报告与台账逐条对账 | Beta |
+| [`gongwen-draft`](skills/gongwen-draft/) 法定公文 | 通知（会议、转发、印发、部署）、请示、就一件事的报告、函、通报、批复、意见、签报、决定、通告、公告；先定文种、查行文规则再成稿 | Stable |
+| [`gongwen-report`](skills/gongwen-report/) 综合文稿 | 总结、计划、工作要点、汇报材料、调研报告、经验材料、述职述责述廉、自主制定的实施方案、大会工作报告；下级材料汇总，一份台账出多版材料 | Stable |
+| [`gongwen-speech`](skills/gongwen-speech/) 讲话类 | 领导讲话、主持词、致辞、表态发言、交流发言、代表发言；按时长定字数（约 200 字/分钟），写成口语稿 | Stable |
+| [`gongwen-party`](skills/gongwen-party/) 党建与组织生活 | 对照检查材料、党建工作报告、党课讲稿、主题党日方案、谈心谈话提纲、研讨发言、心得体会、思想汇报、“三会一课”记录整理；没有本人事例只出提纲 | Stable |
+| [`gongwen-brief`](skills/gongwen-brief/) 信息简报与宣传 | 政务信息、简报、新闻稿、发布词、公众号推文；长材料压成信息；评估一篇信息能不能被采用 | Stable |
+| [`gongwen-minutes`](skills/gongwen-minutes/) 会议纪要与议题 | 会议记录、会议纪要、上会议题材料、督办清单；只整理不添加，分清同意、原则同意与暂缓 | Stable |
+| [`gongwen-implement`](skills/gongwen-implement/) 上级文件转化 | 提取上级文件要点、任务分解表、实施方案和贯彻落实方案、落实情况报告、传达要点；检测照抄上级原文，提示层层加码 | Stable |
+| [`gongwen-rectify`](skills/gongwen-rectify/) 整改材料 | 整改方案、整改台账（可转 Excel）、整改进展和情况报告、按检查清单写自查报告；报告与台账逐条对账 | Stable |
 
 **改稿质检**
 
 | Skill | 能力 | 成熟度 |
 |---|---|---|
-| [`gongwen-title`](skills/gongwen-title/) 标题与提纲 | 公文标题、主副标题、三套小标题方案、提纲，检查标题与正文是否对得上 | Beta |
-| [`gongwen-polish`](skills/gongwen-polish/) 改稿润色 | 压缩、只用已有事实扩写、上行下行语气互转、大白话转公文、按领导批注改、多稿合并 | Beta |
-| [`gongwen-humanize`](skills/gongwen-humanize/) 公文去 AI 味 | 改掉 AI 腔，保留四字格、“一是二是”等公文正当写法，事实一字不动 | Beta |
-| [`gongwen-direct`](skills/gongwen-direct/) 去防御性写作 | 删免责声明和对冲语气，把“建议”“可以考虑”改成要求，让请示有倾向性意见、批复明确表态 | Beta |
-| [`gongwen-review`](skills/gongwen-review/) 核稿审校 | 按“八关”核稿，出分级问题清单；机检标点、数字、格式和保密隐私；按本单位禁用词表比对 | Beta |
+| [`gongwen-title`](skills/gongwen-title/) 标题与提纲 | 公文标题、主副标题、三套小标题方案、提纲，检查标题与正文是否对得上 | Stable |
+| [`gongwen-polish`](skills/gongwen-polish/) 改稿润色 | 压缩、只用已有事实扩写、上行下行语气互转、大白话转公文、按领导批注改、多稿合并 | Stable |
+| [`gongwen-humanize`](skills/gongwen-humanize/) 公文去 AI 味 | 改掉 AI 腔，保留四字格、“一是二是”等公文正当写法，事实一字不动 | Stable |
+| [`gongwen-direct`](skills/gongwen-direct/) 去防御性写作 | 删免责声明和对冲语气，把“建议”“可以考虑”改成要求，让请示有倾向性意见、批复明确表态 | Stable |
+| [`gongwen-review`](skills/gongwen-review/) 核稿审校 | 按“八关”核稿，出分级问题清单；机检标点、数字、格式和保密隐私；按本单位禁用词表比对 | Stable |
 
 **交付工具**
 
 | Skill | 能力 | 成熟度 |
 |---|---|---|
-| [`gongwen-format`](skills/gongwen-format/) 国标排版 | 按 GB/T 9704-2012 生成红头、信函、纪要、白头、材料五种版式的 Word；修复已有 docx；核稿意见写成 Word 批注；简单表格转 Word 表格 | Beta |
-| [`gongwen-data`](skills/gongwen-data/) 数据与图表 | 报表体检、多表合并、同比环比和百分点计算（附算式）、数据写成能进公文的句子、本机生成黑白灰 Excel 图表 | Beta |
+| [`gongwen-format`](skills/gongwen-format/) 国标排版 | 按 GB/T 9704-2012 生成红头、信函、纪要、白头、材料、简报六种版式的 Word（简报无国家标准格式，按机关常见做法）；修复已有 docx；核稿意见写成 Word 批注；简单表格转 Word 表格 | Stable |
+| [`gongwen-data`](skills/gongwen-data/) 数据与图表 | 报表体检、多表合并、同比环比和百分点计算（附算式）、数据写成能进公文的句子、本机生成黑白灰 Excel 图表 | Stable |
 
 **行业包**（单独安装）
 
@@ -368,7 +380,6 @@ v0.2 到 v0.4 原计划分三次发布，开发提前完成，与 v0.1 合并为
 
 **后续**
 
-- [ ] 简报版式（报头、期号）
 - [ ] 跨模型评测：提示词版在 DeepSeek、Qwen、Kimi 上的表现
 - [ ] 收集测试者反馈、做人工盲评，据此修订规则，行业包达标后从 Beta 升级
 - [ ] 在 Word、WPS 中实测排版效果；在 macOS、Linux 上实测字体检测

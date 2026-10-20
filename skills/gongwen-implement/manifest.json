@@ -1,7 +1,7 @@
 {
   "name": "gongwen-implement",
   "version": "1.0.0",
-  "status": "beta",
+  "status": "stable",
   "shared": [
     {"src": "guardrails.md"},
     {"src": "style/output-format.md"},

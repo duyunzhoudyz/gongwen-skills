@@ -24,3 +24,6 @@ tests/**/_out/
 # 系统文件
 .DS_Store
 Thumbs.db
+
+# 会话交接记录（含本机路径，不入库）
+/交接报告*.md

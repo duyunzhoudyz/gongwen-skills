@@ -4,7 +4,7 @@
 
 ## 一、核心 skill（17 个）
 
-成熟度均为 Beta（已用样例测试，边界情况可能还有问题），以各 skill 的 README 为准。
+成熟度均为 Stable（v1.0 真实模型评测达标），以各 skill 的 README 为准。
 
 | 分组 | skill | 能做什么 | 示例说法 |
 |---|---|---|---|
@@ -65,7 +65,7 @@
 4. 把关和交付：核稿（gongwen-review）、排成国标 Word（gongwen-format）。
 5. 单位画像：简版我来建，完整画像和学文风找 gongwen-profile。
 6. 行业包（单独安装）：gongwen-grassroots 乡镇街道社区、gongwen-hospital 医院、gongwen-university 高校、gongwen-k12 中小学、gongwen-soe 国企，各管本行业专用文书；没装的由对应模块按单位画像处理。
-目前都是测试版（Beta），边界情况可能还有问题。
+核心 skill 已通过真实模型评测（稳定版，Stable）；行业包是测试版（Beta），边界情况可能还有问题。
 我不做的：处理涉密材料、编造数据和案例、保证“检测不出 AI”、代写须本人亲历的材料、做 PPT。
 你可以这样说：
 - “领导让我给县里写个东西要补助”

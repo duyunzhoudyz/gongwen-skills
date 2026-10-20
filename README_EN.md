@@ -72,7 +72,19 @@ Before v0.1, the first 7 skills were evaluated with a real model: the same model
 - Without the skill, fabrication was mostly invented work examples, achievement claims and integrity statements, rarely statistics.
 - Each case ran once, and the grader was the same model as the one being tested. Methods, per-skill results and limitations are in the [v0.1 benchmark report](evals/results/v0.1-benchmark.md) (in Chinese).
 
-**v1.0 full benchmark (22 skills)**: 【待补：v1.0 评测结论（英文）】
+**v1.0 full benchmark (22 skills)**: the tested model is claude-sonnet-5-5; 372 test cases and 2,671 checks, all materials fictional, graded blind. Round 1 evaluated the pre-fix skills. After each skill was fixed from the defects round 1 exposed, round 2 re-ran the with-skill group; that is the release version.
+
+| Measure | With skill (round 2) | Without skill |
+|---|---:|---:|
+| Pass rate, all checks (2,671) | **98.6%** | 54.1% |
+| Pass rate, general checks (1,726) | **99.1%** | 68.7% |
+| Runs with fabricated content, 136 anti-fabrication cases | **0** | 66 |
+| Correctly stopped on material marked classified or internal, 21 cases | **21** | 3 |
+
+- Round 1, before the fixes, with both groups under identical conditions: 97.1% vs 54.0% on all checks and 97.7% vs 68.5% on general checks. Across all cases, the with-skill group had fabrication in 19 runs in round 1. In round 2 the grader flagged 2, which on review quote the skill's own bundled reference material and do not count as fabrication.
+- Trigger test: 439 of 440 phrasings were routed to the right skill (99.8%).
+- Each of the 17 core skills passes at 97.4% or higher with zero fabrication and a passing trigger test, and is labeled Stable. The 5 industry packs meet the same numbers but are labeled Beta by convention until front-line testers report back.
+- Limitations: each case ran once, and the grader is the same model as the one being tested. The round-2 with-skill group ran at a higher reasoning effort, so the round-2 gap is not a like-for-like comparison. The retest used the same cases the fixes were based on. The with-skill group still failed 37 checks (across 16 skills). There is no cross-model or human blind evaluation and no front-line tester feedback yet. Methods, per-skill results and limitations are in the [v1.0 benchmark report](evals/results/v1.0-benchmark.md) (in Chinese).
 
 v1.0 revised several rules (first-round delivery, length) and the test cases with them, so it is a new baseline and is not directly comparable with v0.1.
 
@@ -112,7 +124,7 @@ The script checks for Python 3.9+, asks before installing the layout dependencie
 npx skills add duyunzhoudyz/gongwen-skills
 ```
 
-**Option 4: web chatbots and intranet models.** Open [`dist/prompts/`](dist/prompts/), copy one prompt file (one per skill, about 25,000 to 28,000 Chinese characters each), paste it at the start of a conversation, then state your request. Start with `gongwen.md`, the entry point. When the work moves to another skill, you get a handoff card to paste into a new conversation after the next prompt. For intranet use, download the offline package from [Releases](https://github.com/duyunzhoudyz/gongwen-skills/releases) or build it with `python tools/build_prompts.py --offline`.
+**Option 4: web chatbots and intranet models.** Open [`dist/prompts/`](dist/prompts/), copy one prompt file (one per skill, about 26,000 to 29,000 Chinese characters each), paste it at the start of a conversation, then state your request. Start with `gongwen.md`, the entry point. When the work moves to another skill, you get a handoff card to paste into a new conversation after the next prompt. For intranet use, download the offline package from [Releases](https://github.com/duyunzhoudyz/gongwen-skills/releases) or build it with `python tools/build_prompts.py --offline`.
 
 **Option 5: let your agent install it.**
 
@@ -153,27 +165,27 @@ Repeat `--pack` to choose several, or use `--pack all`.
 
 ## Skill map
 
-17 core skills ship as one plugin; the 5 industry packs are optional. **Stable** means the skill met the real-model benchmark bar (pass rate of at least 80%, zero fabrication, correct triggering). **Beta** means it has been tested on samples and edge cases may still fail.
+17 core skills ship as one plugin; the 5 industry packs are optional. **Stable** means the skill met the real-model benchmark bar (pass rate of at least 80%, zero fabrication, correct triggering). **Beta** means it has been tested on samples and edge cases may still fail; the 5 industry packs also passed the v1.0 real-model benchmark, but by design stay Beta until frontline feedback and human blind review.
 
 | Group | Skill | What it does | Maturity |
 |---|---|---|---|
-| Entry and setup | [`gongwen`](skills/gongwen/) | Entry point: works out unclear requests, plans the route through other skills, builds a 3-question profile, reminds you of seasonal writing tasks | Beta |
-| Entry and setup | [`gongwen-profile`](skills/gongwen-profile/) | Full organization profile, house-style learning from past documents, leader preferences from edited drafts, banned-word list | Beta |
-| Drafting | [`gongwen-draft`](skills/gongwen-draft/) | Statutory documents: notices, requests for instructions, reports on a single matter, letters, circulars, replies, opinions, internal memos, decisions, announcements | Beta |
-| Drafting | [`gongwen-report`](skills/gongwen-report/) | Summaries, plans, work briefings, research reports, experience write-ups, performance reports, self-made implementation plans, congress work reports | Beta |
-| Drafting | [`gongwen-speech`](skills/gongwen-speech/) | Leaders' speeches, host scripts, addresses, pledge and experience-sharing remarks; length set by speaking time | Beta |
-| Drafting | [`gongwen-party`](skills/gongwen-party/) | Party-building and organizational-life materials; for personal materials without personal examples, an outline and filling guide only | Beta |
-| Drafting | [`gongwen-brief`](skills/gongwen-brief/) | Government information items, bulletins, press releases, official-account posts; whether an item is likely to be adopted | Beta |
-| Drafting | [`gongwen-minutes`](skills/gongwen-minutes/) | Meeting records, minutes, agenda papers, follow-up lists; records only what was decided | Beta |
-| Drafting | [`gongwen-implement`](skills/gongwen-implement/) | Turns a higher-level document into task breakdowns, implementation plans and progress reports; flags copied text | Beta |
-| Drafting | [`gongwen-rectify`](skills/gongwen-rectify/) | Rectification plans, ledgers (exportable to Excel), progress reports and self-inspection reports, reconciled against the ledger | Beta |
-| Revision and review | [`gongwen-title`](skills/gongwen-title/) | Titles, subtitles, three sets of section headings, outlines, title-body consistency | Beta |
-| Revision and review | [`gongwen-polish`](skills/gongwen-polish/) | Shorten, expand with existing facts only, change register, revise per a leader's comments, merge drafts | Beta |
-| Revision and review | [`gongwen-humanize`](skills/gongwen-humanize/) | Removes AI tone while keeping official-writing patterns; facts untouched | Beta |
-| Revision and review | [`gongwen-direct`](skills/gongwen-direct/) | Removes disclaimers and hedging; makes requests and replies take a clear position | Beta |
-| Revision and review | [`gongwen-review`](skills/gongwen-review/) | Eight-gate review with a graded issue list, machine checks, confidentiality scan, banned-word check | Beta |
-| Delivery tools | [`gongwen-format`](skills/gongwen-format/) | GB/T 9704-2012 Word output in five layouts; repairs existing .docx; writes review comments into Word | Beta |
-| Delivery tools | [`gongwen-data`](skills/gongwen-data/) | Table checks, merging, year-on-year and percentage-point calculations with formulas, local black-and-white Excel charts | Beta |
+| Entry and setup | [`gongwen`](skills/gongwen/) | Entry point: works out unclear requests, plans the route through other skills, builds a 3-question profile, reminds you of seasonal writing tasks | Stable |
+| Entry and setup | [`gongwen-profile`](skills/gongwen-profile/) | Full organization profile, house-style learning from past documents, leader preferences from edited drafts, banned-word list | Stable |
+| Drafting | [`gongwen-draft`](skills/gongwen-draft/) | Statutory documents: notices, requests for instructions, reports on a single matter, letters, circulars, replies, opinions, internal memos, decisions, announcements | Stable |
+| Drafting | [`gongwen-report`](skills/gongwen-report/) | Summaries, plans, work briefings, research reports, experience write-ups, performance reports, self-made implementation plans, congress work reports | Stable |
+| Drafting | [`gongwen-speech`](skills/gongwen-speech/) | Leaders' speeches, host scripts, addresses, pledge and experience-sharing remarks; length set by speaking time | Stable |
+| Drafting | [`gongwen-party`](skills/gongwen-party/) | Party-building and organizational-life materials; for personal materials without personal examples, an outline and filling guide only | Stable |
+| Drafting | [`gongwen-brief`](skills/gongwen-brief/) | Government information items, bulletins, press releases, official-account posts; whether an item is likely to be adopted | Stable |
+| Drafting | [`gongwen-minutes`](skills/gongwen-minutes/) | Meeting records, minutes, agenda papers, follow-up lists; records only what was decided | Stable |
+| Drafting | [`gongwen-implement`](skills/gongwen-implement/) | Turns a higher-level document into task breakdowns, implementation plans and progress reports; flags copied text | Stable |
+| Drafting | [`gongwen-rectify`](skills/gongwen-rectify/) | Rectification plans, ledgers (exportable to Excel), progress reports and self-inspection reports, reconciled against the ledger | Stable |
+| Revision and review | [`gongwen-title`](skills/gongwen-title/) | Titles, subtitles, three sets of section headings, outlines, title-body consistency | Stable |
+| Revision and review | [`gongwen-polish`](skills/gongwen-polish/) | Shorten, expand with existing facts only, change register, revise per a leader's comments, merge drafts | Stable |
+| Revision and review | [`gongwen-humanize`](skills/gongwen-humanize/) | Removes AI tone while keeping official-writing patterns; facts untouched | Stable |
+| Revision and review | [`gongwen-direct`](skills/gongwen-direct/) | Removes disclaimers and hedging; makes requests and replies take a clear position | Stable |
+| Revision and review | [`gongwen-review`](skills/gongwen-review/) | Eight-gate review with a graded issue list, machine checks, confidentiality scan, banned-word check | Stable |
+| Delivery tools | [`gongwen-format`](skills/gongwen-format/) | GB/T 9704-2012 Word output in six layouts (the bulletin layout follows common practice, as no national standard exists); repairs existing .docx; writes review comments into Word | Stable |
+| Delivery tools | [`gongwen-data`](skills/gongwen-data/) | Table checks, merging, year-on-year and percentage-point calculations with formulas, local black-and-white Excel charts | Stable |
 | Industry pack | [`gongwen-grassroots`](skills/gongwen-grassroots/) | Townships and communities: information items, inspection reports, notices to residents, emergency notices, ledgers | Beta |
 | Industry pack | [`gongwen-hospital`](skills/gongwen-hospital/) | Public hospitals: accreditation self-assessment, performance analysis, quality reports, RCA and PDCA, department-head reports | Beta |
 | Industry pack | [`gongwen-university`](skills/gongwen-university/) | Universities: audit self-assessment, discipline evaluation materials, grant-application form checks, internal memos | Beta |
@@ -246,7 +258,7 @@ v0.2 to v0.4 were planned as separate releases; they were finished early and shi
 - [x] v0.4: five industry packs
 - [x] v1.0 (October 31, 2026): all 22 skills; real-model benchmark; one-click install; optional industry packs
 
-Next: bulletin layout (masthead and issue number); cross-model evaluation of the prompts on DeepSeek, Qwen and Kimi; tester feedback and human blind review to promote industry packs from Beta; layout testing in Word and WPS and font detection on macOS and Linux; Word tracked-changes output; merging per-skill check scripts into the lint engine.
+Next: cross-model evaluation of the prompts on DeepSeek, Qwen and Kimi; tester feedback and human blind review to promote industry packs from Beta; layout testing in Word and WPS and font detection on macOS and Linux; Word tracked-changes output; merging per-skill check scripts into the lint engine.
 
 Want to help test? Read the [tester handbook](docs/评测/测试者手册.md) (in Chinese): try the skills on fictional material, no programming needed.
 

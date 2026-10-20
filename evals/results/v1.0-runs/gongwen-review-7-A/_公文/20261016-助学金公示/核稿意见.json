@@ -1,0 +1,71 @@
+{
+  "source_file": "送审稿.txt",
+  "issues": [
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "隐私与保密",
+      "excerpt": "学号",
+      "message": "公示写出学号，属可识别个人的编号，不得公开（一等助学金第1条，全文共 3 处，见本清单第 1–3 条）",
+      "suggestion": "删去学号；如学校规定必须保留，须脱敏处理",
+      "basis": "guardrails.md 第一条第3款；unit-checks.md 第五部分（法规关）；gaoxiao.md 第六部分第2条；机检 PRI-004",
+      "rule_id": "PRI-004"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "隐私与保密",
+      "excerpt": "学号",
+      "message": "公示写出学号，属可识别个人的编号，不得公开（一等助学金第2条）",
+      "suggestion": "删去学号；如学校规定必须保留，须脱敏处理",
+      "basis": "guardrails.md 第一条第3款；unit-checks.md 第五部分（法规关）；gaoxiao.md 第六部分第2条；机检 PRI-004",
+      "rule_id": "PRI-004"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "隐私与保密",
+      "excerpt": "学号",
+      "message": "公示写出学号，属可识别个人的编号，不得公开（二等助学金第1条）",
+      "suggestion": "删去学号；如学校规定必须保留，须脱敏处理",
+      "basis": "guardrails.md 第一条第3款；unit-checks.md 第五部分（法规关）；gaoxiao.md 第六部分第2条；机检 PRI-004",
+      "rule_id": "PRI-004"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "隐私与保密",
+      "excerpt": "父亲患",
+      "message": "一等助学金第1条：公示写出了家庭成员的病情和就业情况等家庭困难具体情况，超出公示应公开的范围",
+      "suggestion": "删去认定等级之外的具体情况描述",
+      "basis": "checklist-8gates.md 第四部分（个人信息公开范围）；unit-checks.md 第五部分（法规关）；gaoxiao.md 第六部分第2条；guardrails.md 第一条第3款"
+    },
+    {
+      "level": "P0",
+      "gate": "法规关",
+      "category": "隐私与保密",
+      "excerpt": "本人有",
+      "message": "一等助学金第2条：公示写出了家庭情况和本人心理健康信息，属不得超范围公开的敏感信息",
+      "suggestion": "删去认定等级之外的具体情况描述",
+      "basis": "checklist-8gates.md 第四部分（个人信息公开范围）；unit-checks.md 第五部分（法规关）；gaoxiao.md 第六部分第2条；guardrails.md 第一条第3款"
+    },
+    {
+      "level": "P2",
+      "gate": "法规关",
+      "category": "公示字段",
+      "excerpt": "拟资助学生名单公示如下",
+      "message": "姓名属个人信息，“家庭经济（特别）困难”认定等级属家庭经济困难认定结果；二者是否属规定公示事项，需对照学校资助文件确认，只公开规定字段",
+      "suggestion": "请对照学校资助文件确认公示字段",
+      "basis": "gaoxiao.md 第六部分第2条；unit-checks.md 第五部分"
+    },
+    {
+      "level": "P2",
+      "gate": "法规关",
+      "category": "隐私与保密",
+      "excerpt": "联系电话：",
+      "message": "办公座机属工作联系方式，可保留",
+      "suggestion": "请确认不是个人手机号",
+      "basis": "SKILL.md 第二步（工作联系电话为 P2）"
+    }
+  ]
+}
