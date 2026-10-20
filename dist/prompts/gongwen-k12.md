@@ -1,6 +1,6 @@
 > **中小学行业包（gongwen-k12）**（提示词版）
 >
-> 版本：1.0.0　成熟度：Beta（测试版）　全文约 28142 字符
+> 版本：1.0.0　成熟度：Beta（测试版）　全文约 27647 字符
 >
 > 使用方法：
 > 1. 复制全文，粘贴到对话开头；
@@ -212,17 +212,11 @@
 
 | 文件 | 何时读取 |
 |---|---|
-| `references/templates/` 下 9 个模板 | 定文书后读对应模板 |
 | （见附录四） | 网页环境代替模板；人工检查 |
 | （见附录三）、（见附录一） | 开工前；与用户要求冲突时 |
-| `references/review-addon.md` | 第五步自检；审稿模式 |
-| `references/profile-detail.md`、`references/_shared/profiles/units/` | 读完画像后；搭板块；判断单位差异 |
-| `references/sources.md`、`references/glossary.md` | 写依据、条款号；术语写法拿不准时 |
-| `references/calendar.md` | 用户问“最近要写什么”时 |
 | （见附录二） | 交付；交接卡和转交 |
-| `references/_shared/rules/jianfu.md` | 定篇幅；课后服务方案 |
-| `references/_shared/profiles/roles.md` | 定角色模式和首轮交付；无画像降级 |
-| `scripts/k12_check.py`、`scripts/gongwen_lint.py`、`scripts/fact_diff.py` | 脱敏；第五步机检、台账对账 |
+
+（其余参考文件未附上。）
 
 ---
 

@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 """把 docx 转成 PDF 和逐页 PNG，供目检排版效果（有条件时使用）。
 
+- 字体严格模式：本机缺任一标准字体（或无法检测）时拒绝渲染，输出缺失字体清单和安装引导，没有绕过选项。
+  原因：LibreOffice 遇到缺失字体会静默换用其他字体，渲染出的不是正式效果，据此目检版式会得出错误结论。
 - 需要本机装有 LibreOffice（soffice）；找不到时给出提示后退出，不报错。
 - 装有 pymupdf 时再把 PDF 转成逐页 PNG；没有时只输出 PDF。
 - 只在本机运行，不联网。LibreOffice 的排版与 Word、WPS 略有差异，正式印发前仍以打印核对为准。
 
-退出码：0 完成或环境不具备（已提示）；2 输入错误或转换失败。
+退出码：0 完成或环境不具备（已提示）；2 输入错误或转换失败；3 缺标准字体或无法检测字体，拒绝渲染。
 """
 from __future__ import annotations
 
@@ -19,6 +21,10 @@ import sys
 import tempfile
 from pathlib import Path
 from typing import List, Optional, Sequence
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import gw_fonts as F  # noqa: E402  只依赖标准库，本脚本仍不依赖 python-docx
 
 WINDOWS_CANDIDATES = [r"C:\Program Files\LibreOffice\program\soffice.exe",
                       r"C:\Program Files (x86)\LibreOffice\program\soffice.exe"]
@@ -95,23 +101,56 @@ def to_png(pdf: Path, out_dir: Path, dpi: int = 80) -> List[Path]:
     return pages
 
 
+def check_fonts(unit_fonts=None) -> int:
+    """字体严格模式：本机标准字体齐全时返回 0；缺字体或无法检测时输出缺失清单和安装引导，返回 3（拒绝渲染）。
+
+    LibreOffice 遇到缺失字体会静默换用其他字体渲染，据此目检版式会得出错误结论，所以不提供绕过选项。
+    """
+    try:
+        params = F.load_params()
+    except (OSError, ValueError) as exc:
+        print(f"错误：读取字体参数失败：{exc}")
+        return 2
+    try:
+        params = F.apply_unit_fonts(params, F.parse_unit_fonts(unit_fonts, params))
+    except ValueError as exc:
+        print(f"错误：{exc}")
+        return 2
+    installed, method = F.installed_fonts()
+    _fonts, check = F.resolve_fonts(params, installed, method)
+    if check["font_status"] == "complete":
+        return 0
+    print(F.render_notice(check))
+    print()
+    print("预览已拒绝：本机缺少标准字体（或无法确认字体齐全）时，LibreOffice 会静默换用其他字体渲染，"
+          "预览看到的不是正式效果，不能据此核对版式。请先按上面的提示安装字体，再重新运行本命令；本命令没有绕过选项。")
+    return F.EXIT_FONTS_INCOMPLETE
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
-    parser = argparse.ArgumentParser(description="把 docx 转成 PDF 和逐页 PNG，用于目检排版效果（需要 LibreOffice）。",
-                                     epilog="示例：python scripts/preview_docx.py 成稿.docx --dpi 80")
+    parser = argparse.ArgumentParser(description="把 docx 转成 PDF 和逐页 PNG，用于目检排版效果（需要 LibreOffice）。"
+                                                 "本机缺任一标准字体（或无法检测）时拒绝渲染，没有绕过选项。",
+                                     epilog="示例：python scripts/preview_docx.py 成稿.docx --dpi 80\n"
+                                            "退出码：0 完成或找不到 LibreOffice（只提示）；2 输入错误或转换失败；3 缺标准字体，拒绝渲染。",
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("file", help="要预览的 .docx")
     parser.add_argument("-o", "--outdir", help="输出目录；默认在 docx 同目录下建“<文件名>-预览”")
     parser.add_argument("--dpi", type=int, default=80, help="PNG 分辨率，默认 80")
     parser.add_argument("--soffice", help="soffice 可执行文件路径（自动查找失败时指定）")
+    parser.add_argument("--unit-fonts", metavar="角色=字体名,…", help=F.UNIT_FONTS_HELP + "；字体齐全检查按单位指定字体核对")
     args = parser.parse_args(argv)
 
     src = Path(args.file)
     if not src.is_file() or src.suffix.lower() != ".docx":
         print(f"错误：找不到 docx 文件 {src}")
         return 2
+    code = check_fonts(args.unit_fonts)
+    if code:
+        return code
     soffice = args.soffice or find_soffice()
     if not soffice or not (Path(soffice).is_file() or shutil.which(soffice)):
         print("未找到 LibreOffice（soffice），跳过预览。需要目检时可安装 LibreOffice，或直接用 Word、WPS 打开并打印核对。")
@@ -128,7 +167,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"逐页图片 {len(pages)} 张：{out_dir}")
     else:
         print("未安装 pymupdf，只输出了 PDF。需要逐页图片时运行：pip install pymupdf")
-    print("提示：LibreOffice 与 Word、WPS 的排版略有差异，字体缺失时会用其他字体代替；红头和版记位置以打印核对为准。")
+    print("提示：LibreOffice 与 Word、WPS 的排版略有差异；红头和版记位置以打印核对为准。")
     return 0
 
 

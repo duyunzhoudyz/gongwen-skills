@@ -1,6 +1,6 @@
 > **行业包·高校（gongwen-university）**（提示词版）
 >
-> 版本：1.0.0　成熟度：Beta（测试版）　全文约 28192 字符
+> 版本：1.0.0　成熟度：Beta（测试版）　全文约 27568 字符
 >
 > 使用方法：
 > 1. 复制全文，粘贴到对话开头；
@@ -233,17 +233,10 @@
 
 | 文件 | 何时读取 |
 |---|---|
-| `references/templates/` 下 7 个模板 | 第三步搭提纲前读对应文书的模板 |
 | （见附录三） | 网页版读不到模板时；谈心谈话填写指引、发文判断三步；评估指标和九项职责名称 |
 | （见附录四） | 第二步建台账、比对口径；第五步对账 |
-| `references/redlines.md` | 开工前；与用户要求冲突时 |
-| `references/review-addon.md` | 第五步自检；审稿模式 |
-| `references/profile-detail.md` | 读完单位画像后，确定学校类型和层级 |
-| `references/glossary.md` | 遇到不熟悉的评估、科研、学工术语 |
-| `references/calendar.md` | 用户问“最近要准备什么” |
-| `references/_shared/` 下的 guardrails、output-format、ai-tone、defensive、roles、units/gaoxiao | 按正文各步的引用读取 |
-| `references/_shared/rules/doc-types.md`、`references/_shared/rules/tiaoli.md` | 两级公文、签报、行文规则 |
-| `references/_shared/rules/jianfu.md` | 篇幅 |
+
+（其余参考文件未附上。）
 
 ---
 
@@ -527,17 +520,6 @@
 ---
 
 # 附录五　项目申报书形式审查清单
-
-## 目录
-
-一、用途与边界
-二、审查顺序
-三、通用清单
-四、国家社会科学基金年度项目要点（2026年）
-五、国家自然科学基金要点（2026年）
-六、审查意见格式
-七、常见毛病与正误对照
-八、出处
 
 ## 一、用途与边界
 

@@ -16,10 +16,8 @@ def _font_runs(paragraph, ctx: D.Ctx, font_role: str, size_name, *, start: int =
                bold: Optional[bool] = None, color: Optional[str] = None, black: bool = True) -> Set[str]:
     """给 [start, end) 范围内的 run 设字体字号（按字符位置取 run，不拆分）。"""
     changes: Set[str] = set()
-    name, extra_bold = ctx.font(font_role)
+    name = ctx.font(font_role)
     size = ctx.size(size_name)
-    if extra_bold:
-        bold = True
     pos = 0
     for run in paragraph.runs:
         length = len(run.text)
@@ -167,7 +165,7 @@ def apply_role(paragraph, role: str, ctx: D.Ctx, *, split: int = -1, black: bool
     elif role == "issuer":
         # 版头标志只统一字体，保留原有字号、颜色和位置
         el = ctx.el("issuer")
-        name, bold = ctx.font(el["font"])
+        name = ctx.font(el["font"])
         for run in paragraph.runs:
             if D.set_rpr(run._r.get_or_add_rPr(), font=name):
                 changes.add("字体")

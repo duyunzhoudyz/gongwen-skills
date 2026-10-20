@@ -43,6 +43,11 @@ PROMPTS_REL = "dist/prompts"
 OFFLINE_REL = "dist/offline"
 INDEX_NAME = "README.md"
 LONG_PROMPT_CHARS = 30000
+# 提示词版字数硬上限：超过时构建报错（--check 同样失败）。LONG_PROMPT_CHARS 只用于超长提示
+MAX_PROMPT_CHARS = 29000
+REFERENCE_HEADING = "## 参考资料"
+REFERENCE_PATH_RE = re.compile(r"`((?:references|assets|scripts)/[^`]+)`")
+REFERENCE_TRIMMED_NOTE = "（其余参考文件未附上。）"
 STATUS_LABELS = {
     "stable": "Stable（稳定版）",
     "beta": "Beta（测试版）",
@@ -144,6 +149,62 @@ def replace_bundle_paths(text: str, mapping: Dict[str, str]) -> str:
     return pattern.sub(repl, text)
 
 
+def trim_reference_table(body: str, mapping: Dict[str, str]) -> str:
+    """参考资料表中，只指向提示词版未附上的文件（references/、assets/、scripts/ 下）的行无法读取，改为一句说明。
+
+    已打包文件所在的行保留（路径随后替换为"见附录"）；表头和不含文件路径的行保留。只影响提示词版，SKILL.md 本身不变。
+    """
+    out: List[str] = []
+    in_section = False
+    dropped = 0
+    for line in body.split("\n"):
+        if line.startswith("#"):
+            if in_section and dropped:
+                out.append(REFERENCE_TRIMMED_NOTE)
+                out.append("")
+                dropped = 0
+            in_section = line.strip() == REFERENCE_HEADING
+        elif in_section and line.startswith("|"):
+            cells = line.split("|")
+            paths = REFERENCE_PATH_RE.findall(cells[1]) if len(cells) > 2 else []
+            if paths and not any(p in mapping for p in paths):
+                dropped += 1
+                continue
+        out.append(line)
+    if in_section and dropped:
+        while out and not out[-1].strip():
+            out.pop()
+        out += ["", REFERENCE_TRIMMED_NOTE]
+    return "\n".join(out)
+
+
+TOC_HEADING = "## 目录"
+
+
+def strip_toc(text: str) -> str:
+    """去掉附录文件里的"## 目录"小节：正文各小节标题都在，提示词版里目录只占字数。跳过代码块。"""
+    out: List[str] = []
+    in_toc = False
+    fence: Optional[Tuple[str, int]] = None
+    for line in text.split("\n"):
+        match = FENCE_RE.match(line)
+        if match:
+            marker = match.group(1)
+            if fence is None:
+                fence = (marker[0], len(marker))
+            elif marker[0] == fence[0] and len(marker) >= fence[1]:
+                fence = None
+        elif fence is None:
+            if line.strip() == TOC_HEADING:
+                in_toc = True
+                continue
+            if in_toc and line.startswith("#"):
+                in_toc = False
+        if not in_toc:
+            out.append(line)
+    return "\n".join(out)
+
+
 def short_title(title: str, name: str) -> str:
     """"综合文稿（gongwen-report）" -> "综合文稿"。"""
     match = re.match(r"^(.*?)\s*[（(]\s*" + re.escape(name) + r"\s*[)）]\s*$", title)
@@ -197,7 +258,7 @@ def render_appendix(index: int, rel: str, content: str, mapping: Dict[str, str])
         first_text = next((i for i, line in enumerate(lines) if line.strip()), None)
         if title is not None and line_index == first_text:
             del lines[line_index]  # 文件标题已用作附录小标题
-        body = replace_bundle_paths("\n".join(lines).strip("\n"), mapping)
+        body = replace_bundle_paths(strip_toc("\n".join(lines)).strip("\n"), mapping)
         heading = title or pure.name
     elif suffix == ".txt":
         body = replace_bundle_paths(content.strip("\n"), mapping)
@@ -311,7 +372,7 @@ def render_skill(skill_dir: Path) -> RenderResult:
             files.append((HANDOFF_SOURCE[:-3] + "-第四部分.md", handoff))
 
     title = find_first_h1(body)[0] or name
-    content = replace_bundle_paths(body.strip("\n"), mapping) + "\n"
+    content = replace_bundle_paths(trim_reference_table(body.strip("\n"), mapping), mapping) + "\n"
     for index, (rel, text) in enumerate(files, start=1):
         content += "\n---\n\n" + render_appendix(index, rel, text, mapping)
 
@@ -326,6 +387,8 @@ def render_skill(skill_dir: Path) -> RenderResult:
         count = len(full)
     if is_long:
         result.warnings.append(f"提示词版共 {count} 字符，超过 {LONG_PROMPT_CHARS}，部分网页大模型可能截断")
+    if count > MAX_PROMPT_CHARS:
+        result.errors.append(f"提示词版共 {count} 字符，超过硬上限 {MAX_PROMPT_CHARS}，请精简 SKILL.md 或 prompt_bundle 中的重复内容")
 
     description = fields.get("description", "") if has_fm else ""
     result.doc = PromptDoc(
@@ -383,6 +446,8 @@ def build_all(repo_root: Path) -> BuildResult:
         name = skill_dir.name
         result = render_skill(skill_dir)
         build.warnings.extend(f"[{name}] {w}" for w in result.warnings)
+        if result.doc is not None:  # 字数超限等不影响生成的错误：仍写出提示词版，但整体报错
+            build.errors.extend(f"[{name}] {e}" for e in result.errors)
         if result.doc is None:
             build.errors.extend(f"[{name}] {e}" for e in result.errors)
             build.keep.add(f"{name}.md")

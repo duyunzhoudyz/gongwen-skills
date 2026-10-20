@@ -1,6 +1,6 @@
 > **数据整理与图表（gongwen-data）**（提示词版）
 >
-> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 28192 字符
+> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 27875 字符
 >
 > 使用方法：
 > 1. 复制全文，粘贴到对话开头；
@@ -187,9 +187,8 @@
 
 | 文件 | 何时读取 |
 |---|---|
-| `references/scripts.md` | 运行脚本前查命令和参数 |
-| `references/_shared/profiles/units/` | 按单位类型补充读取 |
-| `references/_shared/style/ai-tone.md`、`references/_shared/style/defensive.md` | 写数据段落时避开 AI 腔和对冲语气 |
+
+（其余参考文件未附上。）
 
 ---
 
@@ -364,22 +363,6 @@
 > - 适用：各 gongwen skill 中数据的计算口径和文字写法。由 gongwen-data 维护，gongwen-report、gongwen-brief、gongwen-review 等引用。
 > - 依据：GB/T 15835-2011（数字写法，见 `references/_shared/rules/gbt15835.md`）；《中华人民共和国民法典》第一千二百五十九条；国家统计局“统计知识”栏目的公开解释（网页日期为页面所示，内容以国家统计局网站原文为准）：《“百分数”与“百分点”》（2023-01-01，https://www.stats.gov.cn/zs/tjws/tjbk/202301/t20230101_1912934.html）；《“番”与“倍”》（2023-01-01，https://www.stats.gov.cn/zs/tjws/tjbk/202301/t20230101_1912930.html）；《同比与环比有何不同》（2025-07-17，https://www.stats.gov.cn/zs/tjws/tjbk/202301/t20230101_1912960.html）；《什么是经济增长贡献率和拉动点》（2025-07-16，https://www.stats.gov.cn/zs/tjws/tjbk/202301/t20230101_1912957.html）；《平均发展速度和平均增长速度》（2023-08-17，https://www.stats.gov.cn/zs/tjll/sjxl/202308/t20230817_1942110.html）。条目后括注出处；未括注的是本项目的写作约定。
 > - 核验日期：2026-10-16。本文件为要点整理，例句为自拟。
-
-## 目录
-
-一、基本要求
-二、增长与下降
-三、百分比与百分点
-四、倍数与番数
-五、占比、拉动、贡献率
-六、完成率与时间进度
-七、平均数
-八、约数与上下限
-九、亏损、零和负数
-十、小数位、修约和单位
-十一、数据段落怎么写
-十二、常见错误正误对照
-十三、可机检规则
 
 ## 一、基本要求
 

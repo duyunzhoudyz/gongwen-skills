@@ -2,9 +2,13 @@
 """gongwen-format 单元测试的公共函数：定位脚本、生成样稿、构造格式混乱的 docx。"""
 from __future__ import annotations
 
+import contextlib
 import json
+import re
 import sys
+import zipfile
 from pathlib import Path
+from unittest import mock
 
 REPO = Path(__file__).resolve().parents[2]
 SKILL = REPO / "skills" / "gongwen-format"
@@ -18,6 +22,7 @@ if str(SCRIPTS) not in sys.path:
 import build_docx  # noqa: E402
 import check_docx  # noqa: E402
 import gw_docx  # noqa: E402
+import gw_fonts  # noqa: E402
 import gw_layout  # noqa: E402
 
 # 六种版式的样稿输入：(版式, 正文文件, 版式信息文件)
@@ -29,9 +34,29 @@ SAMPLES = {
     "材料": ("年终总结-正文.txt", None),
     "简报": ("简报-正文.txt", "简报-版式信息.json"),
 }
-# 测试中不依赖本机字体：空集合表示“无法检测”，写入标准字体名
-NO_FONTS: set = set()
+# 测试中不依赖本机字体：用指定的“已安装字体名集合”（gw_fonts.norm 规范化后的写法）模拟各种情况
+NO_FONTS: set = set()  # 空集合表示无法检测本机字体
+FULL_FONTS = {"仿宋_gb2312", "楷体_gb2312", "黑体", "方正小标宋简体", "宋体"}  # 标准字体齐全
+# 现行简体中文版 Windows 的典型情况：有黑体、宋体，以及另一款“仿宋”“楷体”，缺仿宋_GB2312、楷体_GB2312、方正小标宋简体
 WIN_FONTS = {"仿宋", "楷体", "黑体", "宋体", "fangsong", "kaiti", "simhei", "simsun"}
+STANDARD_FONTS = {"仿宋": "仿宋_GB2312", "楷体": "楷体_GB2312", "黑体": "黑体", "小标宋": "方正小标宋简体", "宋体": "宋体"}
+
+
+@contextlib.contextmanager
+def fonts_installed(installed=FULL_FONTS, method="测试用字体集合"):
+    """让 gw_fonts.installed_fonts 返回指定的已安装字体集合：直接调用脚本 main 的测试用它，不依赖本机字体。"""
+    with mock.patch.object(gw_fonts, "installed_fonts", return_value=(set(installed), method)):
+        yield
+
+
+def written_fonts(path: Path) -> set:
+    """docx 各部分（正文、样式、页脚等）rFonts 中写入的 eastAsia 字体名。"""
+    names: set = set()
+    with zipfile.ZipFile(path) as z:
+        for name in z.namelist():
+            if name.startswith("word/") and name.endswith(".xml"):
+                names |= set(re.findall(r'<w:rFonts[^>]*?w:eastAsia="([^"]+)"', z.read(name).decode("utf-8")))
+    return names
 
 
 def read_lines(name: str):
@@ -45,15 +70,14 @@ def read_meta(name):
     return json.loads((FILES / name).read_text(encoding="utf-8"))
 
 
-def build_sample(layout: str, out_name: str, *, installed=None, font_fallback=False, meta_update=None):
+def build_sample(layout: str, out_name: str, *, installed=None, meta_update=None):
     """按版式生成样稿，返回 (路径, 报告)。"""
     text_name, meta_name = SAMPLES[layout]
     meta = read_meta(meta_name)
     if meta_update:
         meta.update(meta_update)
     doc, report = build_docx.build(read_lines(text_name), meta, layout=layout,
-                                   installed=NO_FONTS if installed is None else installed,
-                                   font_fallback=font_fallback)
+                                   installed=NO_FONTS if installed is None else installed)
     path = OUT / out_name
     if path.exists():
         path.unlink()

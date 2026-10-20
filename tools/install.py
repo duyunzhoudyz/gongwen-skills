@@ -31,6 +31,7 @@ import os
 import re
 import shutil
 import stat
+import subprocess
 import sys
 import time
 from dataclasses import dataclass
@@ -54,6 +55,9 @@ SKILL_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 # 排版功能的 Python 依赖：(pip 包名, 导入名)
 FORMAT_DEPS: Tuple[Tuple[str, str], ...] = (("python-docx", "docx"), ("openpyxl", "openpyxl"))
 FORMAT_DEPS_CMD = "pip install python-docx openpyxl"
+# 排版 skill 的字体检查脚本：公文排版要求标准字体，缺字体时不会改用其他字体顶替，安装后顺带检查一次
+FORMAT_SKILL = "gongwen-format"
+FONT_CHECK_REL = "skills/gongwen-format/scripts/gw_fonts.py"
 NO_TOOL_HINT = (
     "未探测到已安装的 Agent 工具。可以用 --target 手动指定（--list-targets 查看可选目标），"
     "或者使用提示词版：打开 dist/prompts/，把对应文件复制到网页大模型的对话中。"
@@ -551,6 +555,31 @@ def print_next_steps(targets: List[str], wanted: List[str], catalog: Optional[Ca
         print("  依赖齐全，可以直接使用排版功能。")
 
 
+def print_font_check(root: Path, wanted: List[str]) -> None:
+    """安装了排版 skill 的，调用其字体检查，打印本机缺哪些标准字体以及获取、安装方法。
+
+    只读检查，不联网、不改动任何文件；检查失败只提示，不影响安装结果。
+    """
+    script = root / FONT_CHECK_REL
+    if FORMAT_SKILL not in wanted or not script.is_file():
+        return
+    print()
+    print("排版字体检查（公文排版要求标准字体，缺字体时不会改用其他字体顶替，须自行下载安装）：")
+    try:
+        result = subprocess.run(
+            [sys.executable, "-X", "utf8", str(script)],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        print(f"  字体检查没能运行（{exc}），不影响安装；之后可在排版 skill 目录运行 python scripts/gw_fonts.py 自行检查。")
+        return
+    output = (result.stdout or "").strip()
+    if not output:
+        print("  字体检查没有输出，不影响安装；之后可在排版 skill 目录运行 python scripts/gw_fonts.py 自行检查。")
+        return
+    print(output)
+
+
 def print_targets() -> None:
     print("支持的安装目标：")
     print(f"  {'target':<10} {'user 级':<22} {'project 级':<20} 状态      说明")
@@ -703,6 +732,8 @@ def main(
         print("提示：备份目录与新版本位于同一 skills 目录，部分工具可能把备份识别为重复 skill，确认无误后请手动移走。")
     print("完成。" if not args.dry_run else "[dry-run] 结束，未做任何改动。")
     print_next_steps(targets, wanted, catalog, packs)
+    if not args.dry_run:
+        print_font_check(root, wanted)
     return 0
 
 

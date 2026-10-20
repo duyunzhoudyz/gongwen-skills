@@ -14,6 +14,8 @@
 
 `--allow` 列出的检查项（逗号分隔，如 `--allow DOCX-050`）用于本单位制度明文规定、与国标不同的写法：命中时降为 P2，消息前加“按本单位制度保留：”，不计入 `--strict`；JSON 的 `notes` 中写明降级处数。不存在的检查项忽略并提示。build_docx.py、fix_docx.py 的 `--allow` 原样传给回读检查。
 
+`--unit-fonts "仿宋=方正仿宋_GBK,小标宋=方正小标宋_GBK"` 用于本单位制度明文规定了字体的情形（角色限 gbt9704_params.json 中 `fonts.standard` 的键：仿宋、楷体、黑体、小标宋、宋体；未知角色或空字体名退出码 2）：该角色使用单位字体视为合规，使用国标字体按 DOCX-016 报；JSON 的 `unit_fonts` 为 `{角色: {unit_font, standard_font}}`，`notes` 写明“按单位规定使用字体”。build_docx.py、fix_docx.py 的 `--unit-fonts` 原样传给回读检查。
+
 | ID | 检查内容 | 级别 | 依据 |
 |---|---|---|---|
 | DOCX-001 | 纸张不是 A4 | P0 | 5.1 |
@@ -26,7 +28,7 @@
 | DOCX-013 | 首行缩进不是 2 字 | P1 | 7.3.3 |
 | DOCX-014 | 段首用空格缩进 | P1 | 7.3.3 |
 | DOCX-015 | 正文文字不是黑色 | P1 | 5.2.4 |
-| DOCX-016 | 使用替代字体（仿宋、楷体、华文中宋、宋体等） | P2 | 实践 |
+| DOCX-016 | 使用非标准字体（如仿宋、楷体、方正小标宋_GBK、华文中宋、宋体加粗代替小标宋等）：字体类别对，但不是标准字体本身；只认标准字体名和同款英文名（FangSong_GB2312、KaiTi_GB2312、SimHei、SimSun、FZXiaoBiaoSong-B05S）；消息写明应为哪款标准字体 | P1 | gbt9704.md 第九部分（字体名称，实践） |
 | DOCX-020～022 | 标题字体不是小标宋、字号不是二号、未居中 | P1 | 7.3.1 |
 | DOCX-023 | 未识别到标题 | P2 | 7.3.1 |
 | DOCX-024 | 标题回行后有一行少于 3 字 | P2 | 7.3.1 |
@@ -104,6 +106,9 @@
 | check_docx.py | 屏幕输出，--json 为机检 JSON | 0；--strict 且有 P0 时 1（`--allow` 降级的不计）；2 输入错误 |
 | fix_docx.py | “原名-修复.docx”和“原名-修复-修复报告.md” | 0 成功；2 输入错误 |
 | annotate_docx.py | “原名-批注.docx”和“原名-批注-批注报告.md” | 0 成功；2 输入错误或 python-docx 低于 1.2.0 |
-| preview_docx.py | “原名-预览/”下的 PDF 和逐页 PNG（需 LibreOffice，PNG 另需 pymupdf） | 0 完成或找不到 LibreOffice（只提示）；2 输入错误或转换失败 |
+| preview_docx.py | “原名-预览/”下的 PDF 和逐页 PNG（需 LibreOffice，PNG 另需 pymupdf）；本机缺任一标准字体或无法检测时拒绝渲染，无绕过选项 | 0 完成或找不到 LibreOffice（只提示）；2 输入错误或转换失败；3 缺标准字体或无法检测，拒绝渲染 |
+| gw_fonts.py | 屏幕输出各标准字体是否已安装、缺失时的获取与安装方法，`--json` 为结构化输出 | 0 标准字体齐全；3 缺字体或无法检测；2 参数文件读取失败 |
+
+build_docx.py、fix_docx.py 的字体核对结果（`font_status`、`font_method`、`missing_fonts`、`unverified_fonts`、`font_notice`、`unit_fonts`）并入 JSON 报告，屏幕报告和修复报告开头有醒目的“字体缺失”区块；文件中一律写入标准字体名（指定了 `--unit-fonts` 的角色写入单位字体名，同样要求本机装有），不降级、不替代。
 
 脚本只读写本地文件，不访问网络。原文件一律不修改。

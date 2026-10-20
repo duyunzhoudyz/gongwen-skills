@@ -125,12 +125,53 @@ class BuildPromptsTest(TempRepoTestCase):
         d = self.repo.add_skill()
         write_text(d / "references/checklist.md", "# 自检清单\n\n" + "长" * 31000 + "\n")
         code, out = self.build()
-        self.assertEqual(code, 0, out)
+        self.assertEqual(code, 1, out)  # 超过 29000 硬上限：报错，但提示词版仍写出
+        self.assertIn("超过硬上限 29000", out)
         self.assertIn("警告", out)
         self.assertIn("超过 30000", out)
         text = self.read_prompt()
         self.assertIn("注意：全文超过 30000 字符", text)
         self.assertIn(f"全文约 {len(text)} 字符", text)
+
+    def test_hard_limit_29000(self):
+        d = self.repo.add_skill()
+        write_text(d / "references/checklist.md", "# 自检清单\n\n" + "长" * 27000 + "\n")
+        code, out = self.build()
+        self.assertEqual(code, 0, out)
+        self.assertLessEqual(len(self.read_prompt()), build_prompts.MAX_PROMPT_CHARS)
+        self.assertEqual(self.build("--check")[0], 0)
+        # 超限：构建失败，已同步的 --check 同样失败
+        write_text(d / "references/checklist.md", "# 自检清单\n\n" + "长" * 29500 + "\n")
+        code, out = self.build()
+        self.assertEqual(code, 1, out)
+        self.assertIn("超过硬上限 29000", out)
+        code, out = self.build("--check")
+        self.assertEqual(code, 1, out)
+        self.assertIn("超过硬上限 29000", out)
+
+    def test_appendix_toc_stripped(self):
+        d = self.repo.add_skill()
+        write_text(d / "references/checklist.md",
+                   "# 自检清单\n\n## 目录\n\n一、标题\n二、格式\n\n## 一、标题\n\n- [ ] 标题规范\n\n```\n## 目录\n```\n")
+        self.assertEqual(self.build()[0], 0)
+        text = self.read_prompt()
+        self.assertNotIn("二、格式", text)
+        self.assertIn("## 一、标题", text)
+        self.assertIn("```\n## 目录\n```", text)  # 代码块里的不动
+
+    def test_unbundled_reference_rows_trimmed(self):
+        d = self.repo.add_skill()
+        skill = (d / "SKILL.md").read_text(encoding="utf-8")
+        skill = skill.replace("| `evals/evals.json` | 评测时 |\n",
+                              "| `evals/evals.json` | 评测时 |\n| `references/other.md`、`assets/x.json` | 另有资料时 |\n")
+        write_text(d / "SKILL.md", skill)
+        self.assertEqual(self.build()[0], 0)
+        text = self.read_prompt()
+        self.assertNotIn("other.md", text)  # 只指向未打包文件的行删去
+        self.assertIn("（其余参考文件未附上。）", text)
+        self.assertIn("| （见附录三） | 自检时 |", text)  # 已打包的保留
+        self.assertIn("`evals/evals.json`", text)  # 不在 references、assets、scripts 下的保留
+        self.assertIn("references/other.md", skill)  # SKILL.md 本身不变
 
     def test_missing_bundle_file_is_error(self):
         self.repo.add_skill(bundle=["references/nope.md"])

@@ -1,6 +1,6 @@
 > **公立医院行业包（gongwen-hospital）**（提示词版）
 >
-> 版本：1.0.0　成熟度：Beta（测试版）　全文约 28704 字符
+> 版本：1.0.0　成熟度：Beta（测试版）　全文约 28392 字符
 >
 > 使用方法：
 > 1. 复制全文，粘贴到对话开头；
@@ -188,11 +188,10 @@
 | `references/templates/` 下 8 个模板；（见附录四） | 第三步搭提纲前读对应模板；网页版没有模板时按速查卡写 |
 | （见附录五）、`references/glossary.md` | 第二步建台账；第四步写指标名称、计算、DRG 术语、不良事件分级 |
 | （见附录三）、（见附录六） | 开工前、与红线冲突时；第五步自检、审稿模式 |
-| `references/profile-detail.md`、`references/calendar.md` | 读完单位画像后查制度依据、数据来源、医院类型差异；用户问近期要写什么 |
 | （见附录一）、（见附录二） | 开工前、与用户要求冲突时；第六步交付和转交 |
-| `references/_shared/style/` 下 ai-tone、defensive；`references/_shared/rules/` 下 gbt15835、data-expression、jianfu | 第四步成稿、写数字、定篇幅；处理机检结果 |
-| `references/_shared/profiles/roles.md`、`units/yiyuan.md` | 定角色模式、首轮交付、无画像降级；医院发文体系和决策程序 |
 | `scripts/` 下 hospital_check、gongwen_lint、fact_diff、md2xlsx | 第五步机检、台账对账；整改台账转 Excel |
+
+（其余参考文件未附上。）
 
 ---
 

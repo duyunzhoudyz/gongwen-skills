@@ -1,6 +1,6 @@
 > **公文写作总入口（gongwen）**（提示词版）
 >
-> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 28819 字符
+> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 28214 字符
 >
 > 使用方法：
 > 1. 复制全文，粘贴到对话开头；
@@ -172,20 +172,13 @@
 
 | 文件 | 何时读取 |
 |---|---|
-| `references/intake.md` | 第二、三步和专项一的维度识别、提问模板、首轮回复示例、建档 |
 | （见附录三） | 第四、五步的路线表、行业包与未安装兜底、交接卡、拆分示例 |
 | （见附录四） | 专项三；判断需求是否超出能力范围 |
-| `references/adaptation.md` | 角色模式和单位类型的具体差异 |
 | （见附录五） | 网页提示词版读不到其他文件时 |
 | （见附录一） | 开工前；六条红线优先于本流程 |
 | （见附录二） | 第四部分的交接卡、未安装兜底、安装命令 |
-| `references/_shared/profiles/roles.md` | 确定模式、模式切换、无画像降级、首轮交付（第十节） |
-| `references/_shared/profiles/profile-template.md` | 建档 |
-| `references/_shared/profiles/calendar.md` | 日历提示 |
-| `references/_shared/profiles/units/` | 按画像的单位类型读对应文件 |
-| `references/_shared/rules/doc-types.md` | 文种初判：第六部分决策表、第七部分易混辨析 |
-| `references/_shared/rules/tiaoli.md` | 文种初判引用的《条例》条款 |
-| `references/_shared/style/ai-tone.md`、`references/_shared/style/defensive.md` | 第四步第 3 条定改稿路线时 |
+
+（其余参考文件未附上。）
 
 ---
 
@@ -358,14 +351,6 @@
 # 附录三　路线表
 
 用户的需求对应走哪几个 skill、按什么顺序。表中 skill 名省略 `gongwen-` 前缀，如 report 即 gongwen-report。总入口 gongwen 只规划路线和交接，路线中的起草、改稿都由具体 skill 完成。
-
-## 目录
-
-一、使用规则
-二、路线决策表
-三、行业包与未安装兜底
-四、交接卡
-五、拆分示例
 
 ## 一、使用规则
 

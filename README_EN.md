@@ -246,7 +246,7 @@ Regulations on the Handling of Official Documents of Party and Government Organs
 
 **I work in a hospital, university, school, state-owned enterprise or township. Is there something for me?** Yes, five optional industry packs (`gongwen-hospital`, `gongwen-university`, `gongwen-k12`, `gongwen-soe`, `gongwen-grassroots`). General documents such as summaries and speeches still go through the core skills, which follow the organization profile.
 
-**The Word fonts are wrong, or I have no Python.** Fonts are not bundled; obtain Founder XiaoBiaoSong and FangSong_GB2312 through licensed channels. Without Python, the layout skill gives a manual WPS and Word settings checklist. Print and check before formal issue.
+**The Word fonts are wrong, or I have no Python.** Fonts are not bundled, and the tools never substitute another font. If a standard font (FangSong_GB2312, KaiTi_GB2312, Founder XiaoBiaoSong, SimHei, SimSun) is missing, the layout skill says which ones, explains where to obtain and how to install them, and refuses to render a preview until they are installed; obtain them through licensed channels. Without Python, the layout skill gives a manual WPS and Word settings checklist. Print and check before formal issue.
 
 ## Roadmap
 

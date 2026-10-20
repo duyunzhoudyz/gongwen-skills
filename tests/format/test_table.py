@@ -85,7 +85,7 @@ class BuildTableTest(unittest.TestCase):
         for tag in ("top", "left", "bottom", "right", "insideH", "insideV"):
             self.assertEqual(borders.find(qn(f"w:{tag}")).get(qn("w:val")), "single", tag)
         grid = [int(c.get(qn("w:w"))) for c in tb._tbl.tblGrid.findall(qn("w:gridCol"))]
-        width = gw_docx.Ctx(gw_docx.load_params(), {}).text_width_twips
+        width = gw_docx.Ctx(gw_docx.load_params()).text_width_twips
         self.assertEqual(sum(grid), width)  # 与版心同宽，不超出
         header = tb.rows[0]
         self.assertIsNotNone(header._tr.trPr.find(qn("w:tblHeader")))  # 跨页重复表头

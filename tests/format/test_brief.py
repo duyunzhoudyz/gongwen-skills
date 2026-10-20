@@ -8,7 +8,8 @@ from contextlib import redirect_stdout
 from docx import Document
 from docx.oxml.ns import qn
 
-from tests.format.helpers import FILES, NO_FONTS, OUT, build_sample, build_text, check_docx, gw_layout, read_meta
+from tests.format.helpers import (FILES, NO_FONTS, OUT, build_sample, build_text, check_docx, fonts_installed, gw_layout,
+                                  read_meta)
 
 import build_docx  # noqa: E402  helpers 已把 scripts 加入 sys.path
 import fix_docx  # noqa: E402
@@ -294,7 +295,7 @@ class BriefPreviewTest(unittest.TestCase):
             build_sample("简报", "样稿-简报.docx")
         out = OUT / "render" / "简报样稿-预览"
         shutil.rmtree(out, ignore_errors=True)
-        with redirect_stdout(io.StringIO()):
+        with fonts_installed(), redirect_stdout(io.StringIO()):  # 模拟标准字体齐全，否则预览按严格模式拒绝渲染
             code = preview_docx.main([str(src), "-o", str(out), "--dpi", "90"])
         self.assertEqual(code, 0)
         pdf = out / "样稿-简报.pdf"

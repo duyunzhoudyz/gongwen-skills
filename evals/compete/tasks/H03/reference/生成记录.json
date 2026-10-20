@@ -1,0 +1,26 @@
+{
+  "task": "H03",
+  "model": "deepseek-chat",
+  "model_returned": "deepseek-flash",
+  "temperature": 0.7,
+  "max_tokens": 4096,
+  "api_base": "https://api.deepseek.com",
+  "generated_at": "2026-10-21T06:14:35+09:00",
+  "prompt_file": "reference/生成提示词.md",
+  "prompt_chars": 607,
+  "prompt_sha256": "8aeb0186c37557ed9b85a6b9ba4c51397a42842a7b1ccd8042a9393bd0259263",
+  "output_file": "files/初稿.md",
+  "output_chars": 825,
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 384,
+    "completion_tokens": 510,
+    "total_tokens": 894,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 384
+  },
+  "attempts": 1
+}

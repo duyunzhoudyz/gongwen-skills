@@ -1,6 +1,6 @@
 > **讲话类（gongwen-speech）**（提示词版）
 >
-> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 28076 字符
+> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 27585 字符
 >
 > 使用方法：
 > 1. 复制全文，粘贴到对话开头；
@@ -247,17 +247,11 @@
 
 | 文件 | 何时读取 |
 |---|---|
-| `references/types/` 下 4 个文件 | 第三步选骨架前，读对应类型 |
 | （见附录五） | 定稿子用法；第四步口语化；第五步时长校核 |
-| `references/quotes-and-facts.md` | 第四步处理引语、提法、事例；严谨模式 |
-| `references/agenda-and-preference.md` | 有议程、工作报告、领导偏好卡时 |
-| `references/units.md` | 读完单位画像后 |
-| `references/checklist.md` | 第六步无法运行机检时 |
 | （见附录一） | 开工前；与用户要求冲突时 |
 | （见附录二） | 第六步交付；交接卡 |
-| `references/_shared/style/ai-tone.md`、`defensive.md` | 第四步成稿、处理机检结果 |
-| `references/_shared/rules/` 下 jianfu、doc-types、gbt15834、gbt15835 | 时长和督查考核；判断归属；称谓、破折号、数字写法 |
-| `references/_shared/profiles/` 下 roles、profile-template、units/ | 定角色模式；领导偏好卡的字段；按单位类型读取 |
+
+（其余参考文件未附上。）
 
 ---
 

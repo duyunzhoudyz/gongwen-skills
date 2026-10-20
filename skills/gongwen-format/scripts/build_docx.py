@@ -19,6 +19,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import gw_fonts as F  # noqa: E402
 from gw_layout import (BRIEF_META_KEYS, UPWARD_TYPES, Parsed, break_title, doc_kind,  # noqa: E402
                        extract_pipe_tables, has_brief_header, norm_issue, norm_total, normalize_date, parse_brief,
                        parse_lines, read_body_text, summarize, text_width_chars)
@@ -31,7 +32,7 @@ LAYOUTS = {"红头": "红头", "文件": "红头", "文件格式": "红头", "�
            "简报": "简报", "工作简报": "简报", "简报格式": "简报"}
 META_KEYS = ("版式", "份号", "密级", "保密期限", "紧急程度", "发文机关标志", "发文字号", "签发人", "标题",
              "主送机关", "附件", "发文机关署名", "成文日期", "印章", "附注", "抄送", "印发机关", "印发日期",
-             "三级标题加粗", "表格字体", "表格字号") + BRIEF_META_KEYS
+             "三级标题加粗", "表格字体", "表格字号", "unit_fonts", "单位规定字体") + BRIEF_META_KEYS
 BRIEF_IGNORED = ("发文机关标志", "发文字号", "签发人", "主送机关", "附件", "发文机关署名", "成文日期", "印章", "附注",
                  "印发机关", "份号", "密级", "保密期限", "紧急程度")
 TABLE_FONTS = ("仿宋", "宋体")
@@ -118,8 +119,7 @@ class Builder:
         size = self.issuer_size(text)
         p = self.doc.add_paragraph()
         run = p.add_run(text)
-        name, bold = ctx.font(el["font"])
-        D.format_run(run, font=name, size=size, bold=True if bold else None, color=D.color_hex(ctx.params, el["color"]))
+        D.format_run(run, font=ctx.font(el["font"]), size=size, color=D.color_hex(ctx.params, el["color"]))
         before = max(0.0, top_from_body_mm * 72 / 25.4 - used_lines * ctx.line_pt)
         D.set_para(p, align="center", line_exact=round(size * float(el["line_ratio"]), 1), before_pt=round(before, 1),
                    after_pt=0, snap=False)
@@ -146,17 +146,17 @@ class Builder:
                 p._p.addprevious(extra._p)
                 D.set_para(extra, align="right", right=sg["right_chars"], line_exact=ctx.line_pt, before_pt=0, after_pt=0)
                 add = extra.add_run("　".join(row))
-                D.format_run(add, font=ctx.font(sg["name_font"])[0], size=ctx.size(sg["size"]))
+                D.format_run(add, font=ctx.font(sg["name_font"]), size=ctx.size(sg["size"]))
             D.set_para(p, align="left", line_exact=ctx.line_pt, before_pt=0, after_pt=0)
             D.set_tabs(p, [(one * int(el["left_chars_upward"]), "left"), (width - one * int(sg["right_chars"]), "right")])
             r1 = p.add_run("\t" + docno + "\t签发人：")
-            D.format_run(r1, font=ctx.font(sg["label_font"])[0], size=ctx.size(sg["size"]))
+            D.format_run(r1, font=ctx.font(sg["label_font"]), size=ctx.size(sg["size"]))
             r2 = p.add_run("　".join(rows[-1]))
-            D.format_run(r2, font=ctx.font(sg["name_font"])[0], size=ctx.size(sg["size"]))
+            D.format_run(r2, font=ctx.font(sg["name_font"]), size=ctx.size(sg["size"]))
         else:
             D.set_para(p, align=el["align"], line_exact=ctx.line_pt, before_pt=0, after_pt=0)
             run = p.add_run(docno)
-            D.format_run(run, font=ctx.font(el["font"])[0], size=ctx.size(el["size"]))
+            D.format_run(run, font=ctx.font(el["font"]), size=ctx.size(el["size"]))
         return p
 
     def letter_head(self, issuer: str) -> None:
@@ -176,8 +176,7 @@ class Builder:
         p1 = header.paragraphs[0]
         size = self.issuer_size(issuer)
         run = p1.add_run(issuer)
-        name, bold = ctx.font(el["font"])
-        D.format_run(run, font=name, size=size, bold=True if bold else None, color=red)
+        D.format_run(run, font=ctx.font(el["font"]), size=size, color=red)
         D.set_para(p1, align="center", left=-ext, right=-ext, line_exact=round(size * float(el["line_ratio"]), 1),
                    before_pt=0, after_pt=0, snap=False, chars=False)
         D.set_border(p1, "bottom", sz_eighths=thick, color=red, space_pt=int(round(le["rule_gap_mm"] * 72 / 25.4)))
@@ -246,14 +245,24 @@ def decide_layout(cli_layout: Optional[str], meta: dict, parsed: Parsed, report:
     return layout
 
 
-def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None, font_fallback: bool = False,
-          installed: Optional[set] = None, params: Optional[dict] = None):
-    """生成文档，返回 (Document, report)。"""
+def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
+          installed: Optional[set] = None, params: Optional[dict] = None, unit_fonts=None):
+    """生成文档，返回 (Document, report)。
+
+    字体严格模式：文档中一律写入标准字体名；installed（已安装字体名集合，空集合表示无法检测）只用于核对，
+    缺字体时在 report 中给出字体核对结果（font_status、missing_fonts、font_notice 等），不替代、不降级。
+    unit_fonts：按单位规定指定标准字体（“仿宋=方正仿宋_GBK”字符串或 {角色: 字体名}），与版式信息中的 unit_fonts 合并，
+    同一角色以本参数（命令行）为准；指定后该角色写入单位字体名，严格模式不变。
+    """
     import gw_docx as D
-    import gw_fonts as F
     from gw_format import keep_signoff_together, layout_signature_block
 
     params = params or D.load_params()
+    try:
+        meta_raw = next((meta[k] for k in ("unit_fonts", "单位规定字体") if meta.get(k) not in (None, "", {}, [])), None)
+        params = F.apply_unit_fonts(params, {**F.parse_unit_fonts(meta_raw, params), **F.parse_unit_fonts(unit_fonts, params)})
+    except ValueError as exc:
+        raise BuildError(str(exc))
     report: dict = {"warnings": [], "placeholders": [], "detected": [], "notes": []}
     # 正文中的 Markdown 管道表格先换成占位行，识别结构后在原位置生成 Word 表格
     lines, tables, table_notes = extract_pipe_tables(lines)
@@ -275,11 +284,10 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None, fon
     method = ""
     if installed is None:
         installed, method = F.installed_fonts()
-    fonts, fwarn, fnotes = F.resolve_fonts(params, font_fallback, installed, method)
-    report["fonts"] = {k: v[0] + ("（加粗）" if v[1] else "") for k, v in fonts.items()}
-    report["font_warnings"] = fwarn
-    report["notes"] += fnotes
-    ctx = D.Ctx(params, fonts)
+    fonts, check = F.resolve_fonts(params, installed, method)
+    report["fonts"] = fonts
+    report.update(check)
+    ctx = D.Ctx(params)
 
     fields = merge_fields(parsed, meta, report["warnings"])
     title_text = str(fields.get("标题") or "")
@@ -380,9 +388,9 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None, fon
         if copy_no:
             D.set_tabs(p, [(ctx.text_width_twips, "right")])
             r = p.add_run(copy_no)
-            D.format_run(r, font=ctx.font("仿宋")[0], size=ctx.size("三号"))
+            D.format_run(r, font=ctx.font("仿宋"), size=ctx.size("三号"))
         r = p.add_run(("\t" if copy_no else "") + docno)
-        D.format_run(r, font=ctx.font("仿宋")[0], size=ctx.size("三号"))
+        D.format_run(r, font=ctx.font("仿宋"), size=ctx.size("三号"))
         for role, text in head_lines:
             b.para(role, text)
         b.blank(ctx.el("letter")["blank_lines_before_title"])
@@ -578,8 +586,7 @@ def _build_brief(b: Builder, parsed: Parsed, fields: Dict[str, object], meta: di
     if text_width_chars(name) * size > width_pt:
         report["warnings"].append(f"简报名称“{name}”较长，一行排不下，会回行；请核对名称或缩短")
     p = b.doc.add_paragraph()
-    font, bold = ctx.font(el["name_font"])
-    D.format_run(p.add_run(name), font=font, size=size, bold=True if bold else None, color=red)
+    D.format_run(p.add_run(name), font=ctx.font(el["name_font"]), size=size, color=red)
     D.set_para(p, align="center", line_exact=round(size * float(el["name_line_ratio"]), 1), before_pt=0, after_pt=0,
                snap=False, keep_next=True)
 
@@ -590,7 +597,7 @@ def _build_brief(b: Builder, parsed: Parsed, fields: Dict[str, object], meta: di
         fields["总期号"] = norm_total(fields["总期号"])
         issue += "（" + fields["总期号"] + "）"
     p = b.doc.add_paragraph()
-    D.format_run(p.add_run(issue), font=ctx.font(el["issue_font"])[0], size=ctx.size(el["issue_size"]))
+    D.format_run(p.add_run(issue), font=ctx.font(el["issue_font"]), size=ctx.size(el["issue_size"]))
     D.set_para(p, align="center", line_exact=ctx.line_pt, before_pt=float(el["issue_before_pt"]), after_pt=0,
                snap=False, keep_next=True)
 
@@ -602,7 +609,7 @@ def _build_brief(b: Builder, parsed: Parsed, fields: Dict[str, object], meta: di
     if text_width_chars(editor) + text_width_chars(date) + 1 > float(D.pv(ctx.params, "grid.chars_per_line")):
         report["warnings"].append("编印单位较长，与日期排不进同一行，日期会被挤到下一行；请缩短或改用简称")
     p = b.doc.add_paragraph()
-    D.format_run(p.add_run(editor + "\t" + date), font=ctx.font(el["editor_font"])[0], size=ctx.size(el["editor_size"]))
+    D.format_run(p.add_run(editor + "\t" + date), font=ctx.font(el["editor_font"]), size=ctx.size(el["editor_size"]))
     D.set_para(p, align="left", line_exact=ctx.line_pt, before_pt=float(el["editor_before_pt"]), after_pt=0,
                snap=False, keep_next=True)
     D.set_tabs(p, [(ctx.text_width_twips, "right")])
@@ -700,6 +707,9 @@ def _table_style(meta: dict, report: dict) -> Tuple[str, str]:
 
 def render_text(report: dict) -> str:
     out: List[str] = []
+    notice = F.render_notice(report)  # 缺字体或无法检测字体时，醒目提示放在最前面
+    if notice:
+        out += [notice, ""]
     out.append(f"输出文件：{report.get('output', '')}")
     out.append(f"版式：{report['layout']}（{report.get('layout_reason', '')}）；印章：{'加盖' if report.get('seal') else '不加盖'}")
     nums = iter("一二三四五六七八九十")  # 各部分按实际出现的顺序连续编号
@@ -709,9 +719,12 @@ def render_text(report: dict) -> str:
     for line in report.get("detected", []):
         out.append(f"   依据：{line}")
     out.append(f"{next(nums)}、字体")
-    out.append("   " + "；".join(f"{k}→{v}" for k, v in report.get("fonts", {}).items()))
-    for w in report.get("font_warnings", []):
-        out.append(f"   警告：{w}")
+    if report.get("fonts"):
+        out.append("   文件中一律写入标准字体名：" + "；".join(f"{k}→{v}" for k, v in report["fonts"].items()))
+    out += [f"   按单位规定使用：{line}" for line in F.unit_notes(report)]
+    status = F.status_line(report)
+    if status:
+        out.append("   本机检测：" + status)
     sections = [("待补事项", report.get("placeholders", [])), ("提示", report.get("warnings", []) + report.get("notes", []))]
     for head, items in sections:
         if items:
@@ -741,10 +754,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                                                "对应“成稿-××.docx”，其他文件用原文件名（如 送审稿.txt 对应“送审稿.docx”）；"
                                                "已存在时加 -v2、-v3")
     parser.add_argument("--layout", help="版式：红头、信函、纪要、白头、材料、简报（优先于版式信息）")
-    parser.add_argument("--font-fallback", action="store_true", help="本机缺标准字体时改用已安装的替代字体")
     parser.add_argument("--json", action="store_true", help="以 JSON 输出报告")
     parser.add_argument("--no-check", action="store_true", help="生成后不自动回读检查")
     parser.add_argument("--allow", metavar="DOCX-050", help="回读检查时按本单位制度保留的检查项（逗号分隔），命中降为 P2")
+    parser.add_argument("--unit-fonts", metavar="角色=字体名,…", help=F.UNIT_FONTS_HELP + "（优先于版式信息中的 unit_fonts）")
     args = parser.parse_args(argv)
 
     try:
@@ -777,7 +790,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"错误：正文文件读取失败：{exc}")
         return 2
     try:
-        doc, report = build(lines, meta, layout=args.layout, font_fallback=args.font_fallback)
+        doc, report = build(lines, meta, layout=args.layout, unit_fonts=args.unit_fonts)
     except BuildError as exc:
         print(f"错误：{exc}")
         return 2
@@ -805,7 +818,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     report["output"] = str(final)
     if not args.no_check:
         from check_docx import check_document
-        report["check"] = check_document(final, layout=report["layout"], allow=args.allow)
+        report["check"] = check_document(final, layout=report["layout"], allow=args.allow,
+                                         unit_fonts={r: v["unit_font"] for r, v in report["unit_fonts"].items()})
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:

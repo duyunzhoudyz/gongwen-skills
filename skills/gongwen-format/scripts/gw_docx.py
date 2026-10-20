@@ -169,12 +169,12 @@ def set_attrs(el, attrs: Dict[str, Optional[str]], clear: Sequence[str] = ()) ->
 
 @dataclass
 class Ctx:
-    """排版上下文：参数和实际写入的字体。fonts: 字体角色 -> (字体名, 是否额外加粗)。"""
+    """排版上下文：参数。字体严格模式：写入文档的字体一律是标准字体名，没有可替换字体的入口。"""
     params: dict
-    fonts: Dict[str, Tuple[str, bool]]
 
-    def font(self, role: str) -> Tuple[str, bool]:
-        return self.fonts.get(role, (self.params["fonts"]["standard"].get(role, role), False))
+    def font(self, role: str) -> str:
+        """字体角色（仿宋、楷体、黑体、小标宋、宋体）对应的标准字体名。"""
+        return self.params["fonts"]["standard"].get(role, role)
 
     def el(self, name: str) -> dict:
         return self.params["elements"][name]
@@ -240,8 +240,7 @@ def format_run(run, *, font: Optional[str] = None, size: Optional[float] = None,
 def add_run(paragraph, text: str, ctx: Ctx, font_role: str, size_name, *, color: Optional[str] = None,
             bold: bool = False):
     run = paragraph.add_run(text)
-    name, extra_bold = ctx.font(font_role)
-    format_run(run, font=name, size=ctx.size(size_name), bold=(bold or extra_bold) or None,
+    format_run(run, font=ctx.font(font_role), size=ctx.size(size_name), bold=bold or None,
                color=color_hex(ctx.params, color) if color else None)
     return run
 
@@ -363,7 +362,7 @@ def add_break(run) -> None:
 
 def setup_document(doc, ctx: Ctx) -> None:
     """统一文档默认字体、Normal 样式、奇偶页设置。"""
-    body_font = ctx.font("仿宋")[0]
+    body_font = ctx.font("仿宋")
     styles_el = doc.styles.element
     defaults = styles_el.find(qn("w:docDefaults"))
     if defaults is None:
@@ -432,7 +431,7 @@ def clear_part(part_obj) -> None:
 def add_page_field(paragraph, ctx: Ctx) -> None:
     """写入“— PAGE —”，4 号宋体。"""
     pn = ctx.el("page_number")
-    font, _ = ctx.font(pn["font"])
+    font = ctx.font(pn["font"])
     size = ctx.size(pn["size"])
     dash = pn["dash"]
 
@@ -540,7 +539,7 @@ def add_banji_table(doc, ctx: Ctx, rows: List[List[Tuple[str, str]]], *, with_li
     grid = tbl.tblGrid
     for col in grid.findall(qn("w:gridCol")):
         col.set(qn("w:w"), str(width))
-    font, _ = ctx.font(bj["font"])
+    font = ctx.font(bj["font"])
     for r_idx, row_items in enumerate(rows):
         cell = table.rows[r_idx].cells[0]
         tcpr = cell._tc.get_or_add_tcPr()
@@ -624,7 +623,7 @@ def add_body_table(doc, ctx: Ctx, header: Sequence[str], rows: Sequence[Sequence
     set_attrs(get_or_add(tblpr, "tblLayout", TBLPR_ORDER), {"type": "fixed"})
     for col, w in zip(tbl.tblGrid.findall(qn("w:gridCol")), widths):
         col.set(qn("w:w"), str(w))
-    font, extra_bold = ctx.font(font_role)
+    font = ctx.font(font_role)
     size = ctx.size(size_name)
     for r_idx, values in enumerate([list(header)] + [list(r) for r in rows]):
         row = table.rows[r_idx]
@@ -656,8 +655,7 @@ def add_body_table(doc, ctx: Ctx, header: Sequence[str], rows: Sequence[Sequence
             lines = text.split("\n") if text else [""]
             for k, line in enumerate(lines):
                 run = para.add_run(line)
-                format_run(run, font=font, size=size, bold=True if (r_idx == 0 and tb["header_bold"]) or extra_bold
-                           else None)
+                format_run(run, font=font, size=size, bold=True if (r_idx == 0 and tb["header_bold"]) else None)
                 if k < len(lines) - 1:
                     add_break(run)
     return table

@@ -1,6 +1,6 @@
 > **基层行业包（gongwen-grassroots）**（提示词版）
 >
-> 版本：1.0.0　成熟度：Beta（测试版）　全文约 27674 字符
+> 版本：1.0.0　成熟度：Beta（测试版）　全文约 26873 字符
 >
 > 使用方法：
 > 1. 复制全文，粘贴到对话开头；
@@ -220,22 +220,13 @@
 
 | 文件 | 何时读取 |
 |---|---|
-| `references/profile-detail.md` | 开工检查第 3、4 条：主体、行文对象、程序、篇幅 |
-| `references/templates/` 下 9 个模板 | 第一步定文书后读对应模板 |
 | （见附录四） | 读不到模板时（网页版）用对应卡片 |
 | （见附录三） | 开工前；起草和自检时逐条对照 |
 | （见附录五） | 第四步自检；审稿模式 |
-| `references/glossary.md` | 写术语、引用法规和条号时 |
-| `references/calendar.md` | 用户问“这个月要准备什么”；确认季节性节点 |
 | （见附录一） | 开工前；与用户要求冲突时；篇幅（第四条第2款） |
 | （见附录二） | 第五步交付；交接卡 |
-| `references/_shared/style/ai-tone.md`、`references/_shared/style/defensive.md` | 第三步起草、第四步处理机检结果 |
-| `references/_shared/rules/jianfu.md` | 迎检、台账、发给村（社区）的文书 |
-| `references/_shared/rules/doc-types.md` | 判断通知、通告、公告等文种是否越出本包 |
-| `references/_shared/rules/gbt15835.md`、`references/_shared/rules/data-expression.md` | 写数字和数据 |
-| `references/_shared/profiles/roles.md` | 定角色模式；无画像降级；首轮交付（第十节） |
-| `references/_shared/profiles/units/jiceng.md`、`references/_shared/profiles/units/shequ.md` | 读完单位画像后 |
-| `scripts/gongwen_lint.py`、`scripts/notice_check.py`、`scripts/fact_diff.py`、`scripts/md2xlsx.py` | 第四、五步 |
+
+（其余参考文件未附上。）
 
 ---
 

@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """build_docx：五种版式样稿生成、回读关键参数、check 无 P0、字体与文件保护。"""
+import inspect
 import io
 import json
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
+from pathlib import Path
 
 from docx import Document
 from docx.oxml.ns import qn
 from docx.shared import Mm
 
-from tests.format.helpers import (FILES, OUT, WIN_FONTS, build_docx, build_sample, build_text, check_docx,
-                                  gw_docx)
+from tests.format.helpers import (FILES, FULL_FONTS, NO_FONTS, OUT, STANDARD_FONTS, WIN_FONTS, build_docx,
+                                  build_sample, build_text, check_docx, fonts_installed, gw_docx, written_fonts)
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 
@@ -241,14 +243,6 @@ class BuildBehaviourTest(unittest.TestCase):
         self.assertEqual(cells[0], "抄送：市委办公室，市政府办公室。")
         self.assertFalse(report["seal"])
 
-    def test_font_fallback(self):
-        _path, report = build_sample("白头", "字体替代.docx", installed=WIN_FONTS, font_fallback=True)
-        self.assertEqual(report["fonts"]["仿宋"], "仿宋")
-        self.assertEqual(report["fonts"]["小标宋"], "宋体（加粗）")
-        _path, report2 = build_sample("白头", "字体缺失警告.docx", installed=WIN_FONTS, font_fallback=False)
-        self.assertEqual(report2["fonts"]["仿宋"], "仿宋_GB2312")
-        self.assertTrue(any("方正小标宋简体" in w for w in report2["font_warnings"]))
-
     def test_cli_no_overwrite_and_json(self):
         src = FILES / "白头请示-正文.txt"
         target = OUT / "不覆盖.docx"
@@ -309,6 +303,124 @@ class BuildBehaviourTest(unittest.TestCase):
             old.unlink()
         p.write_bytes(b"x")
         self.assertEqual(gw_docx.unique_path(p).name, "唯一路径-v5.docx")
+
+
+class FontStrictModeTest(unittest.TestCase):
+    """字体严格模式：文档一律写入标准字体名；缺字体时只指出缺哪些并引导安装，绝不降级、替代。"""
+
+    NOT_STANDARD = ("仿宋", "楷体", "华文中宋", "华文仿宋", "方正小标宋_GBK", "方正仿宋_GBK")
+
+    def assert_only_standard(self, path):
+        used = written_fonts(path)
+        self.assertTrue(used <= set(STANDARD_FONTS.values()), used)
+        for name in self.NOT_STANDARD:
+            self.assertNotIn(name, used)
+
+    def test_missing_fonts_written_as_standard_and_reported(self):
+        # 本机只有现行 Windows 自带的“仿宋”“楷体”“黑体”“宋体”：这些不是仿宋_GB2312 等，不能顶替
+        path, report = build_sample("白头", "字体缺失.docx", installed=WIN_FONTS)
+        self.assertEqual(report["fonts"], STANDARD_FONTS)
+        self.assert_only_standard(path)
+        self.assertEqual(report["font_status"], "missing")
+        self.assertEqual([m["font"] for m in report["missing_fonts"]], ["仿宋_GB2312", "楷体_GB2312", "方正小标宋简体"])
+        self.assertEqual([m["role"] for m in report["missing_fonts"]], ["仿宋", "楷体", "小标宋"])
+        for item in report["missing_fonts"]:
+            for key in ("usage", "source", "obtain", "note"):
+                self.assertTrue(item["guide"][key], (item["font"], key))
+        by_font = {m["font"]: m["guide"] for m in report["missing_fonts"]}
+        self.assertIn("https://www.foundertype.com", by_font["方正小标宋简体"]["obtain"])
+        self.assertIn("单位信息中心", by_font["仿宋_GB2312"]["obtain"])
+        notice = report["font_notice"]
+        self.assertEqual(notice["headline"], "字体缺失")
+        self.assertIn("不是正式效果", notice["consequence"])
+        self.assertIn("不能据此核对版式或打印", notice["consequence"])
+        self.assertIn("不提供、不打包任何字体文件", notice["statement"])
+        self.assertEqual(set(notice["install_methods"]), {"Windows", "macOS", "Linux", "安装后"})
+        self.assertEqual(report["unverified_fonts"], [])
+        # 报告里没有任何“已改用替代字体”的痕迹
+        self.assertNotIn("font_warnings", report)
+        self.assertFalse(any("改用" in n for n in report["notes"]), report["notes"])
+
+    def test_screen_report_has_prominent_block_first(self):
+        _path, report = build_sample("白头", "字体缺失屏显.docx", installed=WIN_FONTS)
+        text = build_docx.render_text(dict(report, output="x.docx"))
+        self.assertTrue(text.startswith("="), text[:30])
+        block = text.split("输出文件：")[0]
+        for must in ("【字体缺失】", "仿宋_GB2312", "楷体_GB2312", "方正小标宋简体", "不是正式效果", "不能据此核对版式或打印",
+                     "https://www.foundertype.com", "为所有用户安装", "字体册", "fc-cache -f", "重启 Word/WPS",
+                     "不提供、不打包任何字体文件"):
+            self.assertIn(must, block)
+        self.assertNotIn("黑体（用于", block)  # 黑体、宋体已装，不在缺失清单里
+        self.assertIn("本机检测：缺少 3 款标准字体", text)
+
+    def test_complete_fonts_no_notice(self):
+        path, report = build_sample("白头", "字体齐全.docx", installed=FULL_FONTS)
+        self.assert_only_standard(path)
+        self.assertEqual(report["font_status"], "complete")
+        self.assertEqual(report["missing_fonts"], [])
+        self.assertIsNone(report["font_notice"])
+        text = build_docx.render_text(dict(report, output="x.docx"))
+        self.assertNotIn("字体缺失", text)
+        self.assertIn("标准字体均已安装", text)
+
+    def test_undetected_fonts_requires_manual_check(self):
+        path, report = build_sample("白头", "字体无法检测.docx", installed=NO_FONTS)
+        self.assert_only_standard(path)
+        self.assertEqual(report["font_status"], "undetected")
+        self.assertEqual(report["missing_fonts"], [])
+        self.assertEqual([m["font"] for m in report["unverified_fonts"]],
+                         ["仿宋_GB2312", "楷体_GB2312", "黑体", "方正小标宋简体", "宋体"])
+        text = build_docx.render_text(dict(report, output="x.docx"))
+        block = text.split("输出文件：")[0]
+        self.assertIn("无法检测本机字体，需人工核对", block)
+        self.assertIn("人工核对", block)
+        self.assertIn("https://www.foundertype.com", block)  # 无法确认时也给出获取与安装引导
+
+    def test_every_layout_writes_only_standard_fonts(self):
+        for layout in ("红头", "信函", "纪要", "白头", "材料", "简报"):
+            path, report = build_sample(layout, f"字体严格-{layout}.docx", installed=WIN_FONTS)
+            self.assert_only_standard(path)
+            self.assertEqual(report["font_status"], "missing", layout)
+
+    def test_font_fallback_option_removed(self):
+        src = FILES / "白头请示-正文.txt"
+        buf = io.StringIO()
+        with redirect_stderr(buf), self.assertRaises(SystemExit) as ctx:
+            build_docx.main([str(src), "-o", str(OUT / "无降级参数.docx"), "--font-fallback"])
+        self.assertEqual(ctx.exception.code, 2)
+        self.assertIn("--font-fallback", buf.getvalue())
+        self.assertNotIn("font_fallback", inspect.signature(build_docx.build).parameters)
+
+    def test_cli_json_and_text_report_missing_fonts(self):
+        src = FILES / "白头请示-正文.txt"
+        with fonts_installed(WIN_FONTS):
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                self.assertEqual(build_docx.main([str(src), "-o", str(OUT / "字体缺失CLI-json.docx"), "--json"]), 0)
+            report = json.loads(buf.getvalue())
+            self.assertEqual(report["font_status"], "missing")
+            self.assertEqual({m["font"] for m in report["missing_fonts"]}, {"仿宋_GB2312", "楷体_GB2312", "方正小标宋简体"})
+            self.assertEqual(report["fonts"], STANDARD_FONTS)
+            self.assert_only_standard(Path(report["output"]))
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                self.assertEqual(build_docx.main([str(src), "-o", str(OUT / "字体缺失CLI-text.docx")]), 0)
+            self.assertTrue(buf.getvalue().startswith("="))
+            self.assertIn("【字体缺失】", buf.getvalue())
+        with fonts_installed(FULL_FONTS):
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                self.assertEqual(build_docx.main([str(src), "-o", str(OUT / "字体齐全CLI.docx"), "--json"]), 0)
+            report = json.loads(buf.getvalue())
+            self.assertEqual((report["font_status"], report["missing_fonts"], report["font_notice"]),
+                             ("complete", [], None))
+
+    def test_check_does_not_flag_standard_fonts(self):
+        """缺字体不影响文件本身：写入标准字体名的文档，机检没有 DOCX-016。"""
+        path, _ = build_sample("红头", "字体缺失机检.docx", installed=WIN_FONTS)
+        result = check_docx.check_document(path, layout="红头")
+        self.assertNotIn("DOCX-016", {i["id"] for i in result["issues"]})
+        self.assertEqual(result["summary"]["P0"], 0)
 
 
 class BuildInputRobustnessTest(unittest.TestCase):

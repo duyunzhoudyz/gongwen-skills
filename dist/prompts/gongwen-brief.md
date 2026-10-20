@@ -1,6 +1,6 @@
 > **信息简报与宣传（gongwen-brief）**（提示词版）
 >
-> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 28200 字符
+> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 27844 字符
 >
 > 使用方法：
 > 1. 复制全文，粘贴到对话开头；
@@ -226,11 +226,8 @@
 
 | 文件 | 何时读取 |
 |---|---|
-| `references/types/jianbao.md`、`references/types/xinwengao.md`、`references/types/gongzhonghao.md` | 编简报；写新闻稿、发布词；写推文 |
-| `references/units.md` | 读完单位画像后，查本 skill 在该单位类型下的调整 |
-| `references/_shared/rules/jianfu.md` | 篇幅、重复报送、拍照留痕 |
-| `references/_shared/rules/doc-types.md` | 判断是否属于本 skill；信息的文种要点（4.10） |
-| `references/_shared/profiles/calendar.md` | 用户问“最近有什么宣传节点”时 |
+
+（其余参考文件未附上。）
 
 ---
 

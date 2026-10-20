@@ -1,6 +1,6 @@
 > **会议纪要与议题材料（gongwen-minutes）**（提示词版）
 >
-> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 28250 字符
+> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 27791 字符
 >
 > 使用方法：
 > 1. 复制全文，粘贴到对话开头；
@@ -176,10 +176,8 @@
 | （见附录七） | 做督办清单、更新办理状态、转 Excel |
 | （见附录八） | 读完单位画像后，查本 skill 在该单位类型下的调整 |
 | （见附录一）、（见附录二） | 开工前；与用户要求冲突时；交付和交接卡 |
-| `references/_shared/style/ai-tone.md`、`references/_shared/style/defensive.md` | 成稿、处理机检结果 |
-| `references/_shared/rules/` 下 doc-types.md（7.5）、gbt9704.md（第七部分）、gbt15835.md、jianfu.md | 区分纪要与记录；纪要格式和出席列席；写数字日期；会议要求有层层加码、留痕要求时 |
-| `references/_shared/profiles/roles.md`、`references/_shared/profiles/units/` | 定角色模式、首轮交付、无画像降级；按单位类型读取 |
-| `scripts/minutes_check.py`、`scripts/fact_diff.py`、`scripts/gongwen_lint.py`、`scripts/md2xlsx.py` | 议定事项检查和督办清单对账；数字日期对账；机检；督办清单转 Excel |
+
+（其余参考文件未附上。）
 
 ---
 

@@ -1,6 +1,6 @@
 > **公文去 AI 味（gongwen-humanize）**（提示词版）
 >
-> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 28021 字符
+> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 27825 字符
 >
 > 使用方法：
 > 1. 复制全文，粘贴到对话开头；
@@ -188,10 +188,8 @@ Agent 环境下，改稿写入上述输出目录的 `正文.txt`，起草说明�
 | （见附录五） | 确定文书类型后 |
 | （见附录六） | 确定单位类型后；遇到行业术语时 |
 | （见附录二） | 输出前 |
-| `references/_shared/style/defensive.md` | 拿不准某处表述归本 skill 还是 gongwen-direct 时 |
-| `references/_shared/profiles/roles.md` | 确定角色模式；无画像降级 |
-| `scripts/gongwen_lint.py` | 诊断和复检 |
-| `scripts/fact_diff.py` | 复检 |
+
+（其余参考文件未附上。）
 
 ---
 

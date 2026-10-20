@@ -1,6 +1,6 @@
 > **法定公文（gongwen-draft）**（提示词版）
 >
-> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 27084 字符
+> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 26097 字符
 >
 > 使用方法：
 > 1. 复制全文，粘贴到对话开头；
@@ -226,20 +226,11 @@
 | 文件 | 何时读取 |
 |---|---|
 | （见附录三） | 网页环境的文种速查卡；Agent 环境可代替细则快速查阅 |
-| `references/decision.md` | 第一步定文种；判断是否归本 skill |
-| `references/rules-check.md` | 第二步、第四步查行文规则；拆分和抽出请示 |
-| `references/doc-types/` 下 12 个文件 | 第三步动笔前，读对应文种 |
-| `references/units.md` | 读完单位画像后；党政两套代字、两级发文、签报流转 |
 | （见附录四） | 第四步无法运行机检时 |
 | （见附录一） | 开工前；与用户要求冲突时 |
 | （见附录二） | 第五步交付；交接卡；转交和未安装兜底 |
-| `references/_shared/style/ai-tone.md`、`references/_shared/style/defensive.md` | 成稿措辞；处理机检结果 |
-| `references/_shared/rules/tiaoli.md` | 写条款依据；行文规则原文要点 |
-| `references/_shared/rules/doc-types.md` | 文种通用要点、决策表、易混辨析 |
-| `references/_shared/rules/gbt9704.md`、`references/_shared/rules/gbt15834.md`、`references/_shared/rules/gbt15835.md` | 格式要素、标点、数字 |
-| `references/_shared/rules/jianfu.md` | 定篇幅；部署性文件的减负要求 |
-| `references/_shared/profiles/roles.md`、`references/_shared/profiles/units/` | 定角色模式；无画像降级；首轮交付；单位类型细节 |
-| `scripts/gongwen_lint.py`、`scripts/draft_check.py`、`scripts/fact_diff.py` | 第四步机检；模式二核对事实 |
+
+（其余参考文件未附上。）
 
 ---
 
@@ -413,10 +404,6 @@
 
 网页提示词版没有 `references/doc-types/` 下的细则和 `references/decision.md`、`references/rules-check.md`，按 SKILL.md 和本卡起草。条款均指《党政机关公文处理工作条例》。所有卡片共用四条：事实只用用户给的，缺的标【待补】；结语与文种对应；版头要素（发文字号、签发人）不写进正文；篇幅只有上限，事实少的写短，用户指定字数的按 SKILL.md 第三步通用规则第6条处理。
 
-## 目录
-
-一、通知　二、请示　三、报告　四、函　五、通报　六、批复　七、意见　八、签报　九、决定、通告、公告　十、决议、命令、公报、议案　十一、文种判断和行文问题补充
-
 ## 一、通知
 
 部署性：
@@ -561,22 +548,6 @@
 # 附录四　人工自检清单
 
 无法运行 `scripts/gongwen_lint.py` 和 `scripts/draft_check.py`（没有 Python、脚本报错、输出“未执行检查”）时，逐项检查。第一至十部分对应机检的类别，第十一至十三部分对应 draft_check.py 的本 skill 专项。检查完在起草说明写“未运行机检，已按人工清单检查”。
-
-## 目录
-
-一、残留
-二、标点
-三、数字
-四、格式要素
-五、结构
-六、AI 腔
-七、防御腔
-八、隐私与保密
-九、待补标记
-十、篇幅与减负
-十一、标题
-十二、文种专项
-十三、面向群众的表述
 
 ## 一、残留
 

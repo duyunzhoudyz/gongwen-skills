@@ -18,6 +18,7 @@ from typing import Dict, List, Optional, Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import gw_fonts as F  # noqa: E402
 from gw_layout import (BODY_ROLES, ROLE_LABELS, doc_kind, draft_note_index, has_brief_header,  # noqa: E402
                        parse_brief, parse_lines, summarize)
 
@@ -87,27 +88,33 @@ def _describe_page_change(before: Dict[str, str], after: Dict[str, str]) -> List
     return out
 
 
-def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None, font_fallback: bool = False,
-                 seal: Optional[bool] = None, installed: Optional[set] = None, params: Optional[dict] = None) -> dict:
-    """修复 src，保存到 dst（调用方保证 dst 不覆盖已有文件）。返回报告字典。"""
+def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None,
+                 seal: Optional[bool] = None, installed: Optional[set] = None, params: Optional[dict] = None,
+                 unit_fonts=None) -> dict:
+    """修复 src，保存到 dst（调用方保证 dst 不覆盖已有文件）。返回报告字典。
+
+    字体严格模式：各角色一律改为标准字体名；installed（已安装字体名集合，空集合表示无法检测）只用于核对，
+    缺字体时在报告中给出字体核对结果（font_status、missing_fonts、font_notice 等），不替代、不降级。
+    unit_fonts：按单位规定指定标准字体（“仿宋=方正仿宋_GBK”字符串或 {角色: 字体名}），指定后该角色改为单位字体名，严格模式不变；
+    角色或字体名不合法时抛 ValueError。
+    """
     import gw_docx as D
-    import gw_fonts as F
     from docx import Document
     from docx.oxml.ns import qn
     from gw_format import apply_role, keep_signoff_together, layout_signature_block, strip_leading_spaces
 
     params = params or D.load_params()
+    params = F.apply_unit_fonts(params, F.parse_unit_fonts(unit_fonts, params))
     doc = Document(str(src))
     report: dict = {"input": str(src), "output": str(dst), "page": [], "roles": {}, "notes": [], "warnings": [],
                     "untouched": []}
     method = ""
     if installed is None:
         installed, method = F.installed_fonts()
-    fonts, fwarn, fnotes = F.resolve_fonts(params, font_fallback, installed, method)
-    report["fonts"] = {k: v[0] + ("（加粗）" if v[1] else "") for k, v in fonts.items()}
-    report["font_warnings"] = fwarn
-    report["notes"] += fnotes
-    ctx = D.Ctx(params, fonts)
+    fonts, check = F.resolve_fonts(params, installed, method)
+    report["fonts"] = fonts
+    report.update(check)
+    ctx = D.Ctx(params)
 
     # ---- 版式判断 ----
     paras = list(doc.paragraphs)
@@ -297,7 +304,15 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None, font_fal
 
 def render_report(report: dict) -> str:
     out = ["# 修复报告", "", f"- 原文件：{report['input']}（未修改）", f"- 新文件：{report['output']}",
-           f"- 版式判断：{report['layout']}；署名按{'加盖印章' if report['seal'] else '不加盖印章'}排列", ""]
+           f"- 版式判断：{report['layout']}；署名按{'加盖印章' if report['seal'] else '不加盖印章'}排列"]
+    status = F.status_line(report)
+    if status:
+        out.append(f"- 字体：文件中一律写入标准字体名；本机检测：{status}")
+    out += [f"- 按单位规定使用：{line}" for line in F.unit_notes(report)]
+    out.append("")
+    notice = F.render_notice(report, markdown=True)  # 缺字体或无法检测字体时，醒目提示放在最前面（引用块，不占章节编号）
+    if notice:
+        out += [notice, ""]
     nums = iter("一二三四五六七八九十")  # 各部分按实际出现的顺序连续编号
     out.append(f"## {next(nums)}、识别结果（请核对）")
     out += [f"{i}. {s}" for i, s in enumerate(report.get("summary", []), start=1)] or ["（无）"]
@@ -317,9 +332,9 @@ def render_report(report: dict) -> str:
         out.append(f"## {next(nums)}、其他处理")
         out += [f"- {n}" for n in report["notes"]]
         out.append("")
-    if report.get("untouched") or report.get("warnings") or report.get("font_warnings"):
+    if report.get("untouched") or report.get("warnings"):
         out.append(f"## {next(nums)}、未处理和提示")
-        out += [f"- {n}" for n in report.get("untouched", []) + report.get("warnings", []) + report.get("font_warnings", [])]
+        out += [f"- {n}" for n in report.get("untouched", []) + report.get("warnings", [])]
         out.append("")
     chk = report.get("check")
     if chk:
@@ -344,9 +359,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--report", help="修复报告路径；默认与输出文件同名加“-修复报告.md”")
     parser.add_argument("--layout", help="版式：红头、信函、纪要、白头、材料、简报；不写时自动判断")
     parser.add_argument("--seal", choices=["是", "否"], help="署名是否按加盖印章排列；不写时法定公文按加盖处理")
-    parser.add_argument("--font-fallback", action="store_true", help="本机缺标准字体时改用已安装的替代字体")
     parser.add_argument("--json", action="store_true", help="以 JSON 输出报告")
     parser.add_argument("--allow", metavar="DOCX-050", help="修复后检查时按本单位制度保留的检查项（逗号分隔），命中降为 P2")
+    parser.add_argument("--unit-fonts", metavar="角色=字体名,…", help=F.UNIT_FONTS_HELP)
     args = parser.parse_args(argv)
     try:
         import docx  # noqa: F401
@@ -371,11 +386,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     final = D.unique_path(out)
     seal = None if args.seal is None else args.seal == "是"
     try:
-        report = fix_document(src, final, layout=args.layout, font_fallback=args.font_fallback, seal=seal)
+        unit_fonts = F.parse_unit_fonts(args.unit_fonts, F.load_params())
+    except ValueError as exc:
+        print(f"错误：{exc}")
+        return 2
+    try:
+        report = fix_document(src, final, layout=args.layout, seal=seal, unit_fonts=unit_fonts)
     except Exception as exc:
         print(f"错误：无法处理 {src}：{exc}")
         return 2
-    report["check"] = check_document(final, layout=report["layout"], allow=args.allow)
+    report["check"] = check_document(final, layout=report["layout"], allow=args.allow, unit_fonts=unit_fonts)
     rpath = Path(args.report) if args.report else final.with_name(final.stem + "-修复报告.md")
     rpath = D.unique_path(rpath)
     rpath.parent.mkdir(parents=True, exist_ok=True)  # --report 指定的文件夹不存在时先建好
@@ -385,9 +405,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
         s = report["check"]["summary"]
+        notice = F.render_notice(report)  # 缺字体或无法检测字体时，醒目提示放在最前面
+        if notice:
+            print(notice + "\n")
         print(f"已输出：{final}\n修复报告：{rpath}\n修复后检查：P0 {s['P0']} 项，P1 {s['P1']} 项，P2 {s['P2']} 项")
-        for w in report.get("font_warnings", []):
-            print(f"字体提示：{w}")
     return 0
 
 

@@ -1,0 +1,246 @@
+[
+  {
+    "id": "ours",
+    "name": "本项目（gongwen-skills 全套 22 个 skill）",
+    "kind": "suite",
+    "repo": "duyunzhoudyz/gongwen-skills",
+    "repo_url": "",
+    "commit": "",
+    "license": "MIT",
+    "tracks": ["W", "F", "H"],
+    "skill_subdir": "",
+    "skill_name": "",
+    "scope_note": "全套 22 个 skill 同时安装，由执行模型按 description 自选；commit 在 prep 时取 --ours-src 仓库的 HEAD",
+    "setup": [
+      {"cmd": "python -c \"import docx, openpyxl; print('python-docx、openpyxl 可用')\"", "cwd": "", "desc": "确认 python-docx、openpyxl 可用（本项目脚本只依赖标准库与它们）"}
+    ],
+    "smoke": [],
+    "env_path": [],
+    "env_commands": [],
+    "exclude": ["evals", "__pycache__"],
+    "identify_terms": [
+      "gongwen-grassroots", "gongwen-university", "gongwen-hospital", "gongwen-implement", "gongwen-minutes",
+      "gongwen-humanize", "gongwen-profile", "gongwen-rectify", "gongwen-polish", "gongwen-review",
+      "gongwen-direct", "gongwen-format", "gongwen-report", "gongwen-speech", "gongwen-brief",
+      "gongwen-draft", "gongwen-party", "gongwen-title", "gongwen-data", "gongwen-soe", "gongwen-k12",
+      "gongwen-skills", "gongwen", "duyunzhoudyz", "公文写作skill"
+    ]
+  },
+  {
+    "id": "lieflat-gongwen",
+    "name": "lieflat-gongwen（公文写作 DNA）",
+    "kind": "single",
+    "repo": "larashero3-dotcom/lieflat-gongwen",
+    "repo_url": "https://github.com/larashero3-dotcom/lieflat-gongwen",
+    "commit": "e0a5aba6b6ce66402aff799ea213af2d987d99dd",
+    "license": "PolyForm-Noncommercial-1.0.0",
+    "tracks": ["W"],
+    "skill_subdir": "",
+    "skill_name": "lieflat-gongwen",
+    "scope_note": "声明只覆盖 6 类无固定模板的文体（调研报告、领导讲话、工作意见、经验材料、工作方案、经验总结）加党建经验材料，明确不做法定公文",
+    "setup": [
+      {"cmd": "go build -o \"{shim_dir}\\python3.exe\" \"{compete}\\shims\\python3\\main.go\"", "cwd": "", "desc": "SKILL.md 里的命令一律写 python3，Windows 上 python3 指向应用商店占位程序，提供同名替身"}
+    ],
+    "smoke": [
+      {"cmd": "python3 scripts/check_params.py --list", "cwd": "", "desc": "自检脚本只用标准库，确认能运行"}
+    ],
+    "env_path": ["_shim"],
+    "env_commands": ["python3"],
+    "exclude": [".git", "__pycache__"],
+    "identify_terms": [
+      "lieflat-less-ai-tone", "lieflat-gongwen", "larashero3-dotcom", "larashero3", "lieflat",
+      "公文写作 DNA", "公文写作DNA", "MoxtHub", "moxt.ai", "Moxt"
+    ]
+  },
+  {
+    "id": "liu-official",
+    "name": "Liuxiangjian-ai/official-document-skill",
+    "kind": "single",
+    "repo": "Liuxiangjian-ai/official-document-skill",
+    "repo_url": "https://github.com/Liuxiangjian-ai/official-document-skill",
+    "commit": "cbe5f8cd8aa79c8d977ff858994780f306cebb66",
+    "license": "MIT",
+    "tracks": ["W", "H"],
+    "skill_subdir": "",
+    "skill_name": "official-document-skill",
+    "scope_note": "纯文字 skill（SKILL.md + 示例），无脚本；description 含降 AI 味，故同时参加 W 与 H",
+    "setup": [],
+    "smoke": [],
+    "env_path": [],
+    "env_commands": [],
+    "exclude": [".git", "__pycache__"],
+    "identify_terms": [
+      "official-document-skill", "Official Document Skill", "Liuxiangjian-ai", "Liuxiangjian", "Xiangjian Liu"
+    ]
+  },
+  {
+    "id": "kagura-writing",
+    "name": "KaguraNanaga/official-document-writing-skill",
+    "kind": "single",
+    "repo": "KaguraNanaga/official-document-writing-skill",
+    "repo_url": "https://github.com/KaguraNanaga/official-document-writing-skill",
+    "commit": "e76a6f585bf392f81cb65926db58811ae53e144d",
+    "license": "MIT",
+    "tracks": ["W"],
+    "skill_subdir": "",
+    "skill_name": "official-document-writing",
+    "scope_note": "纯文字 skill（SKILL.md + references + checklists），无可运行脚本",
+    "setup": [],
+    "smoke": [],
+    "env_path": [],
+    "env_commands": [],
+    "exclude": [".git", "__pycache__"],
+    "identify_terms": [
+      "official-document-writing-skill", "Official Document Writing Skill Project", "Official Document Writing Skill",
+      "official-document-writing", "KaguraNanaga", "Kagura"
+    ]
+  },
+  {
+    "id": "amer-super",
+    "name": "Amer-CN/super-official-writer（超级公文写作）",
+    "kind": "single",
+    "repo": "Amer-CN/super-official-writer",
+    "repo_url": "https://github.com/Amer-CN/super-official-writer",
+    "commit": "56685cf4c5a8f035b344afbe0d85c5543af43c9d",
+    "license": "无 LICENSE 文件；README 声明代码部分（scripts/）MIT，知识库内容版权归原作者/博主",
+    "tracks": ["W"],
+    "skill_subdir": "",
+    "skill_name": "super-official-writer",
+    "scope_note": "SKILL.md 无 YAML frontmatter；自带 Node 排版脚本 render_docx.js（依赖 npm 包 docx）与 Python 自检脚本；W 赛道只评写作，不评其排版",
+    "setup": [
+      {"cmd": "npm ci --no-audit --no-fund --loglevel=error", "cwd": "scripts", "desc": "按 package-lock.json 安装 render_docx.js 的依赖 docx（^9.7.1）"}
+    ],
+    "smoke": [
+      {"cmd": "node -e \"require('./node_modules/docx'); console.log('docx 可用')\"", "cwd": "scripts", "desc": "确认 npm 依赖已装好"},
+      {"cmd": "python scripts/check_params.py --help", "cwd": "", "desc": "风格自检脚本只用标准库，确认能运行"}
+    ],
+    "env_path": [],
+    "env_commands": [],
+    "exclude": [".git", "__pycache__"],
+    "identify_terms": [
+      "super-official-writer", "超级公文写作 Skill", "超级公文写作Skill", "超级公文写作", "Amer-CN"
+    ]
+  },
+  {
+    "id": "mizz-gbt9704",
+    "name": "mizzlelover/gongwen-gbt9704-skill（公文排版）",
+    "kind": "single",
+    "repo": "mizzlelover/gongwen-gbt9704-skill",
+    "repo_url": "https://github.com/mizzlelover/gongwen-gbt9704-skill",
+    "commit": "6a5e47a9077d30aa62d6a1cd511bcac6887a7b75",
+    "license": "MIT",
+    "tracks": ["F"],
+    "skill_subdir": "",
+    "skill_name": "gongwen",
+    "scope_note": "Node.js 生成器 generate_gongwen_docx.mjs，无 npm 依赖，但生成 docx 时直接调用 PATH 中的 zip 命令（Windows 默认没有）；检测到缺字体时会改用替代字体并在终端警告",
+    "setup": [
+      {"cmd": "go build -o \"{shim_dir}\\zip.exe\" \"{compete}\\shims\\zip\\main.go\"", "cwd": "", "desc": "SKILL.md 与脚本声明需要 PATH 中有 zip，Windows 默认没有，提供同名替身"},
+      {"cmd": "go build -o \"{shim_dir}\\unzip.exe\" \"{compete}\\shims\\unzip\\main.go\"", "cwd": "", "desc": "SKILL.md 的验证步骤调用 unzip -t / -p，PowerShell 里没有，提供同名替身"}
+    ],
+    "smoke": [
+      {"cmd": "node scripts/generate_gongwen_docx.mjs --input \"{smoke_md}\" --output \"{smoke_out}\\mizz-smoke.docx\" --format ordinary --title 烟雾测试", "cwd": "", "desc": "生成一份样例 docx，确认 node 与 zip 替身可用"}
+    ],
+    "env_path": ["_shim"],
+    "env_commands": ["zip", "unzip"],
+    "exclude": [".git", "__pycache__"],
+    "identify_terms": [
+      "gongwen-gbt9704-skill", "Gongwen GB/T 9704 Skill", "generate_gongwen_docx", "verify_gongwen_docx",
+      "mizzlelover", "谁是专家", "公文版式工具", "CEB 文件转换", "gongwen"
+    ]
+  },
+  {
+    "id": "kagura-format",
+    "name": "KaguraNanaga/document-format-skills（公文格式助手）",
+    "kind": "single",
+    "repo": "KaguraNanaga/document-format-skills",
+    "repo_url": "https://github.com/KaguraNanaga/document-format-skills",
+    "commit": "a1005d13c3429d40cc1e5a5db677555cd672f930",
+    "license": "MIT",
+    "tracks": ["F"],
+    "skill_subdir": "",
+    "skill_name": "document-format-skills",
+    "scope_note": "Python 脚本包，依赖 python-docx（用 uv run --with python-docx 运行）；.doc/.wps 转换需 Windows + pywin32，本评测只用 .docx",
+    "setup": [
+      {"cmd": "uv run --with python-docx python -c \"import docx; print('python-docx 可用')\"", "cwd": "", "desc": "预热 uv 缓存，避免运行时现下载"}
+    ],
+    "smoke": [
+      {"cmd": "uv run --with python-docx python scripts/process.py analyze \"{smoke_docx}\"", "cwd": "", "desc": "对样例 docx 做格式诊断，确认脚本可运行"}
+    ],
+    "env_path": [],
+    "env_commands": [],
+    "exclude": [".git", "__pycache__"],
+    "identify_terms": [
+      "document-format-skills", "docformat-gui", "Document Format GUI", "公文格式助手", "Gloria LaRoche",
+      "KaguraNanaga", "Kagura"
+    ]
+  },
+  {
+    "id": "cj-gbt9704",
+    "name": "cj0103/gbt-9704-2012-skills",
+    "kind": "single",
+    "repo": "cj0103/gbt-9704-2012-skills",
+    "repo_url": "https://github.com/cj0103/gbt-9704-2012-skills",
+    "commit": "931dbfd380312ddd0eb1b45698330470bde2a90f",
+    "license": "MIT",
+    "tracks": ["F"],
+    "skill_subdir": "",
+    "skill_name": "gbt-9704-2012-skills",
+    "scope_note": "Python 脚本包，SKILL.md 的命令写作 uv run --with python-docx python3 ...，Windows 上 python3 指向应用商店占位程序，提供同名替身",
+    "setup": [
+      {"cmd": "go build -o \"{shim_dir}\\python3.exe\" \"{compete}\\shims\\python3\\main.go\"", "cwd": "", "desc": "SKILL.md 的命令一律写 python3，提供同名替身"},
+      {"cmd": "uv run --with python-docx python -c \"import docx; print('python-docx 可用')\"", "cwd": "", "desc": "预热 uv 缓存，避免运行时现下载"}
+    ],
+    "smoke": [
+      {"cmd": "uv run --with python-docx python3 scripts/analyzer.py \"{smoke_docx}\"", "cwd": "", "desc": "按 SKILL.md 原写法对样例 docx 做诊断，确认 python3 替身与脚本可用"}
+    ],
+    "env_path": ["_shim"],
+    "env_commands": ["python3"],
+    "exclude": [".git", "__pycache__"],
+    "identify_terms": [
+      "gbt-9704-2012-skills", "国家行政机关公文格式处理工具", "ChenXuanZhou", "cj0103"
+    ]
+  },
+  {
+    "id": "lieflat-less-ai-tone",
+    "name": "larashero3-dotcom/lieflat-less-ai-tone（去 AI 味）",
+    "kind": "single",
+    "repo": "larashero3-dotcom/lieflat-less-ai-tone",
+    "repo_url": "https://github.com/larashero3-dotcom/lieflat-less-ai-tone",
+    "commit": "27d29232f10124db904ca9c0536d0b67cb3b2833",
+    "license": "MIT",
+    "tracks": ["H"],
+    "skill_subdir": "",
+    "skill_name": "lieflat-less-ai-tone",
+    "scope_note": "白名单式改写规则（SKILL.md），无需运行脚本；scripts/ 下的 check-structure.py、check-translationese.py 由 machine.py 用来统计 AI 痕迹",
+    "setup": [],
+    "smoke": [
+      {"cmd": "python scripts/check-translationese.py \"{smoke_dir}\"", "cwd": "", "desc": "统计脚本只用标准库，确认能运行（machine.py 会调用）"}
+    ],
+    "env_path": [],
+    "env_commands": [],
+    "exclude": [".git", "__pycache__"],
+    "identify_terms": [
+      "lieflat-less-ai-tone", "Lieflat Less AI Tone", "去AI味.skill", "larashero3-dotcom", "larashero3", "shiujan",
+      "lieflat", "MoxtHub", "moxt.ai", "Moxt"
+    ]
+  },
+  {
+    "id": "none",
+    "name": "不装 skill（对照）",
+    "kind": "none",
+    "repo": "",
+    "repo_url": "",
+    "commit": "",
+    "license": "",
+    "tracks": ["W", "F", "H"],
+    "skill_subdir": "",
+    "skill_name": "",
+    "scope_note": "没有安装任何 skill，只许读本请求工作目录，可用 python、python-docx 等工具",
+    "setup": [],
+    "smoke": [],
+    "env_path": [],
+    "env_commands": [],
+    "exclude": [],
+    "identify_terms": []
+  }
+]

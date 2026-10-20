@@ -48,6 +48,9 @@ LAYOUT_NAMES = ("红头", "信函", "纪要", "白头", "材料", "简报")  # -
 LEVEL_FONT = {"h1": "黑体", "h2": "楷体", "h3": "仿宋", "h4": "仿宋", "body": "仿宋", "attendance": "仿宋"}
 LEVEL_NAME = {"h1": "一级标题", "h2": "二级标题", "h3": "三级标题", "h4": "四级标题", "body": "正文"}
 ALLOW_PREFIX = "按本单位制度保留："
+# DOCX-016 使用非标准字体：字体严格模式，只认标准字体或同款别名，缺字体时先安装，不得用其他字体代替
+NON_STANDARD_HINT = "改为“{std}”；本机没有该字体时先下载安装，不要用其他字体代替（运行 python scripts/gw_fonts.py 查看获取和安装方法）"
+NON_STANDARD_BASIS = "GB/T 9704-2012 7.3.1、7.3.3；gbt9704.md 第九部分（字体名称，实践）"
 
 
 class Collector:
@@ -121,17 +124,21 @@ def parse_allow(value) -> List[str]:
 
 
 def check_document(path: Path, layout: Optional[str] = None, params: Optional[dict] = None,
-                   allow=None) -> dict:
+                   allow=None, unit_fonts=None) -> dict:
     """检查 docx，返回机检 JSON 结构。
 
     allow：本单位制度明文规定、与国标不同的写法对应的检查项（如企业发文字号用方括号的 DOCX-050），
     命中时降为 P2 并注明“按本单位制度保留”，不计入 --strict。
+    unit_fonts：按单位规定指定标准字体（“仿宋=方正仿宋_GBK”字符串或 {角色: 字体名}）；指定后该角色使用单位字体视为合规，
+    使用国标字体按非单位规定字体报 DOCX-016。角色或字体名不合法时抛 ValueError。
     """
     import gw_docx as D
     from docx import Document
     from docx.oxml.ns import qn
 
     params = params or D.load_params()
+    params = F.apply_unit_fonts(params, F.parse_unit_fonts(unit_fonts, params))
+    unit_over = params["fonts"].get("unit_override", {})
     doc = Document(str(path))
     col = Collector()
     tol = float(D.pv(params, "page.margin_tolerance_mm"))
@@ -241,14 +248,14 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
         raw_text = p.text
         if role in ("body", "h1", "h2", "h3", "h4"):
             _check_body_para(col, doc, p, role, it.split if role != "body" else -1, line, text, std,
-                             line_pt, body_pt, lines_req, grid_pitch)
+                             line_pt, body_pt, lines_req, grid_pitch, unit_roles=frozenset(unit_over))
             for rx, msg, hint in BAD_ORDINALS:
                 if rx.match(text):
                     col.add("DOCX-033", "P1", "格式要素", f"层次序数写法不规范：{msg}", line=line, excerpt=text,
                             suggestion=hint, basis="GB/T 9704-2012 7.3.3；GB/T 15834-2011 附录 B.3")
                     break
         elif role == "title":
-            _check_title(col, doc, p, line, text, std)
+            _check_title(col, doc, p, line, text, std, unit_roles=frozenset(unit_over))
         elif role == "recipient":
             fl = D.para_first_line_chars(p, doc)
             left = D.para_left_chars(p, doc)
@@ -363,8 +370,10 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
         for m in MARKERS_RE.finditer(t):
             markers["待核实" if m.group(0).startswith("【待核实") else "待补"] += 1
     summary["markers"] = markers
+    if unit_over:
+        notes += [f"按单位规定使用字体：{line}" for line in F.unit_notes({"unit_fonts": unit_over})]
     return {"file": Path(path).name, "doc_type": doc_type or "其他", "layout": layout, "char_count": total,
-            "summary": summary, "issues": issues, "notes": notes}
+            "summary": summary, "issues": issues, "notes": notes, "unit_fonts": dict(unit_over)}
 
 
 def _apply_allow(issues: List[dict], allow: Sequence[str], notes: List[str]) -> List[dict]:
@@ -550,7 +559,8 @@ def _majority(values: List[tuple]) -> Optional[object]:
 
 
 def _check_body_para(col: Collector, doc, p, role: str, split: int, line: int, text: str, std: dict,
-                     line_pt: float, body_pt: float, lines_req: int, grid_pitch: Optional[float]) -> None:
+                     line_pt: float, body_pt: float, lines_req: int, grid_pitch: Optional[float],
+                     unit_roles=frozenset()) -> None:
     import gw_docx as D
     expected = LEVEL_FONT[role]
     end = len(text) if split is None or split < 0 else split
@@ -574,18 +584,21 @@ def _check_body_para(col: Collector, doc, p, role: str, split: int, line: int, t
     main_font = _majority(fonts)
     if main_font is not None:
         cls = F.font_class(main_font)
-        if role == "body" and cls != "仿宋":
+        if expected in unit_roles and F.same_font(main_font, std.get(expected)):
+            pass  # 本单位制度规定的字体（--unit-fonts），视为合规，不再按字体类别判断
+        elif role == "body" and cls != "仿宋":
             col.agg("font-body", "DOCX-010", "P0", "字体", f"正文字体为“{main_font}”，应为仿宋体（仿宋_GB2312）",
-                    line=line, excerpt=text, suggestion="正文设为 3 号仿宋_GB2312（缺字体时用仿宋）",
+                    line=line, excerpt=text, suggestion="正文设为 3 号仿宋_GB2312（本机没有时先下载安装，不要用其他字体代替）",
                     basis="GB/T 9704-2012 7.3.3")
         elif role != "body" and cls != expected:
             iid = {"h1": "DOCX-030", "h2": "DOCX-031"}.get(role, "DOCX-032")
             col.agg(f"font-{role}", iid, "P1", "字体", f"{name}字体为“{main_font}”，应为{expected}", line=line,
                     excerpt=text, suggestion=f"{name}设为{std.get(expected, expected)}", basis="GB/T 9704-2012 7.3.3")
-        elif main_font != std.get(expected) and cls == expected:
-            col.agg(f"alt-{role}-{main_font}", "DOCX-016", "P2", "字体",
-                    f"{name}使用“{main_font}”，标准字体名为“{std.get(expected)}”", line=line, excerpt=text,
-                    suggestion="本单位要求 GB2312 字体的，正式印发前替换", basis="gbt9704.md 第九部分（实践）")
+        elif not F.same_font(main_font, std.get(expected)):
+            # 字体类别对，但不是标准字体本身（如“仿宋”不是“仿宋_GB2312”）：严格模式不接受替代字体
+            col.agg(f"alt-{role}-{main_font}", "DOCX-016", "P1", "字体",
+                    f"{name}使用非标准字体“{main_font}”，应为“{std.get(expected)}”", line=line, excerpt=text,
+                    suggestion=NON_STANDARD_HINT.format(std=std.get(expected)), basis=NON_STANDARD_BASIS)
         if role == "body" and len({F.font_class(f) for f, _ in fonts}) > 1:
             col.agg("font-mixed", "DOCX-010", "P2", "字体", "正文段落中夹有非仿宋字体的文字", line=line, excerpt=text,
                     suggestion="核对是否有意强调；一般正文统一用仿宋", basis="GB/T 9704-2012 7.3.3")
@@ -627,15 +640,20 @@ def _check_body_para(col: Collector, doc, p, role: str, split: int, line: int, t
                     excerpt=text, suggestion="首行缩进设为 2 字符", basis="GB/T 9704-2012 7.3.3")
 
 
-def _check_title(col: Collector, doc, p, line: int, text: str, std: dict) -> None:
+def _check_title(col: Collector, doc, p, line: int, text: str, std: dict, unit_roles=frozenset()) -> None:
     import gw_docx as D
     fonts = [(D.run_font(r, p, doc), len(r.text)) for r in p.runs if r.text.strip()]
     sizes = [(D.run_size(r, p, doc), len(r.text)) for r in p.runs if r.text.strip()]
     main_font = _majority(fonts)
     cls = F.font_class(main_font)
-    if cls == "宋体":
-        col.add("DOCX-016", "P2", "字体", f"标题使用替代字体“{main_font}”，标准为小标宋体", line=line, excerpt=text,
-                suggestion="正式印发前换成方正小标宋简体（需单位授权）", basis="gbt9704.md 第九部分（实践）")
+    std_title = std.get("小标宋")
+    if "小标宋" in unit_roles and F.same_font(main_font, std_title):
+        pass  # 本单位制度规定的标题字体（--unit-fonts），视为合规
+    elif cls in ("小标宋", "宋体") and not F.same_font(main_font, std_title):
+        # 华文中宋、宋体（含加粗）、方正小标宋_GBK 等都不是方正小标宋简体，严格模式不接受替代字体
+        col.add("DOCX-016", "P1", "字体", f"标题使用非标准字体“{main_font}”，应为“{std_title}”（宋体、华文中宋、宋体加粗等不能代替）",
+                line=line, excerpt=text, suggestion=NON_STANDARD_HINT.format(std=std_title) + "；该字体为商业字体，需单位授权",
+                basis=NON_STANDARD_BASIS)
     elif cls != "小标宋":
         col.add("DOCX-020", "P1", "字体", f"标题字体为“{main_font}”，应为小标宋体", line=line, excerpt=text,
                 suggestion=f"标题设为 2 号{std.get('小标宋')}", basis="GB/T 9704-2012 7.3.1")
@@ -747,11 +765,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--allow", metavar="DOCX-050",
                         help="本单位制度明文规定、与国标不同的写法对应的检查项（逗号分隔，如 DOCX-050 方括号文号），"
                              "命中时降为 P2、注明“按本单位制度保留”，不计入 --strict")
+    parser.add_argument("--unit-fonts", metavar="角色=字体名,…", help=F.UNIT_FONTS_HELP)
     args = parser.parse_args(argv)
     try:
         import docx  # noqa: F401
     except ImportError:
         print("缺少 python-docx。请先安装：pip install -U python-docx（需要 1.2.0 及以上版本）")
+        return 2
+    try:
+        unit_fonts = F.parse_unit_fonts(args.unit_fonts, F.load_params())
+    except ValueError as exc:
+        print(f"错误：{exc}")
         return 2
     path = Path(args.file)
     if not path.is_file() or path.suffix.lower() != ".docx":
@@ -761,7 +785,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"错误：无法识别的版式：{args.layout}。可选：{'、'.join(LAYOUT_NAMES)}")
         return 2
     try:
-        result = check_document(path, layout=args.layout, allow=args.allow)
+        result = check_document(path, layout=args.layout, allow=args.allow, unit_fonts=unit_fonts)
     except Exception as exc:  # 文件损坏、不是 docx 等
         print(f"错误：无法读取 {path}：{exc}")
         return 2

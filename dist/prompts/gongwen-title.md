@@ -1,6 +1,6 @@
 > **标题与提纲（gongwen-title）**（提示词版）
 >
-> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 26132 字符
+> 版本：1.0.0　成熟度：Stable（稳定版）　全文约 25710 字符
 >
 > 使用方法：
 > 1. 复制全文，粘贴到对话开头；
@@ -252,16 +252,11 @@
 | 文件 | 何时读取 |
 |---|---|
 | （见附录三） | 拟公文标题、材料标题，查样式和正误示例 |
-| `references/heading-rules.md` | 提炼小标题、做一致性检查时查细则 |
 | （见附录四） | 搭提纲时选骨架 |
-| `references/unit-styles.md` | 确定单位类型后 |
 | （见附录一） | 开工前，以及遇到保密、事实、代笔问题时 |
 | （见附录二） | 交付前；转交、交接卡 |
-| `references/_shared/style/ai-tone.md`、`defensive.md` | 检查标题文风；计划、方案类提纲的要点措辞 |
-| `references/_shared/rules/doc-types.md` | 判断文种，查各文种和材料的标题格式 |
-| `references/_shared/rules/gbt15834.md`、`gbt9704.md` | 标题标点、回行、层次序数 |
-| `references/_shared/profiles/roles.md` | 确定角色模式，无画像降级，首轮交付 |
-| `references/_shared/profiles/units/<文件名>.md` | 需要发文体系、术语表时 |
+
+（其余参考文件未附上。）
 
 ---
 

@@ -1,6 +1,6 @@
 > **国有企业行业包（gongwen-soe）**（提示词版）
 >
-> 版本：1.0.0　成熟度：Beta（测试版）　全文约 27922 字符
+> 版本：1.0.0　成熟度：Beta（测试版）　全文约 27626 字符
 >
 > 使用方法：
 > 1. 复制全文，粘贴到对话开头；
@@ -194,10 +194,9 @@
 |---|---|
 | （见附录四）；（见附录三） | 开工检查第 3 条、第二步决策链核对；起草和自检时逐条对照红线 |
 | `references/templates/` 下 8 个模板；（见附录五） | 第一步定文书后读模板；读不到时用速查卡 |
-| `references/review-addon.md` | 第四步；审稿模式（网页版用速查卡卡九） |
-| `references/glossary.md`；`references/calendar.md` | 写术语、制度和条号；问年度节点 |
-| `references/_shared/` 下的共享规则（guardrails、style/、rules/、profiles/） | 开工、起草、交付和处理机检结果时；定角色模式和无画像降级 |
 | `scripts/` 下 gongwen_lint、soe_check、fact_diff、overlap_check、md2xlsx | 第四、五步 |
+
+（其余参考文件未附上。）
 
 ---
 
@@ -426,16 +425,6 @@
 # 附录四　国有企业行业画像（详版）
 
 本文件是 `references/_shared/profiles/units/guoqi.md` 的补充，写本包 8 类专用文书时用。优先顺序：用户提供的本企业制度（公司章程、议事规则、“三重一大”实施办法、前置研究清单、董事会授权管理办法、公文管理办法）最先；其次是本文件和 `references/glossary.md`；`guoqi.md` 与本文件或 glossary 冲突时，以本文件和 glossary 为准。条款出处见 `references/glossary.md`。
-
-## 目录
-
-一、企业属性判定
-二、治理主体与各自的文书
-三、决策链速查
-四、发文主体与主语
-五、关键动词的分寸
-六、其他单位使用本包时
-七、默认篇幅（工具约定）
 
 ## 一、企业属性判定
 

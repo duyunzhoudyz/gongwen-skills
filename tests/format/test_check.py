@@ -63,6 +63,65 @@ class SpecimenTest(unittest.TestCase):
                 r._r.rPr.find(qn("w:rFonts")).set(qn("w:eastAsia"), "宋体")
         self.assertIn(("DOCX-010", "P0"), ids(self.mutate("标本-正文字体.docx", fn)))
 
+    def _set_font(self, paragraph, name):
+        for r in paragraph.runs:
+            r._r.rPr.find(qn("w:rFonts")).set(qn("w:eastAsia"), name)
+
+    def _hits_016(self, result):
+        return [i for i in result["issues"] if i["id"] == "DOCX-016"]
+
+    def test_non_standard_body_font_is_p1(self):
+        """DOCX-016（严格模式，P1）：字体类别对、但不是标准字体本身（仿宋、方正仿宋_GBK），消息写明应为仿宋_GB2312。"""
+        for k, font in enumerate(("仿宋", "方正仿宋_GBK", "STFangsong")):
+            result = self.mutate(f"标本-正文非标准字体{k}.docx", lambda doc, f=font: self._set_font(self._body(doc), f))
+            hits = self._hits_016(result)
+            self.assertEqual([(h["level"], h["category"]) for h in hits], [("P1", "字体")], font)
+            self.assertIn(f"“{font}”", hits[0]["message"])
+            self.assertIn("应为“仿宋_GB2312”", hits[0]["message"])
+            self.assertIn("不要用其他字体代替", hits[0]["suggestion"])
+            self.assertNotIn("缺字体时用", hits[0]["suggestion"])
+            self.assertNotIn("DOCX-010", {i["id"] for i in result["issues"] if i["level"] == "P0"})
+
+    def test_standard_font_aliases_pass(self):
+        """同一款字体的英文名（FangSong_GB2312、SimHei、FZXiaoBiaoSong-B05S）不算非标准字体。"""
+        def fn(doc):
+            self._set_font(self._body(doc), "FangSong_GB2312")
+            self._set_font([p for p in doc.paragraphs if p.text.startswith("一、")][0], "SimHei")
+            self._set_font(doc.paragraphs[0], "FZXiaoBiaoSong-B05S")
+        result = self.mutate("标本-字体别名.docx", fn)
+        self.assertEqual(self._hits_016(result), [])
+        self.assertEqual((result["summary"]["P0"], result["summary"]["P1"]), (0, 0))
+
+    def test_non_standard_heading_font_is_p1(self):
+        def fn(doc):
+            self._set_font([p for p in doc.paragraphs if p.text.startswith("一、")][0], "方正黑体_GBK")
+        hits = self._hits_016(self.mutate("标本-一级标题非标准字体.docx", fn))
+        self.assertEqual([(h["level"], h["id"]) for h in hits], [("P1", "DOCX-016")])
+        self.assertIn("一级标题", hits[0]["message"])
+        self.assertIn("应为“黑体”", hits[0]["message"])
+
+    def test_non_standard_title_font_is_p1(self):
+        """标题用华文中宋、宋体（含加粗）、方正小标宋_GBK 代替方正小标宋简体：DOCX-016 P1；其他字体仍是 DOCX-020。"""
+        for k, font in enumerate(("华文中宋", "宋体", "方正小标宋_GBK", "FZXiaoBiaoSong-B05")):
+            result = self.mutate(f"标本-标题非标准字体{k}.docx", lambda doc, f=font: self._set_font(doc.paragraphs[0], f))
+            hits = self._hits_016(result)
+            self.assertEqual([(h["level"], h["category"]) for h in hits], [("P1", "字体")], font)
+            self.assertIn("应为“方正小标宋简体”", hits[0]["message"])
+            self.assertIn(f"“{font}”", hits[0]["message"])
+            self.assertNotIn("DOCX-020", {i["id"] for i in result["issues"]})
+        result = self.mutate("标本-标题其他字体.docx", lambda doc: self._set_font(doc.paragraphs[0], "微软雅黑"))
+        self.assertEqual(self._hits_016(result), [])
+        self.assertIn(("DOCX-020", "P1"), ids(result))
+
+    def test_allow_demotes_non_standard_font(self):
+        """--allow DOCX-016 的机制不变：本单位制度明文规定用其他字体的，降为 P2 并注明按本单位制度保留。"""
+        self.mutate("标本-允许非标准字体.docx", lambda doc: self._set_font(self._body(doc), "仿宋"))
+        result = check_docx.check_document(OUT / "标本-允许非标准字体.docx", allow="DOCX-016")
+        hits = self._hits_016(result)
+        self.assertEqual([h["level"] for h in hits], ["P2"])
+        self.assertTrue(hits[0]["message"].startswith("按本单位制度保留："))
+        self.assertEqual(result["summary"]["P1"], 0)
+
     def test_theme_font_is_wrong(self):
         def fn(doc):
             for r in self._body(doc).runs:

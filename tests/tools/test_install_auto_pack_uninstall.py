@@ -499,5 +499,55 @@ class NextStepsTest(InstallTestBase):
         self.assertFalse(install.module_available(""))
 
 
+class FontCheckTest(InstallTestBase):
+    """安装排版 skill 后，调用其 gw_fonts.py 检查标准字体并打印缺失字体与引导；检查失败不影响安装结果。"""
+
+    STUB = "import sys\nprint('假的字体检查报告：缺方正小标宋简体')\nsys.exit(3)\n"
+
+    def setUp(self):
+        super().setUp()
+        self.add_skills("gongwen", "gongwen-format")
+        self.make_marketplace(core=["gongwen", "gongwen-format"], packs={})
+        self.script = write_text(self.root / install.FONT_CHECK_REL, self.STUB)
+
+    def test_font_report_printed_after_install(self):
+        code, out = self.run_install("--target", "claude")
+        self.assertEqual(code, 0, out)  # 字体检查返回 3 也不影响安装结果
+        self.assertIn("排版字体检查", out)
+        self.assertIn("假的字体检查报告：缺方正小标宋简体", out)
+        self.assertIn("不会改用其他字体顶替", out)
+        self.assertEqual(self.installed(".claude/skills"), ["gongwen", "gongwen-format"])
+
+    def test_skipped_in_dry_run(self):
+        code, out = self.run_install("--target", "claude", "--dry-run")
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("排版字体检查", out)
+
+    def test_skipped_when_format_not_installed(self):
+        code, out = self.run_install("--target", "claude", "--skills", "gongwen")
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("排版字体检查", out)
+
+    def test_skipped_when_script_missing(self):
+        self.script.unlink()
+        code, out = self.run_install("--target", "claude")
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("排版字体检查", out)
+
+    def test_failure_to_run_does_not_fail_install(self):
+        with mock.patch.object(install.subprocess, "run", side_effect=OSError("找不到 Python")):
+            code, out = self.run_install("--target", "claude")
+        self.assertEqual(code, 0, out)
+        self.assertIn("字体检查没能运行", out)
+        self.assertIn("python scripts/gw_fonts.py", out)
+        self.assertEqual(self.installed(".claude/skills"), ["gongwen", "gongwen-format"])
+
+    def test_empty_output_does_not_fail_install(self):
+        write_text(self.script, "pass\n")
+        code, out = self.run_install("--target", "claude")
+        self.assertEqual(code, 0, out)
+        self.assertIn("字体检查没有输出", out)
+
+
 if __name__ == "__main__":
     unittest.main()

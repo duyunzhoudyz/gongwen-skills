@@ -27,3 +27,6 @@ Thumbs.db
 
 # 会话交接记录（含本机路径，不入库）
 /交接报告*.md
+
+# 评测用 API Key（只在本机，绝不入库）
+/deepseek.key.local*

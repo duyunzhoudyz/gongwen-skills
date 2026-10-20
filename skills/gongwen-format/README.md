@@ -46,19 +46,22 @@ python scripts/build_docx.py 正文.txt --meta 版式信息.json -o 成稿.docx
 python scripts/check_docx.py 成稿.docx --strict
 python scripts/check_docx.py 成稿.docx --strict --allow DOCX-050    # 本单位制度规定文号用方括号时
 python scripts/fix_docx.py 旧稿.docx
+python scripts/build_docx.py 正文.txt --unit-fonts "仿宋=方正仿宋_GBK,小标宋=方正小标宋_GBK"    # 本单位制度规定了字体时（build、fix、check、preview、gw_fonts 都支持）
 python scripts/build_docx.py 送审稿.txt --meta 版式信息.json    # 输出 送审稿.docx，供批注用
 python scripts/annotate_docx.py 送审稿.docx 核稿意见.json
-python scripts/preview_docx.py 成稿.docx    # 本机装有 LibreOffice 时，转成逐页图片目检
+python scripts/preview_docx.py 成稿.docx    # 本机装有 LibreOffice 且标准字体齐全时，转成逐页图片目检；缺字体时拒绝渲染
+python scripts/gw_fonts.py    # 检查本机是否装齐标准字体，缺哪款、怎么装
 ```
 
 ## 注意事项
 
-1. 字体：不附带任何字体文件，也不提供下载。默认写入仿宋_GB2312、楷体_GB2312、黑体、方正小标宋简体，打开文档的电脑上要有这些字体。本机没有时，加 `--font-fallback` 改用系统自带的仿宋、楷体、黑体，标题用华文中宋或宋体加粗。方正小标宋简体是商业字体，需要单位自行取得授权。
+1. 字体（严格模式）：不附带任何字体文件，也不提供下载。文件中一律写入仿宋_GB2312、楷体_GB2312、黑体、方正小标宋简体、宋体，打开文档的电脑上必须装有这些字体。本机缺字体时，脚本不会改用其他字体顶替，而是在报告开头明确指出缺哪些字体，说明在缺字体的电脑上看到的不是正式效果、不能据此核对版式或打印，并给出每款字体的获取途径和安装方法，请自行下载安装；缺字体时 `preview_docx.py` 拒绝渲染。随时可运行 `python scripts/gw_fonts.py` 检查。方正小标宋简体是商业字体，需要单位自行取得授权。
 2. 不编造：发文字号、成文日期、签发人、印发日期只用你提供的，缺了就写【待补】。文号还没编的，写成“某发〔2026〕【待补：序号】号”，签发人仍在同一行。
 3. 保密：涉密材料不要交给联网 AI 工具处理。脚本本身只在本机运行，不联网。
 4. 位置要打印核对：红头标志、红线、页码、版记的位置是近似实现，正式印发前打印一页量一下（清单见 `references/manual-setup.md` 第十三部分）。
 5. 不做的事：不生成印章和院徽、校徽；不排附件正文；不支持命令（令）格式；简报版式是常见做法的默认样式，要与本单位往期简报一致的，核对后在 Word 中微调；表格不支持合并单元格，修复时不调整已有的正文表格；批注不写修订。
 6. 单位规定与国标不同的（例如企业规定年份用方括号），按单位规定排，检查时加 `--allow DOCX-050`，相应问题降为提示并注明“按本单位制度保留”。
+7. 单位规定字体：本单位制度明文规定了字体（例如正文用方正仿宋_GBK）的，用 `--unit-fonts "角色=字体名,…"` 指定（角色限仿宋、楷体、黑体、小标宋、宋体；build_docx.py 的版式信息也可写 `unit_fonts`，命令行优先）。该角色写入单位指定的字体名，严格模式不变：本机没装就同样报“字体缺失”并引导安装（向单位信息中心或办公室索取），不回退国标字体或其他字体；检查时单位字体合规、国标字体报 DOCX-016。只是没装国标字体想换个字体的，不属于单位规定，不能用该参数。
 
 ## 成熟度
 
