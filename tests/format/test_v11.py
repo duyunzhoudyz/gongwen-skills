@@ -621,3 +621,90 @@ class OverprintTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BuildKeepTextTest(unittest.TestCase):
+    """build_docx --keep-text：只排版，不补冒号、不加括号、不去段首空格；保存前核对文字与输入一致。"""
+
+    TEXT = ("关于做好冬季消防安全检查的通知\n\n各区应急管理局\n\n　　现就有关事项通知如下。\n\n  一、总体要求\n\n"
+            "　　全面排查火灾隐患。\n\n某市应急管理局\n\n2026-10-28\n\n注：此件公开发布")
+
+    def _build(self, text, name, meta=None, keep=True):
+        doc, report = build_docx.build(text.split("\n"), meta or {}, layout="白头", installed=NO_FONTS, keep_text=keep)
+        path = OUT / name
+        if path.exists():
+            path.unlink()
+        doc.save(str(path))
+        return Document(str(path)), report
+
+    def test_default_still_normalizes(self):
+        doc, report = self._build(self.TEXT, "bk-默认.docx", {"主送机关": "各区应急管理局"}, keep=False)
+        texts = [p.text for p in doc.paragraphs]
+        self.assertIn("各区应急管理局：", texts)
+        self.assertNotIn("　　现就有关事项通知如下。", texts)
+
+    def test_keep_text_adds_no_character(self):
+        doc, report = self._build(self.TEXT, "bk-保留.docx", {"主送机关": "各区应急管理局"})
+        texts = [p.text for p in doc.paragraphs]
+        self.assertIn("各区应急管理局", texts)  # 不补全角冒号
+        self.assertNotIn("各区应急管理局：", texts)
+        self.assertIn("　　现就有关事项通知如下。", texts)  # 段首空格保留
+        self.assertIn("  一、总体要求", texts)
+        self.assertTrue(report["keep_text"])
+        self.assertTrue(any("主送机关" in x and "冒号" in x for x in report["text_issues"]), report["text_issues"])
+        self.assertTrue(any("--keep-text" in n for n in report["notes"]), report["notes"])
+        self.assertFalse(any("已去掉行首空格" in w for w in report["warnings"]))
+        self.assertIn("文字类问题", build_docx.render_text(report))
+
+    def test_keep_text_indent_not_stacked_on_space_indent(self):
+        doc, _ = self._build(self.TEXT, "bk-缩进.docx")
+        body = para_with(doc, "现就有关事项通知如下")
+        self.assertEqual(gw_docx.para_first_line_chars(body, doc), 0)
+        # 页面、字体照常排：正文 3 号仿宋
+        self.assertEqual(body.runs[0].font.size.pt, 16)
+
+    def test_keep_text_note_and_date_not_rewritten(self):
+        meta = {"成文日期": "2026-10-28", "附注": "此件公开发布"}
+        text = "关于通知的通知\n\n各单位：\n\n特此通知。\n\n某市应急管理局"
+        doc, report = self._build(text, "bk-附注日期.docx", meta)
+        texts = [p.text for p in doc.paragraphs]
+        self.assertIn("2026-10-28", texts)
+        self.assertIn("此件公开发布", texts)
+        self.assertTrue(any("附注" in x for x in report["text_issues"]))
+        self.assertTrue(any("成文日期" in x for x in report["text_issues"]))
+
+    def test_keep_text_attachment_lines_verbatim(self):
+        text = NOTICE.replace("某市应急管理局\n\n2026年10月28日", "") + "附件：1．检查表\n　　2．整改表\n\n某市应急管理局\n\n2026年10月28日"
+        doc, _ = self._build(text, "bk-附件.docx")
+        texts = [p.text for p in doc.paragraphs]
+        self.assertIn("附件：1．检查表", texts)
+
+    def test_keep_text_verification_aborts_on_change(self):
+        from unittest import mock
+        real = build_docx.Builder.para
+
+        def tamper(self, role, text, split=-1, raw=None):
+            if role == "body":
+                text += "。"
+            return real(self, role, text, split, raw)
+        with mock.patch.object(build_docx.Builder, "para", tamper):
+            with self.assertRaises(build_docx.BuildError) as cm:
+                build_docx.build(self.TEXT.split("\n"), {}, layout="白头", installed=NO_FONTS, keep_text=True)
+        self.assertIn("不一致", str(cm.exception))
+
+    def test_keep_text_pipe_table_and_attach_pages(self):
+        doc, report = self._build(ATTACH_TEXT, "bk-附件页.docx", RED_META)
+        self.assertTrue(any("项目" in c.text for t in doc.tables for r in t.rows for c in r.cells))  # 附件页表格在
+        self.assertIn("整改通知书（样式）", "".join(p.text for p in doc.paragraphs))
+
+    def test_cli_flag(self):
+        src = OUT / "bk-命令行-正文.txt"
+        src.write_text(self.TEXT, encoding="utf-8")
+        out = OUT / "bk-命令行.docx"
+        if out.exists():
+            out.unlink()
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            self.assertEqual(build_docx.main([str(src), "-o", str(out), "--layout", "白头", "--keep-text", "--no-check"]), 0)
+        self.assertIn("按 --keep-text", buf.getvalue())
+        self.assertIn("  一、总体要求", [p.text for p in Document(str(out)).paragraphs])

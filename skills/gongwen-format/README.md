@@ -48,6 +48,7 @@ python scripts/check_docx.py 成稿.docx --strict
 python scripts/check_docx.py 成稿.docx --strict --allow DOCX-050    # 本单位制度规定文号用方括号时
 python scripts/fix_docx.py 旧稿.docx
 python scripts/fix_docx.py 旧稿.docx --keep-text    # 用户要求“内容别动”“一个字都别改”时：只调格式，不改文字
+python scripts/build_docx.py 正文.txt --keep-text    # 同上，排版时不补冒号、不加括号、不去段首空格
 python scripts/build_docx.py 正文.txt --meta 版式信息.json --layout 命令    # 命令（令）
 python scripts/build_docx.py 正文.txt --meta 版式信息.json --overprint      # 预印红头纸套打
 python scripts/check_docx.py 成稿.docx --overprint
