@@ -49,6 +49,7 @@ class LintRulesSchemaTest(unittest.TestCase):
         source = LINT_PATH.read_text(encoding="utf-8")
         used = set(re.findall(r'_proc_issue\(\s*"([A-Z]{3}-\d{3})"', source))
         used |= set(re.findall(r'add\("([A-Z]{3}-\d{3})"', source))
+        used |= set(re.findall(r'(?:emit|marker_or)\(\s*"([A-Z]{3}-\d{3})"', source))  # 要素完整性、评价证据检查
         registered = {p["id"] for p in RULES["procedural"]}
         self.assertEqual(used - registered, set(), "引擎使用了未登记的规则")
         self.assertEqual(registered - used, set(), "登记了引擎中没有实现的规则")
