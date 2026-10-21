@@ -1,6 +1,6 @@
 # 脚本用法
 
-两个脚本都在本机运行，不联网，不修改输入文件，输出文件已存在时加 -v2、-v3。读表时先查密级和内部标注（文件名、各工作表名、标题、表头前文字、单元格、表注）：命中的，inspect 只报 DT-SEC-01 和标注位置，不输出标题、表注、统计数和其他问题；merge、count、calc 和 phrase 的表格模式、chart_tool 直接拦截，退出码 2。用户说明使用内网部署模型、已删去相关内容、标识系误加或材料已公开后，才可加 `--marking-ok` 重新运行，此后 DT-SEC-01 降为 P2。需要 Python 3.9 及以上和 openpyxl（`pip install openpyxl`）；读 CSV 只用标准库；出 PNG 另需 matplotlib（可选）。不支持旧版 .xls，请先另存为 .xlsx。
+两个脚本都在本机运行，不联网，不修改输入文件，输出文件已存在时加 -v2、-v3。读表时先查密级和内部标注（文件名、各工作表名、标题、表头前文字、单元格、表注）：命中的，inspect 只报 DT-SEC-01 和标注位置，不输出标题、表注、统计数和其他问题；merge、count、calc 和 phrase 的表格模式、chart_tool 直接拦截，退出码 2。用户说明使用内网部署模型、已删去相关内容、经本单位保密管理部门确认标识系误加或材料已解密、已公开后，才可加 `--marking-ok` 重新运行，此后 DT-SEC-01 降为 P2。需要 Python 3.9 及以上和 openpyxl（`pip install openpyxl`）；读 CSV 只用标准库；出 PNG 另需 matplotlib（可选）。不支持旧版 .xls，请先另存为 .xlsx。
 
 ## 目录
 
