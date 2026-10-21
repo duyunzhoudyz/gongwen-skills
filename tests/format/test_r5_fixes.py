@@ -232,6 +232,15 @@ class TextCheckTest(unittest.TestCase):
         self.assertEqual(got2.count("2026年4月8日"), 1, got2)
         self.assertTrue(report2["text_check"]["ok"], report2["text_check"])
 
+    def test_blank_day_date_recognized(self):
+        """成文日期日留空（“2026年10月　日”）仍识别为成文日期并排在署名之下，回读检查无 P0、P1。"""
+        text = "关于某事的通知\n\n各单位:\n\n现通知如下。\n\n特此通知。\n\n某局\n2026年10月　日"
+        path, report = build_file(text, "r5-日留空.docx", {"版式": "白头"})
+        got = texts(Document(str(path)))
+        self.assertEqual(got[-2:], ["某局", "2026年10月　日"], got)
+        bad = {x for x in ids(check_docx.check_document(path)) if x[1] in ("P0", "P1")}
+        self.assertFalse(bad, bad)
+
     def test_check_reports_duplicate_date_line(self):
         """回读检查：同一行成文日期在正文中出现两次（如重排时多排了一行）报 P1。"""
         src = OUT / "r5-重复日期-检查.docx"

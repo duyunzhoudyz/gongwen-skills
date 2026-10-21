@@ -49,7 +49,7 @@ KNOWN_TYPES = {
 }
 
 MARKER_RE = re.compile(r"【(待补|待核实)：[^】]*】")
-PURE_DATE_RE = re.compile(r"^\d{4}年\d{1,2}月\d{1,2}日$")
+PURE_DATE_RE = re.compile(r"^\d{4}年\d{1,2}月[ 　]*(?:\d{1,2})?日$")
 DOCNO_RE = re.compile(r"〔\d{4}〕\d+号|\[\d{4}\]\d+号|（\d{4}）\d+号")
 HEADER_RE = re.compile(r"^(签发人|份号|密级|紧急程度|特急|加急|秘密|机密|绝密)")
 # 签报单、呈批件抬头印的表头字样，不是标题

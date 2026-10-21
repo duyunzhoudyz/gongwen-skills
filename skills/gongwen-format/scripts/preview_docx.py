@@ -102,7 +102,7 @@ def to_png(pdf: Path, out_dir: Path, dpi: int = 80) -> List[Path]:
 
 
 PAGE_NO_RE = re.compile(r"^[—-]\s*[0-9]+\s*[—-]$")
-DATE_LINE_RE = re.compile(r"^\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日$")
+DATE_LINE_RE = re.compile(r"^\d{4}\s*年\s*\d{1,2}\s*月\s*(?:\d{1,2}\s*)?日$")
 TAIL_LINE_RE = re.compile(r"^(抄送|附件)\s*[：:]|^\d{1,2}\s*[.．、]\s*\S|^[（(].*[）)]$|印发$")
 
 

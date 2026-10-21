@@ -227,6 +227,11 @@ class ElementClosingTest(unittest.TestCase):
         self.assertNotIn("ELM-003", elm_ids(text, "请示"))
         self.assertIn("STR-003", ids(run(text, "请示")))
 
+    def test_blank_day_date_not_missing(self):
+        """起草时成文日期日留空（“2026年10月　日”，签发时填）：不报缺少成文日期。"""
+        text = TONGZHI_OK.replace("2026年12月20日\n", "2026年12月　日\n", 1)
+        self.assertNotIn("ELM-005", elm_ids(text, "通知"))
+
     def test_tongzhi_not_required(self):
         text = TONGZHI_OK.replace("特此通知。\n\n", "", 1)
         self.assertNotIn("ELM-003", elm_ids(text, "通知"))

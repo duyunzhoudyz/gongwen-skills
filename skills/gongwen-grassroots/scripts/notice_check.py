@@ -79,7 +79,7 @@ SIGN_TODO_RE = re.compile(r"^【待(?:补|核实)：[^】]*(?:落款|单位|署�
 CN_NUM = "〇零一二三四五六七八九"
 # 成文日期行；紧急通知可写到“时”“分”，缺时的可写“2026年7月12日【待补：时】”
 DATE_LINE_RE = re.compile(
-    r"^(?:\d{4}年\d{1,2}月\d{1,2}日(?:\d{1,2}时(?:\d{1,2}分)?|【待(?:补|核实)：[^】]*】)?|"
+    r"^(?:\d{4}年\d{1,2}月(?:\d{1,2}|[ 　]*)日(?:(?:\d{1,2}|[ 　]*)时(?:\d{1,2}分)?|【待(?:补|核实)：[^】]*】)?|"
     r"[〇零一二三四五六七八九]{4}年[一二三四五六七八九十]{1,2}月[一二三四五六七八九十]{1,3}日|"
     r"【待(?:补|核实)：[^】]*(?:日期|时间)[^】]*】)$"
 )
@@ -302,7 +302,7 @@ def cn_to_int(text: str) -> Optional[int]:
 def signoff_year(body: Sequence[Tuple[int, str]]) -> Tuple[Optional[int], Optional[int]]:
     """从落款日期取年份和月份。"""
     for _number, text in reversed(body[-4:]):
-        match = re.match(r"^(\d{4})年(\d{1,2})月\d{1,2}日(?:\d{1,2}时(?:\d{1,2}分)?|【待(?:补|核实)：[^】]*】)?$", text)
+        match = re.match(r"^(\d{4})年(\d{1,2})月(?:\d{1,2}|[ 　]*)日(?:(?:\d{1,2}|[ 　]*)时(?:\d{1,2}分)?|【待(?:补|核实)：[^】]*】)?$", text)
         if match:
             return int(match.group(1)), int(match.group(2))
     return None, None

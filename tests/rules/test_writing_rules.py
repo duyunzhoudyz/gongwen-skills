@@ -27,9 +27,10 @@ class WritingRulesTest(unittest.TestCase):
         self.assertIn("（初稿）", s)
         self.assertIn("85% 下限不适用", s)
 
-    def test_date_default_today(self):
+    def test_date_signing_day(self):
         s = read("shared/guardrails.md")
-        self.assertIn("成文日期按今天填写，请按实际印发日期调整", s)
+        self.assertIn("成文日期按签发日填写", s)
+        self.assertIn("年份类相对表述照抄", s)
 
     def test_notice_contact_and_han_closing(self):
         t = read("skills/gongwen-draft/references/doc-types/tongzhi.md")
