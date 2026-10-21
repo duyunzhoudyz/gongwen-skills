@@ -8,6 +8,7 @@
     提示词是普通的“请根据以下事实写一篇……”，不要求模型刻意写差，保留模型自然产生的 AI 味。
 
 用法
+    python gen_h_drafts.py --tasks-dir evals/compete/tasks-v2 --dry-run   # 指定题目目录（默认 tasks/）
     python gen_h_drafts.py --dry-run                 # 只打印将要调用的题号和提示词长度（不读 key、不联网、不写文件）
     python gen_h_drafts.py                           # 为尚无初稿的 H 题生成初稿
     python gen_h_drafts.py --only H01,H03            # 只处理指定题号
@@ -123,6 +124,7 @@ def read_key() -> str:
 # 任务发现与计划
 # ---------------------------------------------------------------------------
 def discover_h_tasks() -> list[str]:
+    # TASKS_DIR 可被 --tasks-dir 覆盖（见 main）
     if not TASKS_DIR.is_dir():
         return []
     return sorted(p.name for p in TASKS_DIR.iterdir() if p.is_dir() and re.fullmatch(r"H\d{2}", p.name))
@@ -302,6 +304,8 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         description="为 H 赛道（去 AI 味）调用 DeepSeek 生成初稿，写入 tasks/Hxx/files/初稿.md。",
         epilog="Key 只从仓库根目录 deepseek.key.local 读取；不会被打印或写入任何文件。",
     )
+    parser.add_argument("--tasks-dir", metavar="DIR", default=None,
+                        help="题目目录（默认 evals/compete/tasks）；相对路径先按当前目录、再按仓库根目录解析")
     parser.add_argument("--only", metavar="H01,H03", help="只处理指定题号，逗号分隔")
     parser.add_argument("--dry-run", action="store_true",
                         help="只打印将要调用的题号和提示词长度；不读 key、不联网、不写文件")
@@ -340,6 +344,13 @@ def print_plan(plan: list[dict], args: argparse.Namespace) -> None:
 def main(argv: list[str] | None = None) -> int:
     _setup_stdio()
     args = parse_args(argv)
+
+    global TASKS_DIR
+    if args.tasks_dir:
+        cand = Path(args.tasks_dir)
+        if not cand.is_absolute():
+            cand = next((c for c in (Path.cwd() / cand, ROOT.parents[1] / cand) if c.is_dir()), Path.cwd() / cand)
+        TASKS_DIR = cand.resolve()
 
     all_ids = discover_h_tasks()
     if not all_ids:
