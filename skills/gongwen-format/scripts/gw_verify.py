@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""文字核对：输入全文与文档全文规范化后双向、按顺序逐字比对（只依赖标准库）。
+"""文字核对\uff1a输入全文与文档全文规范化后双向\u3001按顺序逐字比对\uff08只依赖标准库\uff09\u3002
 
-多字（文档里有、输入里没有）、少字（输入里有、文档里没有）、乱序（位置不一致）、重复（同一段文字排了两次）都算不一致。
-build_docx.py --keep-text 保存前用它核对，不一致就中止；抽取（extract_docx.py）后用它核对“版式信息 + 正文”是否等于原文。
-规范化：去掉全部空白（含全角空格、制表符、换行）。核对通过前，不得对用户声称“已逐字核对”。
+多字\uff08文档里有\u3001输入里没有\uff09\u3001少字\uff08输入里有\u3001文档里没有\uff09\u3001乱序\uff08位置不一致\uff09\u3001重复\uff08同一段文字排了两次\uff09都算不一致\u3002
+build_docx.py --keep-text 保存前用它核对\uff0c不一致就中止\uff1b抽取\uff08extract_docx.py\uff09后用它核对\u201c版式信息 + 正文\u201d是否等于原文\u3002
+规范化\uff1a去掉全部空白\uff08含全角空格\u3001制表符\u3001换行\uff09\u3002核对通过前\uff0c不得对用户声称\u201c已逐字核对\u201d\u3002
 """
 from __future__ import annotations
 
@@ -13,11 +13,11 @@ from dataclasses import dataclass, field
 from typing import List, Sequence
 
 # 文档里由版式信息写出的固定标签字，核对“多出”的文字时不计（如“签发人：”“抄送：”“某日印发”“附件1”）
-LABEL_WORDS = ("签发人：", "抄送：", "附件：", "总第", "★", "印发", "文件", "附件", "第", "号", "期", "编")
+LABEL_WORDS = ("签发人\uff1a", "抄送\uff1a", "附件\uff1a", "总第", "★", "印发", "文件", "附件", "第", "号", "期", "编")
 
 
 def norm(text: str) -> str:
-    """规范化：去掉全部空白字符。"""
+    """规范化\uff1a去掉全部空白字符\u3002"""
     return re.sub(r"\s+", "", text or "")
 
 
@@ -28,11 +28,11 @@ class TextCheck:
     problems: List[str] = field(default_factory=list)
 
     def summary(self, limit: int = 5) -> str:
-        return "；".join(self.problems[:limit]) + (f"；……共 {len(self.problems)} 处" if len(self.problems) > limit else "")
+        return "\uff1b".join(self.problems[:limit]) + (f"；……共 {len(self.problems)} 处" if len(self.problems) > limit else "")
 
 
 def _pieces(a: str, b: str):
-    """a（输入）与 b（文档）的字符级差异：返回 (少的文字列表, 多的文字列表)。"""
+    """a\uff08输入\uff09与 b\uff08文档\uff09的字符级差异\uff1a返回 (少的文字列表, 多的文字列表)\u3002"""
     missing: List[str] = []
     extra: List[str] = []
     for op, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
@@ -44,7 +44,7 @@ def _pieces(a: str, b: str):
 
 
 def _covered(piece: str, values: Sequence[str]) -> bool:
-    """piece 是否能完全由版式信息的值和固定标签字依次拼成。"""
+    """piece 是否能完全由版式信息的值和固定标签字依次拼成\u3002"""
     words = sorted({v for v in list(values) + list(LABEL_WORDS) if v}, key=len, reverse=True)
     reach = [False] * (len(piece) + 1)
     reach[0] = True
@@ -59,11 +59,11 @@ def _covered(piece: str, values: Sequence[str]) -> bool:
 
 def compare_text(doc_texts: Sequence[str], input_texts: Sequence[str], *, allowed: Sequence[str] = (),
                  movable: Sequence[str] = ()) -> TextCheck:
-    """比对文档全文与输入全文。
+    """比对文档全文与输入全文\u3002
 
-    doc_texts：文档各段落文字（按文档顺序，含表格单元格）；input_texts：输入各行、表格单元格文字（按输入顺序）。
-    allowed：版式信息中提供的值（文档里由它们写出的文字不算“多出”，其他多出的文字报错）。
-    movable：允许换位置的文字（版头要素、版记行，排版时按版式移到版头、版记位置）。
+    doc_texts\uff1a文档各段落文字\uff08按文档顺序\uff0c含表格单元格\uff09\uff1binput_texts\uff1a输入各行\u3001表格单元格文字\uff08按输入顺序\uff09\u3002
+    allowed\uff1a版式信息中提供的值\uff08文档里由它们写出的文字不算\u201c多出\u201d\uff0c其他多出的文字报错\uff09\u3002
+    movable\uff1a允许换位置的文字\uff08版头要素\u3001版记行\uff0c排版时按版式移到版头\u3001版记位置\uff09\u3002
     """
     inp = [t for t in (norm(x) for x in input_texts) if t]
     doc = [t for t in (norm(x) for x in doc_texts) if t]
@@ -101,10 +101,10 @@ def compare_text(doc_texts: Sequence[str], input_texts: Sequence[str], *, allowe
 
 
 def compare_chars(original_texts: Sequence[str], rebuilt_texts: Sequence[str], *, ignore: Sequence[str] = ()) -> TextCheck:
-    """按字统计核对（不看顺序）：原文全文与“版式信息加正文”重组后的全文，各字出现次数应一致，多了或少了都报出。
+    """按字统计核对\uff08不看顺序\uff09\uff1a原文全文与\u201c版式信息加正文\u201d重组后的全文\uff0c各字出现次数应一致\uff0c多了或少了都报出\u3002
 
-    抽取（extract_docx.py）用：版式信息里的要素已从正文移出，顺序与原文不同，所以只核对文字有没有多、少、重复；
-    ignore：两边都去掉的固定标签字和记号（如“签发人：”“抄送：”“【”“】”）。"""
+    抽取\uff08extract_docx.py\uff09用\uff1a版式信息里的要素已从正文移出\uff0c顺序与原文不同\uff0c所以只核对文字有没有多\u3001少\u3001重复\uff1b
+    ignore\uff1a两边都去掉的固定标签字和记号\uff08如\u201c签发人\uff1a\u201d\u201c抄送\uff1a\u201d\u201c【\u201d\u201c】\u201d\uff09\u3002"""
     from collections import Counter
 
     def flat(texts: Sequence[str]) -> str:
@@ -117,8 +117,8 @@ def compare_chars(original_texts: Sequence[str], rebuilt_texts: Sequence[str], *
     res = TextCheck(chars=sum(a.values()))
     lost, gained = a - b, b - a
     if lost:
-        res.problems.append("少字：原文有、版式信息和正文里没有的字：" + "".join(f"{c}×{n} " for c, n in lost.most_common(12)).strip())
+        res.problems.append("少字\uff1a原文有\u3001版式信息和正文里没有的字\uff1a" + "".join(f"{c}×{n} " for c, n in lost.most_common(12)).strip())
     if gained:
-        res.problems.append("多字或重复：版式信息和正文里多出的字：" + "".join(f"{c}×{n} " for c, n in gained.most_common(12)).strip())
+        res.problems.append("多字或重复\uff1a版式信息和正文里多出的字\uff1a" + "".join(f"{c}×{n} " for c, n in gained.most_common(12)).strip())
     res.ok = not res.problems
     return res

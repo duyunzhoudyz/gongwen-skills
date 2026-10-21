@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""从已有 docx 抽取全文和版式信息，供 build_docx.py 重排（已有 docx 的版头、版记、附件等结构有缺失或错误时用）。
+"""从已有 docx 抽取全文和版式信息\uff0c供 build_docx.py 重排\uff08已有 docx 的版头\u3001版记\u3001附件等结构有缺失或错误时用\uff09\u3002
 
-输出两个文件：
-- 正文-<原名>.txt：按段落抽取的全文。版头、版记要素（见下）已移入版式信息，不在正文中；正文表格转成管道表格；
-  附件页（“附件”“附件1”标识加标题）转成“【附件1】标题”分界行；版记表格和落在附件之后的抄送、印发行移到主文末尾。
-- 版式信息-<原名>.json：版式、份号、密级、紧急程度、发文机关标志、令号、发文字号、签发人、抄送（原句）、印发机关、印发日期。
-  识别不出的不写，由 build_docx.py 写【待补】。主送机关、标题、署名、成文日期、附注、附件说明仍留在正文中，由 build 识别，
-  避免版式信息覆盖原文写法。
+输出两个文件\uff1a
+- 正文-<原名>.txt\uff1a按段落抽取的全文\u3002版头\u3001版记要素\uff08见下\uff09已移入版式信息\uff0c不在正文中\uff1b正文表格转成管道表格\uff1b
+  附件页\uff08\u201c附件\u201d\u201c附件1\u201d标识加标题\uff09转成\u201c【附件1】标题\u201d分界行\uff1b版记表格和落在附件之后的抄送\u3001印发行移到主文末尾\u3002
+- 版式信息-<原名>.json\uff1a版式\u3001份号\u3001密级\u3001紧急程度\u3001发文机关标志\u3001令号\u3001发文字号\u3001签发人\u3001抄送\uff08原句\uff09\u3001印发机关\u3001印发日期\u3002
+  识别不出的不写\uff0c由 build_docx.py 写【待补】\u3002主送机关\u3001标题\u3001署名\u3001成文日期\u3001附注\u3001附件说明仍留在正文中\uff0c由 build 识别\uff0c
+  避免版式信息覆盖原文写法\u3002
 
-不改任何文字：文字只做搬运（段内制表符换成全角空格，软换行拆成两行）。之后用 build_docx.py --keep-text 重排，
-build 会逐行核对文字。退出码：0 成功；2 输入错误或缺少依赖。
+不改任何文字\uff1a文字只做搬运\uff08段内制表符换成全角空格\uff0c软换行拆成两行\uff09\u3002之后用 build_docx.py --keep-text 重排\uff0c
+build 会逐行核对文字\u3002退出码\uff1a0 成功\uff1b2 输入错误或缺少依赖\u3002
 """
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ TAIL_LAYOUTS = ("红头", "白头", "纪要", "命令")
 
 
 def _norm(text: str) -> List[str]:
-    """一个段落的文字：软换行拆成多行，段内制表符换成全角空格，去行尾空白（行首空格保留）。"""
+    """一个段落的文字\uff1a软换行拆成多行\uff0c段内制表符换成全角空格\uff0c去行尾空白\uff08行首空格保留\uff09\u3002"""
     out = []
     for part in text.replace("\r", "").split("\n"):
         part = re.sub(r"(?<=\S)\t+(?=\S)", "　", part).replace("\t", "").rstrip()
@@ -68,7 +68,7 @@ def _pipe_table(tbl, doc) -> List[str]:
 
 
 def extract(path: Path, layout: Optional[str] = None) -> dict:
-    """返回 {"lines": 正文行, "meta": 版式信息, "recognized": 识别结果, "notes": 提示, "warnings": 警告}。"""
+    """返回 {"lines": 正文行, "meta": 版式信息, "recognized": 识别结果, "notes": 提示, "warnings": 警告}\u3002"""
     import gw_docx as D
     from docx import Document
     from docx.table import Table
@@ -89,7 +89,7 @@ def extract(path: Path, layout: Optional[str] = None) -> dict:
             raw = D.direct_text(para) or para.text
             if is_draft_note_line(raw.strip()):
                 cut = True
-                notes.append("遇到【起草说明】，其后内容未抽取")
+                notes.append("遇到【起草说明】\uff0c其后内容未抽取")
                 break
             red = D.para_is_red(para, doc)
             original.append(raw)
@@ -124,7 +124,7 @@ def extract(path: Path, layout: Optional[str] = None) -> dict:
         elif m:
             title = ""
             if i + 1 < len(seq) and seq[i + 1][0] == "p" and not ATTACH_MARK_RE.match(seq[i + 1][1].strip()) \
-                    and len(seq[i + 1][1].strip()) <= 60 and seq[i + 1][1].strip()[-1] not in SENT_PUNCT + "：:":
+                    and len(seq[i + 1][1].strip()) <= 60 and seq[i + 1][1].strip()[-1] not in SENT_PUNCT + "\uff1a:":
                 title = seq[i + 1][1].strip()
                 i += 1
             secs.append([m.group(1) or "", title, []])
@@ -164,7 +164,7 @@ def extract(path: Path, layout: Optional[str] = None) -> dict:
     eff = lay or ("白头" if kind == "法定" else "材料")
     strip_roles: tuple = ()
     if lay == "简报":
-        warnings.append("识别为简报，版头版记未移入版式信息；简报用 fix_docx.py --keep-text 处理已排好的 docx")
+        warnings.append("识别为简报\uff0c版头版记未移入版式信息\uff1b简报用 fix_docx.py --keep-text 处理已排好的 docx")
     else:
         if eff in STRIP_LAYOUTS:
             strip_roles += STRIP_HEAD
@@ -207,14 +207,14 @@ def extract(path: Path, layout: Optional[str] = None) -> dict:
             meta["印发机关"] = f["印发机关"]
             meta["印发日期"] = f["印发日期"]
     if lay in ("红头", "纪要", "命令", "信函") and "发文机关标志" not in meta:
-        notes.append("未识别到发文机关标志，build 将写【待补】，请用户补齐")
+        notes.append("未识别到发文机关标志\uff0cbuild 将写【待补】\uff0c请用户补齐")
     for k, label in (("标题", "标题"), ("主送机关", "主送机关"), ("发文机关署名", "落款署名"), ("成文日期", "成文日期"),
                      ("附注", "附注"), ("附件", "附件说明")):
         if f.get(k):
-            recognized.append(f"{label}：{f[k] if not isinstance(f[k], list) else '、'.join(f[k])}（留在正文，由 build 识别）")
-    recognized += [f"{k}：{'、'.join(v) if isinstance(v, list) else v}（移入版式信息）" for k, v in meta.items() if k != "版式"]
+            recognized.append(f"{label}：{f[k] if not isinstance(f[k], list) else '\u3001'.join(f[k])}（留在正文，由 build 识别）")
+    recognized += [f"{k}：{'\u3001'.join(v) if isinstance(v, list) else v}（移入版式信息）" for k, v in meta.items() if k != "版式"]
     if secs:
-        recognized.append("附件页：" + "；".join(f"附件{s[0]} {s[1] or '【无标题】'}" for s in secs))
+        recognized.append("附件页\uff1a" + "\uff1b".join(f"附件{s[0]} {s[1] or '【无标题】'}" for s in secs))
     warnings += [w for w in parsed.warnings if "空格缩进" not in w]
 
     # 4. 组装正文行：按 parse 时的下标去掉已移入版式信息的行
@@ -236,7 +236,7 @@ def extract(path: Path, layout: Optional[str] = None) -> dict:
             if summary:
                 hf.append(("" if len(doc.sections) == 1 else f"第 {idx} 节") + f"{name}：{summary}")
     if hf:
-        notes.append("原页眉、页脚中的内容不带入重排稿（公文不用页眉，页码由 build 在页脚按标准重设）：" + "；".join(hf))
+        notes.append("原页眉\u3001页脚中的内容不带入重排稿\uff08公文不用页眉\uff0c页码由 build 在页脚按标准重设\uff09\uff1a" + "\uff1b".join(hf))
     # 6. 核对：版式信息加正文（还原成文字）应与原文各字一致，没有多字、少字、重复；不一致的先查明再重排
     if letter_head and "发文机关标志" in meta and lay == "信函":
         original.append(letter_head)
@@ -248,10 +248,10 @@ def extract(path: Path, layout: Optional[str] = None) -> dict:
                       if not re.fullmatch(r"[\s:-]*", c)]
         else:
             recon.append(ln)
-    chk = compare_chars(original, recon, ignore=("签发人：", "签发人:", "抄送：", "抄送:", "印发", "文件", "【", "】", "|", "-",
+    chk = compare_chars(original, recon, ignore=("签发人\uff1a", "签发人:", "抄送\uff1a", "抄送:", "印发", "文件", "【", "】", "|", "-",
                                                  "<br>", "&nbsp;"))
     if not chk.ok:
-        warnings.append("抽取核对发现版式信息加正文与原文的文字不一致，请先查明再重排（不得声称已逐字核对）：" + chk.summary())
+        warnings.append("抽取核对发现版式信息加正文与原文的文字不一致\uff0c请先查明再重排\uff08不得声称已逐字核对\uff09\uff1a" + chk.summary())
     return {"lines": lines, "meta": meta, "recognized": recognized, "notes": notes, "warnings": warnings,
             "attachments": len(secs), "layout": lay,
             "text_check": {"ok": chk.ok, "chars": chk.chars, "problems": chk.problems}}
@@ -262,20 +262,20 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
-    parser = argparse.ArgumentParser(description="从已有 docx 抽取全文和版式信息，供 build_docx.py 重排。",
-                                     epilog="示例：python scripts/extract_docx.py 旧稿.docx --layout 红头 && "
+    parser = argparse.ArgumentParser(description="从已有 docx 抽取全文和版式信息\uff0c供 build_docx.py 重排\u3002",
+                                     epilog="示例\uff1apython scripts/extract_docx.py 旧稿.docx --layout 红头 && "
                                             "python scripts/build_docx.py 正文-旧稿.txt --meta 版式信息-旧稿.json --keep-text")
-    parser.add_argument("file", help="待抽取的 .docx（不会被修改）")
-    parser.add_argument("-o", "--output", help="正文输出路径；默认在 docx 同目录写“正文-<原名>.txt”")
-    parser.add_argument("--meta-output", help="版式信息输出路径；默认与正文同目录“版式信息-<原名>.json”")
-    parser.add_argument("--layout", help="版式：红头、信函、纪要、命令、白头、材料（不写时按版头判断；"
-                                         "版头缺失但应排红头的，指定红头，build 会把缺的要素写成【待补】）")
+    parser.add_argument("file", help="待抽取的 .docx\uff08不会被修改\uff09")
+    parser.add_argument("-o", "--output", help="正文输出路径\uff1b默认在 docx 同目录写\u201c正文-<原名>.txt\u201d")
+    parser.add_argument("--meta-output", help="版式信息输出路径\uff1b默认与正文同目录\u201c版式信息-<原名>.json\u201d")
+    parser.add_argument("--layout", help="版式\uff1a红头\u3001信函\u3001纪要\u3001命令\u3001白头\u3001材料\uff08不写时按版头判断\uff1b"
+                                         "版头缺失但应排红头的\uff0c指定红头\uff0cbuild 会把缺的要素写成【待补】\uff09")
     parser.add_argument("--json", action="store_true", help="以 JSON 输出结果")
     args = parser.parse_args(argv)
     try:
         import docx  # noqa: F401
     except ImportError:
-        print("缺少 python-docx。请先安装：pip install -U python-docx（需要 1.2.0 及以上版本）")
+        print("缺少 python-docx\u3002请先安装\uff1apip install -U python-docx\uff08需要 1.2.0 及以上版本\uff09")
         return 2
     import gw_docx as D
     src = Path(args.file)
@@ -296,14 +296,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.json:
         print(json.dumps({k: v for k, v in res.items() if k != "lines"}, ensure_ascii=False, indent=2))
         return 0
-    print(f"已抽取：{len(res['lines'])} 行 -> {out}\n版式信息 -> {meta_out}\n版式：{res['layout'] or '未判定（build 按文种决定）'}")
+    print(f"已抽取：{len(res['lines'])} 行 -> {out}\n版式信息 -> {meta_out}\n版式：{res['layout'] or '未判定\uff08build 按文种决定\uff09'}")
     for title, items in (("识别结果", res["recognized"]), ("提示", res["notes"]), ("警告", res["warnings"])):
         if items:
-            print(title + "：\n" + "\n".join("  - " + x for x in items))
+            print(title + "\uff1a\n" + "\n".join("  - " + x for x in items))
     tc = res["text_check"]
-    print("抽取核对：版式信息加正文与原文各字一致，没有多字、少字、重复（" + str(tc["chars"]) + " 字）" if tc["ok"]
-          else "抽取核对：不一致，见上面的警告；查明前不要声称已逐字核对")
-    print("下一步：python scripts/build_docx.py <正文> --meta <版式信息> --keep-text -o <成稿.docx>（内容别动时加 --keep-text）")
+    print("抽取核对\uff1a版式信息加正文与原文各字一致\uff0c没有多字\u3001少字\u3001重复\uff08" + str(tc["chars"]) + " 字\uff09" if tc["ok"]
+          else "抽取核对\uff1a不一致\uff0c见上面的警告\uff1b查明前不要声称已逐字核对")
+    print("下一步\uff1apython scripts/build_docx.py <正文> --meta <版式信息> --keep-text -o <成稿.docx>\uff08内容别动时加 --keep-text\uff09")
     return 0
 
 

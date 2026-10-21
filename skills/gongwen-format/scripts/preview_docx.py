@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""把 docx 转成 PDF 和逐页 PNG，供目检排版效果（有条件时使用）。
+"""把 docx 转成 PDF 和逐页 PNG\uff0c供目检排版效果\uff08有条件时使用\uff09\u3002
 
-- 字体严格模式：本机缺任一标准字体（或无法检测）时拒绝渲染，输出缺失字体清单和安装引导，没有绕过选项。
-  原因：LibreOffice 遇到缺失字体会静默换用其他字体，渲染出的不是正式效果，据此目检版式会得出错误结论。
-- 需要本机装有 LibreOffice（soffice）；找不到时给出提示后退出，不报错。
-- 装有 pymupdf 时再把 PDF 转成逐页 PNG；没有时只输出 PDF。
-- 只在本机运行，不联网。LibreOffice 的排版与 Word、WPS 略有差异，正式印发前仍以打印核对为准。
+- 字体严格模式\uff1a本机缺任一标准字体\uff08或无法检测\uff09时拒绝渲染\uff0c输出缺失字体清单和安装引导\uff0c没有绕过选项\u3002
+  原因\uff1aLibreOffice 遇到缺失字体会静默换用其他字体\uff0c渲染出的不是正式效果\uff0c据此目检版式会得出错误结论\u3002
+- 需要本机装有 LibreOffice\uff08soffice\uff09\uff1b找不到时给出提示后退出\uff0c不报错\u3002
+- 装有 pymupdf 时再把 PDF 转成逐页 PNG\uff1b没有时只输出 PDF\u3002
+- 只在本机运行\uff0c不联网\u3002LibreOffice 的排版与 Word\u3001WPS 略有差异\uff0c正式印发前仍以打印核对为准\u3002
 
-退出码：0 完成或环境不具备（已提示）；2 输入错误或转换失败；3 缺标准字体或无法检测字体，拒绝渲染。
+退出码\uff1a0 完成或环境不具备\uff08已提示\uff09\uff1b2 输入错误或转换失败\uff1b3 缺标准字体或无法检测字体\uff0c拒绝渲染\u3002
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ MAC_CANDIDATES = ["/Applications/LibreOffice.app/Contents/MacOS/soffice"]
 
 
 def find_soffice() -> Optional[str]:
-    """按 PATH、常见安装位置查找 soffice。"""
+    """按 PATH\u3001常见安装位置查找 soffice\u3002"""
     for name in ("soffice", "libreoffice"):
         found = shutil.which(name)
         if found:
@@ -46,7 +46,7 @@ def find_soffice() -> Optional[str]:
 
 
 def unique_path(path: Path) -> Path:
-    """输出路径已存在时依次加 -v2、-v3，不覆盖已有文件（与 gw_docx.unique_path 相同；本脚本不依赖 python-docx）。"""
+    """输出路径已存在时依次加 -v2\u3001-v3\uff0c不覆盖已有文件\uff08与 gw_docx.unique_path 相同\uff1b本脚本不依赖 python-docx\uff09\u3002"""
     if not path.exists():
         return path
     stem, suffix = path.stem, path.suffix
@@ -58,9 +58,9 @@ def unique_path(path: Path) -> Path:
 
 
 def to_pdf(soffice: str, src: Path, out_dir: Path, timeout: int = 180) -> Path:
-    """调用 LibreOffice 无界面转换。用临时用户配置，避免与已打开的 LibreOffice 冲突。
+    """调用 LibreOffice 无界面转换\u3002用临时用户配置\uff0c避免与已打开的 LibreOffice 冲突\u3002
 
-    LibreOffice 会直接覆盖输出目录中的同名 PDF，因此先转到临时目录，再按不覆盖的文件名移入 out_dir。
+    LibreOffice 会直接覆盖输出目录中的同名 PDF\uff0c因此先转到临时目录\uff0c再按不覆盖的文件名移入 out_dir\u3002
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     profile = tempfile.mkdtemp(prefix="gw-lo-")
@@ -71,7 +71,7 @@ def to_pdf(soffice: str, src: Path, out_dir: Path, timeout: int = 180) -> Path:
         subprocess.run(cmd, capture_output=True, timeout=timeout, check=False)
         made = Path(work) / (src.stem + ".pdf")
         if not made.is_file():
-            raise RuntimeError("LibreOffice 没有生成 PDF，请确认文件能正常打开")
+            raise RuntimeError("LibreOffice 没有生成 PDF\uff0c请确认文件能正常打开")
         pdf = unique_path(out_dir / made.name)
         shutil.move(str(made), str(pdf))
     finally:
@@ -81,7 +81,7 @@ def to_pdf(soffice: str, src: Path, out_dir: Path, timeout: int = 180) -> Path:
 
 
 def to_png(pdf: Path, out_dir: Path, dpi: int = 80) -> List[Path]:
-    """用 pymupdf 把 PDF 逐页转成 PNG；没有 pymupdf 时返回空列表。"""
+    """用 pymupdf 把 PDF 逐页转成 PNG\uff1b没有 pymupdf 时返回空列表\u3002"""
     try:
         import pymupdf  # noqa: F401
     except ImportError:
@@ -101,16 +101,16 @@ def to_png(pdf: Path, out_dir: Path, dpi: int = 80) -> List[Path]:
     return pages
 
 
-PAGE_NO_RE = re.compile(r"^[—-]\s*[0-9]+\s*[—-]$")
+PAGE_NO_RE = re.compile(r"^[\u2014-]\s*[0-9]+\s*[\u2014-]$")
 DATE_LINE_RE = re.compile(r"^\d{4}\s*年\s*\d{1,2}\s*月\s*(?:\d{1,2}\s*)?日$")
-TAIL_LINE_RE = re.compile(r"^(抄送|附件)\s*[：:]|^\d{1,2}\s*[.．、]\s*\S|^[（(].*[）)]$|印发$")
+TAIL_LINE_RE = re.compile(r"^(抄送|附件)\s*[\uff1a:]|^\d{1,2}\s*[.．\u3001]\s*\S|^[\uff08(].*[\uff09)]$|印发$")
 
 
 def analyze_pages(pdf: Path, bottom_mm: float = 35.0) -> List[str]:
-    """读 PDF 逐页文字，给出版面事实（交付说明只能写这里核对到的）：落款是否与正文同页、首页下方留白。没有 pymupdf 时返回空列表。
+    """读 PDF 逐页文字\uff0c给出版面事实\uff08交付说明只能写这里核对到的\uff09\uff1a落款是否与正文同页\u3001首页下方留白\u3002没有 pymupdf 时返回空列表\u3002
 
-    落款孤页：末页（超过一页时）去掉页码、成文日期、单位名称短行、附注、抄送、印发行、附件说明后，没有正文行了。
-    首页留白：多页文档的首页，正文最后一行到版心下边缘（页下边距 bottom_mm）的距离大于 60 mm。"""
+    落款孤页\uff1a末页\uff08超过一页时\uff09去掉页码\u3001成文日期\u3001单位名称短行\u3001附注\u3001抄送\u3001印发行\u3001附件说明后\uff0c没有正文行了\u3002
+    首页留白\uff1a多页文档的首页\uff0c正文最后一行到版心下边缘\uff08页下边距 bottom_mm\uff09的距离大于 60 mm\u3002"""
     try:
         import pymupdf
     except ImportError:
@@ -135,12 +135,12 @@ def analyze_pages(pdf: Path, bottom_mm: float = 35.0) -> List[str]:
     if len(pages) > 1:
         lines = [ln for ln in pages[-1][0] if not PAGE_NO_RE.match(ln)]
         body = [ln for ln in lines if not (DATE_LINE_RE.match(ln.replace(" ", "")) or TAIL_LINE_RE.match(ln)
-                                           or (len(ln) <= 20 and not any(ch in ln for ch in "。，；：！？、")))]
+                                           or (len(ln) <= 20 and not any(ch in ln for ch in "\u3002\uff0c\uff1b\uff1a\uff01\uff1f\u3001")))]
         has_date = any(DATE_LINE_RE.match(ln.replace(" ", "")) for ln in lines)
         if has_date and not body:
-            facts.append("末页只有落款（署名、成文日期，可能连同附件说明、版记），落款与正文最后一段不在同一页，需要调整")
+            facts.append("末页只有落款\uff08署名\u3001成文日期\uff0c可能连同附件说明\u3001版记\uff09\uff0c落款与正文最后一段不在同一页\uff0c需要调整")
         elif has_date:
-            facts.append("落款与正文最后一段在同一页（末页）")
+            facts.append("落款与正文最后一段在同一页\uff08末页\uff09")
         first_bottom, limit = pages[0][1], pages[0][2]
         gap_mm = (limit - first_bottom) * 25.4 / 72
         if gap_mm > 60:
@@ -149,9 +149,9 @@ def analyze_pages(pdf: Path, bottom_mm: float = 35.0) -> List[str]:
 
 
 def check_fonts(unit_fonts=None) -> int:
-    """字体严格模式：本机标准字体齐全时返回 0；缺字体或无法检测时输出缺失清单和安装引导，返回 3（拒绝渲染）。
+    """字体严格模式\uff1a本机标准字体齐全时返回 0\uff1b缺字体或无法检测时输出缺失清单和安装引导\uff0c返回 3\uff08拒绝渲染\uff09\u3002
 
-    LibreOffice 遇到缺失字体会静默换用其他字体渲染，据此目检版式会得出错误结论，所以不提供绕过选项。
+    LibreOffice 遇到缺失字体会静默换用其他字体渲染\uff0c据此目检版式会得出错误结论\uff0c所以不提供绕过选项\u3002
     """
     try:
         params = F.load_params()
@@ -169,8 +169,8 @@ def check_fonts(unit_fonts=None) -> int:
         return 0
     print(F.render_notice(check))
     print()
-    print("预览已拒绝：本机缺少标准字体（或无法确认字体齐全）时，LibreOffice 会静默换用其他字体渲染，"
-          "预览看到的不是正式效果，不能据此核对版式。请先按上面的提示安装字体，再重新运行本命令；本命令没有绕过选项。")
+    print("预览已拒绝\uff1a本机缺少标准字体\uff08或无法确认字体齐全\uff09时\uff0cLibreOffice 会静默换用其他字体渲染\uff0c"
+          "预览看到的不是正式效果\uff0c不能据此核对版式\u3002请先按上面的提示安装字体\uff0c再重新运行本命令\uff1b本命令没有绕过选项\u3002")
     return F.EXIT_FONTS_INCOMPLETE
 
 
@@ -179,16 +179,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
-    parser = argparse.ArgumentParser(description="把 docx 转成 PDF 和逐页 PNG，用于目检排版效果（需要 LibreOffice）。"
-                                                 "本机缺任一标准字体（或无法检测）时拒绝渲染，没有绕过选项。",
-                                     epilog="示例：python scripts/preview_docx.py 成稿.docx --dpi 80\n"
-                                            "退出码：0 完成或找不到 LibreOffice（只提示）；2 输入错误或转换失败；3 缺标准字体，拒绝渲染。",
+    parser = argparse.ArgumentParser(description="把 docx 转成 PDF 和逐页 PNG\uff0c用于目检排版效果\uff08需要 LibreOffice\uff09\u3002"
+                                                 "本机缺任一标准字体\uff08或无法检测\uff09时拒绝渲染\uff0c没有绕过选项\u3002",
+                                     epilog="示例\uff1apython scripts/preview_docx.py 成稿.docx --dpi 80\n"
+                                            "退出码\uff1a0 完成或找不到 LibreOffice\uff08只提示\uff09\uff1b2 输入错误或转换失败\uff1b3 缺标准字体\uff0c拒绝渲染\u3002",
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("file", help="要预览的 .docx")
-    parser.add_argument("-o", "--outdir", help="输出目录；默认在 docx 同目录下建“<文件名>-预览”")
-    parser.add_argument("--dpi", type=int, default=80, help="PNG 分辨率，默认 80")
-    parser.add_argument("--soffice", help="soffice 可执行文件路径（自动查找失败时指定）")
-    parser.add_argument("--unit-fonts", metavar="角色=字体名,…", help=F.UNIT_FONTS_HELP + "；字体齐全检查按单位指定字体核对")
+    parser.add_argument("-o", "--outdir", help="输出目录\uff1b默认在 docx 同目录下建\u201c<文件名>-预览\u201d")
+    parser.add_argument("--dpi", type=int, default=80, help="PNG 分辨率\uff0c默认 80")
+    parser.add_argument("--soffice", help="soffice 可执行文件路径\uff08自动查找失败时指定\uff09")
+    parser.add_argument("--unit-fonts", metavar="角色=字体名,…", help=F.UNIT_FONTS_HELP + "\uff1b字体齐全检查按单位指定字体核对")
     args = parser.parse_args(argv)
 
     src = Path(args.file)
@@ -200,7 +200,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return code
     soffice = args.soffice or find_soffice()
     if not soffice or not (Path(soffice).is_file() or shutil.which(soffice)):
-        print("未找到 LibreOffice（soffice），跳过预览。需要目检时可安装 LibreOffice，或直接用 Word、WPS 打开并打印核对。")
+        print("未找到 LibreOffice\uff08soffice\uff09\uff0c跳过预览\u3002需要目检时可安装 LibreOffice\uff0c或直接用 Word\u3001WPS 打开并打印核对\u3002")
         return 0
     out_dir = Path(args.outdir) if args.outdir else src.with_name(src.stem + "-预览")
     try:
@@ -219,8 +219,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if pages:
         print(f"逐页图片 {len(pages)} 张：{out_dir}")
     else:
-        print("未安装 pymupdf，只输出了 PDF。需要逐页图片时运行：pip install pymupdf")
-    print("提示：LibreOffice 与 Word、WPS 的排版略有差异；红头和版记位置以打印核对为准。")
+        print("未安装 pymupdf\uff0c只输出了 PDF\u3002需要逐页图片时运行\uff1apip install pymupdf")
+    print("提示\uff1aLibreOffice 与 Word\u3001WPS 的排版略有差异\uff1b红头和版记位置以打印核对为准\u3002")
     return 0
 
 

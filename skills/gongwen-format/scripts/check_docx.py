@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""检查已有 docx 是否符合 GB/T 9704-2012。
+"""检查已有 docx 是否符合 GB/T 9704-2012\u3002
 
-检查项：纸张、页边距、文档网格、正文和标题的字体字号、行距、首行缩进、层次标题字体、页码、
-发文字号（上行文居左空一字）、成文日期、主送机关、附件说明、抄送、印发日期、残留标记等；
-v1.1 版式：命令（令）、附件另面编排、联合行文版头与联署署名、预印红头纸套打（--overprint）。
---json 输出与 docs/开发规范.md 第 8 节的机检 JSON 一致，级别 P0/P1/P2。
+检查项\uff1a纸张\u3001页边距\u3001文档网格\u3001正文和标题的字体字号\u3001行距\u3001首行缩进\u3001层次标题字体\u3001页码\u3001
+发文字号\uff08上行文居左空一字\uff09\u3001成文日期\u3001主送机关\u3001附件说明\u3001抄送\u3001印发日期\u3001残留标记等\uff1b
+v1.1 版式\uff1a命令\uff08令\uff09\u3001附件另面编排\u3001联合行文版头与联署署名\u3001预印红头纸套打\uff08--overprint\uff09\u3002
+--json 输出与 docs/开发规范.md 第 8 节的机检 JSON 一致\uff0c级别 P0/P1/P2\u3002
 
-退出码：默认 0；--strict 时存在 P0 返回 1；输入错误或缺少依赖返回 2。
+退出码\uff1a默认 0\uff1b--strict 时存在 P0 返回 1\uff1b输入错误或缺少依赖返回 2\u3002
 """
 from __future__ import annotations
 
@@ -29,29 +29,29 @@ from gw_layout import (ATTACH_MARK_RE, DATE_CN_RE, MARKERS_RE, ROLE_LABELS, SECR
 CJK_RE = re.compile(r"[一-鿿]")
 # 序号位与 gw_layout.DOCNO_PAT 一致：阿拉伯数字，或尚未编号的“【待补：序号】”
 DOCNO_SEQ = r"(?:\d+|【待补[^】]*】)"
-DOCNO_BRACKET_RE = re.compile(r"[一-鿿]{1,12}[\[［(（【﹝{｛]\s*(?:19|20)\d{2}\s*[\]］)）】﹞}｝]\s*第?\s*" + DOCNO_SEQ + r"\s*号")
+DOCNO_BRACKET_RE = re.compile(r"[一-鿿]{1,12}[\[［(\uff08【﹝{\uff5b]\s*(?:19|20)\d{2}\s*[\]］)\uff09】﹞}\uff5d]\s*第?\s*" + DOCNO_SEQ + r"\s*号")
 DOCNO_SHORT_YEAR_RE = re.compile(r"〔\d{2}〕")
 DOCNO_DI_RE = re.compile(r"〔\d{4}〕\s*第\s*" + DOCNO_SEQ + r"\s*号")
 DOCNO_ZERO_RE = re.compile(r"〔\d{4}〕\s*0\d*\s*号")
 DATE_ZERO_RE = re.compile(r"\d{4}年0[1-9]月|月0[1-9]日")
 PRINT_OK_RE = re.compile(r"\d{4}年[1-9]\d?月[1-9]\d?日印发$")
-PAGE_TEXT_RE = re.compile(r"^—\s?[1-9]\d*\s?—$")
-ORDINAL_HINT = "依次用 一、（一）1.（1）"
+PAGE_TEXT_RE = re.compile(r"^\u2014\s?[1-9]\d*\s?\u2014$")
+ORDINAL_HINT = "依次用 一\u3001\uff08一\uff091.\uff081\uff09"
 # (写法, 问题说明, 修改建议)。“1、”不判断所在层级：序号后改用“.”，直接位于一级标题下的应改为“（一）”
 BAD_ORDINALS = [
-    (re.compile(r"^\d+、"), "阿拉伯数字序数后应用“.”，不用“、”",
-     "序号后应用“.”，如“1.”；如属第二层（直接位于“一、”下），应为“（一）”"),
-    (re.compile(r"^（[一二三四五六七八九十]+）[、，.．]"), "“（一）”后不加标点", ORDINAL_HINT),
-    (re.compile(r"^[一二三四五六七八九十]+[.．，]"), "一级序数后用顿号“一、”", ORDINAL_HINT),
-    (re.compile(r"^\((\d+|[一二三四五六七八九十]+)\)"), "序数括号应为全角“（）”", ORDINAL_HINT),
+    (re.compile(r"^\d+\u3001"), "阿拉伯数字序数后应用\u201c.\u201d\uff0c不用\u201c\u3001\u201d",
+     "序号后应用\u201c.\u201d\uff0c如\u201c1.\u201d\uff1b如属第二层\uff08直接位于\u201c一\u3001\u201d下\uff09\uff0c应为\u201c\uff08一\uff09\u201d"),
+    (re.compile(r"^\uff08[一二三四五六七八九十]+\uff09[\u3001\uff0c.．]"), "\u201c\uff08一\uff09\u201d后不加标点", ORDINAL_HINT),
+    (re.compile(r"^[一二三四五六七八九十]+[.．\uff0c]"), "一级序数后用顿号\u201c一\u3001\u201d", ORDINAL_HINT),
+    (re.compile(r"^\((\d+|[一二三四五六七八九十]+)\)"), "序数括号应为全角\u201c\uff08\uff09\u201d", ORDINAL_HINT),
 ]
 LAYOUT_NAMES = ("红头", "信函", "纪要", "命令", "白头", "材料", "简报")  # --layout 可选值
 LEVEL_FONT = {"h1": "黑体", "h2": "楷体", "h3": "仿宋", "h4": "仿宋", "body": "仿宋", "attendance": "仿宋"}
 LEVEL_NAME = {"h1": "一级标题", "h2": "二级标题", "h3": "三级标题", "h4": "四级标题", "body": "正文"}
-ALLOW_PREFIX = "按本单位制度保留："
+ALLOW_PREFIX = "按本单位制度保留\uff1a"
 # DOCX-016 使用非标准字体：字体严格模式，只认标准字体或同款别名，缺字体时先安装，不得用其他字体代替
-NON_STANDARD_HINT = "改为“{std}”；本机没有该字体时先下载安装，不要用其他字体代替（运行 python scripts/gw_fonts.py 查看获取和安装方法）"
-NON_STANDARD_BASIS = "GB/T 9704-2012 7.3.1、7.3.3；gbt9704.md 第九部分（字体名称，实践）"
+NON_STANDARD_HINT = "改为\u201c{std}\u201d\uff1b本机没有该字体时先下载安装\uff0c不要用其他字体代替\uff08运行 python scripts/gw_fonts.py 查看获取和安装方法\uff09"
+NON_STANDARD_BASIS = "GB/T 9704-2012 7.3.1\u30017.3.3\uff1bgbt9704.md 第九部分\uff08字体名称\uff0c实践\uff09"
 
 
 class Collector:
@@ -66,7 +66,7 @@ class Collector:
 
     def agg(self, key: str, iid: str, level: str, category: str, message: str, *, line: Optional[int],
             excerpt: str, suggestion: str, basis: str) -> None:
-        """同类问题合并为一条，记录段数和第一处位置。"""
+        """同类问题合并为一条\uff0c记录段数和第一处位置\u3002"""
         if key in self._agg:
             self._agg[key]["count"] += 1
             return
@@ -89,7 +89,7 @@ def _cls_ok(cls: str, expected: str) -> bool:
 
 
 def _footer_info(footer_el) -> dict:
-    """页脚中的页码域、文本、对齐方式和字体。"""
+    """页脚中的页码域\u3001文本\u3001对齐方式和字体\u3002"""
     from docx.oxml.ns import qn
     info = {"has_page": False, "text": "", "align": None, "fonts": set(), "sizes": set()}
     for p in footer_el.iter(qn("w:p")):
@@ -117,22 +117,22 @@ def _part_text(part_el) -> str:
 
 
 def parse_allow(value) -> List[str]:
-    """解析 --allow：逗号或空格分隔的检查项 ID，统一为大写（与 gongwen_lint.py 的 --allow 一致）。"""
+    """解析 --allow\uff1a逗号或空格分隔的检查项 ID\uff0c统一为大写\uff08与 gongwen_lint.py 的 --allow 一致\uff09\u3002"""
     if not value:
         return []
-    items = value if isinstance(value, (list, tuple, set)) else re.split(r"[,，\s]+", str(value))
+    items = value if isinstance(value, (list, tuple, set)) else re.split(r"[,\uff0c\s]+", str(value))
     return [str(v).strip().upper() for v in items if str(v).strip()]
 
 
 def check_document(path: Path, layout: Optional[str] = None, params: Optional[dict] = None,
                    allow=None, unit_fonts=None, overprint: bool = False) -> dict:
-    """检查 docx，返回机检 JSON 结构。
+    """检查 docx\uff0c返回机检 JSON 结构\u3002
 
-    allow：本单位制度明文规定、与国标不同的写法对应的检查项（如企业发文字号用方括号的 DOCX-050），
-    命中时降为 P2 并注明“按本单位制度保留”，不计入 --strict。
-    unit_fonts：按单位规定指定标准字体（“仿宋=方正仿宋_GBK”字符串或 {角色: 字体名}）；指定后该角色使用单位字体视为合规，
-    使用国标字体按非单位规定字体报 DOCX-016。角色或字体名不合法时抛 ValueError。
-    overprint：文档是预印红头纸套打稿（不含红色版头），按套打要求检查（DOCX-150、151），版式缺省按红头。
+    allow\uff1a本单位制度明文规定\u3001与国标不同的写法对应的检查项\uff08如企业发文字号用方括号的 DOCX-050\uff09\uff0c
+    命中时降为 P2 并注明\u201c按本单位制度保留\u201d\uff0c不计入 --strict\u3002
+    unit_fonts\uff1a按单位规定指定标准字体\uff08\u201c仿宋=方正仿宋_GBK\u201d字符串或 {角色: 字体名}\uff09\uff1b指定后该角色使用单位字体视为合规\uff0c
+    使用国标字体按非单位规定字体报 DOCX-016\u3002角色或字体名不合法时抛 ValueError\u3002
+    overprint\uff1a文档是预印红头纸套打稿\uff08不含红色版头\uff09\uff0c按套打要求检查\uff08DOCX-150\u3001151\uff09\uff0c版式缺省按红头\u3002
     """
     import gw_docx as D
     from docx import Document
@@ -159,14 +159,14 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
         w_mm, h_mm = D.twips_to_mm(w), D.twips_to_mm(h)
         if abs(w_mm - 210) > tol or abs(h_mm - 297) > tol:
             col.add("DOCX-001", "P0", "页面", f"第 {s_idx} 节纸张为 {w_mm:.0f}×{h_mm:.0f} mm，不是 A4",
-                    excerpt=f"{w_mm:.0f}×{h_mm:.0f} mm", suggestion="纸张设为 A4（210 mm×297 mm）", basis="GB/T 9704-2012 5.1")
+                    excerpt=f"{w_mm:.0f}×{h_mm:.0f} mm", suggestion="纸张设为 A4\uff08210 mm\u00d7297 mm\uff09", basis="GB/T 9704-2012 5.1")
         pgmar = sect.find(qn("w:pgMar"))
         if pgmar is not None:
             for attr, label, key, lvl, basis in (
-                    ("top", "上边距（天头）", "margin_top_mm", "P0", "GB/T 9704-2012 5.2.1"),
-                    ("left", "左边距（订口）", "margin_left_mm", "P0", "GB/T 9704-2012 5.2.1"),
-                    ("bottom", "下边距", "margin_bottom_mm", "P1", "GB/T 9704-2012 5.2.1（由版心推算）"),
-                    ("right", "右边距", "margin_right_mm", "P1", "GB/T 9704-2012 5.2.1（由版心推算）")):
+                    ("top", "上边距\uff08天头\uff09", "margin_top_mm", "P0", "GB/T 9704-2012 5.2.1"),
+                    ("left", "左边距\uff08订口\uff09", "margin_left_mm", "P0", "GB/T 9704-2012 5.2.1"),
+                    ("bottom", "下边距", "margin_bottom_mm", "P1", "GB/T 9704-2012 5.2.1\uff08由版心推算\uff09"),
+                    ("right", "右边距", "margin_right_mm", "P1", "GB/T 9704-2012 5.2.1\uff08由版心推算\uff09")):
                 val = pgmar.get(qn(f"w:{attr}")) or pgmar.get(qn("w:start" if attr == "left" else "w:end"))
                 if val is None:
                     continue
@@ -186,11 +186,11 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
             chars = math.floor(width_pt / pitch + 1e-6) if pitch > 0 else 0
             if chars != chars_req:
                 col.add("DOCX-004", "P2", "页面", f"文档网格每行约 {chars} 字，标准为每行 {chars_req} 字",
-                        excerpt=f"每行 {chars} 字", suggestion="页面设置→文档网格→指定行和字符网格，每行 28 字",
+                        excerpt=f"每行 {chars} 字", suggestion="页面设置→文档网格→指定行和字符网格\uff0c每行 28 字",
                         basis="GB/T 9704-2012 5.2.3")
         elif s_idx == 1:
-            col.add("DOCX-004", "P2", "页面", "未设置字符网格，每行字数取决于字体，可能不是 28 字",
-                    excerpt="无字符网格", suggestion="页面设置→文档网格→指定行和字符网格，每行 28 字、每页 22 行",
+            col.add("DOCX-004", "P2", "页面", "未设置字符网格\uff0c每行字数取决于字体\uff0c可能不是 28 字",
+                    excerpt="无字符网格", suggestion="页面设置→文档网格→指定行和字符网格\uff0c每行 28 字\u3001每页 22 行",
                     basis="GB/T 9704-2012 5.2.3")
     first_grid = doc.sections[0]._sectPr.find(qn("w:docGrid"))
     grid_pitch = None
@@ -204,7 +204,7 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
     cut = draft_note_index(texts)
     cut_el = paras[cut]._p if cut is not None else None
     if cut is not None:
-        col.add("DOCX-082", "P1", "残留", "文档中有【起草说明】，其后内容不是正文，未检查；成稿中应删除", line=cut + 1,
+        col.add("DOCX-082", "P1", "残留", "文档中有【起草说明】\uff0c其后内容不是正文\uff0c未检查\uff1b成稿中应删除", line=cut + 1,
                 excerpt=texts[cut], suggestion="删除【起草说明】及其后的全部内容",
                 basis="references/_shared/style/output-format.md 第二部分")
         paras, texts = paras[:cut], texts[:cut]
@@ -246,8 +246,8 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
         else:
             layout = "材料"
     if not parsed.find("title") and layout not in ("纪要", "命令"):
-        col.add("DOCX-023", "P2", "结构", "未识别到标题，标题相关检查已跳过", excerpt=texts[0] if texts else "",
-                suggestion="标题一般以“关于”开头或以文种结尾", basis="GB/T 9704-2012 7.3.1")
+        col.add("DOCX-023", "P2", "结构", "未识别到标题\uff0c标题相关检查已跳过", excerpt=texts[0] if texts else "",
+                suggestion="标题一般以\u201c关于\u201d开头或以文种结尾", basis="GB/T 9704-2012 7.3.1")
 
     for it in parsed.items:
         if it.role in ("table", "table_caption") or it.role.startswith("brief_"):
@@ -263,65 +263,65 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
             for rx, msg, hint in BAD_ORDINALS:
                 if rx.match(text):
                     col.add("DOCX-033", "P1", "格式要素", f"层次序数写法不规范：{msg}", line=line, excerpt=text,
-                            suggestion=hint, basis="GB/T 9704-2012 7.3.3；GB/T 15834-2011 附录 B.3")
+                            suggestion=hint, basis="GB/T 9704-2012 7.3.3\uff1bGB/T 15834-2011 附录 B.3")
                     break
             else:
                 if it.nonstd:  # 阿拉伯数字多级序号等：已按嵌套层级套用标题字体，序号文字要用户自己改
-                    col.add("DOCX-033", "P1", "格式要素", "层次序数写法不规范：" + it.nonstd, line=line, excerpt=text,
-                            suggestion=ORDINAL_HINT, basis="GB/T 9704-2012 7.3.3；GB/T 15834-2011 附录 B.3")
+                    col.add("DOCX-033", "P1", "格式要素", "层次序数写法不规范\uff1a" + it.nonstd, line=line, excerpt=text,
+                            suggestion=ORDINAL_HINT, basis="GB/T 9704-2012 7.3.3\uff1bGB/T 15834-2011 附录 B.3")
         elif role == "title":
             _check_title(col, doc, p, line, text, std, unit_roles=frozenset(unit_over))
         elif role in ("recipient", "salutation"):
             # 行首空格用负左缩进抵消（--keep-text 不删空格）的，视觉上顶格即可
             if abs(D.leading_offset_chars(p, doc)) > 0.3 or (D.para_align(p, doc) in ("center", "right")):
-                col.add("DOCX-040", "P1", "段落", "主送机关、称呼应居左顶格" if role == "salutation" else "主送机关应居左顶格",
+                col.add("DOCX-040", "P1", "段落", "主送机关\u3001称呼应居左顶格" if role == "salutation" else "主送机关应居左顶格",
                         line=line, excerpt=text, suggestion="首行缩进和左缩进设为 0", basis="GB/T 9704-2012 7.3.2")
             if role == "recipient" and text.rstrip().endswith(":"):
                 col.add("DOCX-041", "P1", "标点", "主送机关后应用全角冒号", line=line, excerpt=text,
-                        suggestion=text.rstrip()[:-1] + "：", basis="GB/T 9704-2012 7.3.2")
+                        suggestion=text.rstrip()[:-1] + "\uff1a", basis="GB/T 9704-2012 7.3.2")
         elif role == "attachment":
             if re.match(r"^附\s*件\s*:", text):
-                col.add("DOCX-042", "P1", "标点", "“附件”后应用全角冒号", line=line, excerpt=text,
-                        suggestion="附件：", basis="GB/T 9704-2012 7.3.4")
-            if text and text[-1] in "。；，、.;,":
+                col.add("DOCX-042", "P1", "标点", "\u201c附件\u201d后应用全角冒号", line=line, excerpt=text,
+                        suggestion="附件\uff1a", basis="GB/T 9704-2012 7.3.4")
+            if text and text[-1] in "\u3002\uff1b\uff0c\u3001.;,":
                 col.add("DOCX-042", "P1", "标点", "附件名称后不加标点", line=line, excerpt=text,
                         suggestion=text[:-1], basis="GB/T 9704-2012 7.3.4")
         elif role == "date":
             compact = text.replace(" ", "").replace("　", "")
             if DATE_ZERO_RE.search(compact):
-                col.add("DOCX-043", "P0", "数字", "成文日期月、日不编虚位", line=line, excerpt=text,
+                col.add("DOCX-043", "P0", "数字", "成文日期月\u3001日不编虚位", line=line, excerpt=text,
                         suggestion=re.sub(r"(?<=年)0|(?<=月)0", "", compact), basis="GB/T 9704-2012 7.3.5.4")
             if DATE_CN_RE.match(compact):
                 col.add("DOCX-044", "P1", "数字", "成文日期应使用阿拉伯数字", line=line, excerpt=text,
-                        suggestion="如“2026年10月16日”", basis="GB/T 9704-2012 7.3.5.4")
+                        suggestion="如\u201c2026年10月16日\u201d", basis="GB/T 9704-2012 7.3.5.4")
             if D.para_align(p, doc) != "right" and D.para_left_chars(p, doc) < 8:
-                col.add("DOCX-046", "P2", "段落", "成文日期应排在右侧，按是否盖章右空四字或二字", line=line,
+                col.add("DOCX-046", "P2", "段落", "成文日期应排在右侧\uff0c按是否盖章右空四字或二字", line=line,
                         excerpt=text, suggestion="运行 fix_docx.py 统一排署名和日期", basis="GB/T 9704-2012 7.3.5")
         elif role == "note":
-            if not (text.startswith(("（", "(")) and text.endswith(("）", ")"))):
+            if not (text.startswith(("\uff08", "(")) and text.endswith(("\uff09", ")"))):
                 col.add("DOCX-045", "P2", "格式要素", "附注应加圆括号", line=line, excerpt=text,
                         suggestion=f"（{text}）", basis="GB/T 9704-2012 7.3.6")
         elif role in ("docno", "signer"):
             if re.search(r"签发人\s*:", text):
-                col.add("DOCX-054", "P1", "标点", "“签发人”后应用全角冒号", line=line, excerpt=text,
-                        suggestion="签发人：", basis="GB/T 9704-2012 7.2.6")
+                col.add("DOCX-054", "P1", "标点", "\u201c签发人\u201d后应用全角冒号", line=line, excerpt=text,
+                        suggestion="签发人\uff1a", basis="GB/T 9704-2012 7.2.6")
             if role == "signer" and layout in ("红头", "纪要"):
-                col.add("DOCX-162", "P1", "段落", "签发人另起了一行，应与发文字号同一行（居右空一字，上行文发文字号居左空一字）",
-                        line=line, excerpt=text, suggestion="抽取全文后用 build_docx.py 重排版头（见 SKILL.md 第四步）",
-                        basis="GB/T 9704-2012 7.2.5、7.2.6")
+                col.add("DOCX-162", "P1", "段落", "签发人另起了一行\uff0c应与发文字号同一行\uff08居右空一字\uff0c上行文发文字号居左空一字\uff09",
+                        line=line, excerpt=text, suggestion="抽取全文后用 build_docx.py 重排版头\uff08见 SKILL.md 第四步\uff09",
+                        basis="GB/T 9704-2012 7.2.5\u30017.2.6")
             if role == "docno" and doc_type in UPWARD_TYPES and layout == "红头":
                 off = D.leading_offset_chars(p, doc)
                 centered = D.para_align(p, doc) in ("center", "right") and not p.text.startswith("\t")
                 if centered or abs(off - 1) > 0.5:
                     col.add("DOCX-056", "P1", "段落",
                             f"{doc_type}属上行文，发文字号应居左空一字，与最后一个签发人姓名处在同一行"
-                            + ("（现为居中或居右）" if centered else f"（现左空 {off:g} 字）"),
-                            line=line, excerpt=text, suggestion="发文字号设为左对齐、左缩进 1 字符，签发人居右空一字排在同一行；"
-                            "运行 fix_docx.py 可补足左缩进", basis="GB/T 9704-2012 7.2.5、7.2.6")
+                            + ("\uff08现为居中或居右\uff09" if centered else f"（现左空 {off:g} 字）"),
+                            line=line, excerpt=text, suggestion="发文字号设为左对齐\u3001左缩进 1 字符\uff0c签发人居右空一字排在同一行\uff1b"
+                            "运行 fix_docx.py 可补足左缩进", basis="GB/T 9704-2012 7.2.5\u30017.2.6")
         elif role == "issuer":
             if layout in ("红头", "纪要", "命令") and D.para_align(p, doc) != "center":
                 col.add("DOCX-161", "P1", "段落", "发文机关标志应居中", line=line, excerpt=text,
-                        suggestion="标志居中编排；整个版头有问题的，抽取全文后用 build_docx.py 重排",
+                        suggestion="标志居中编排\uff1b整个版头有问题的\uff0c抽取全文后用 build_docx.py 重排",
                         basis="GB/T 9704-2012 7.2.4")
             if not D.para_is_red(p, doc):
                 col.add("DOCX-055", "P1", "格式要素", "发文机关标志应为红色", line=line, excerpt=text,
@@ -350,8 +350,8 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
     _check_tables(col, doc, [el for _, el in tables])
     for i, text in enumerate(texts):
         if is_pipe_residue(text):
-            col.agg("pipe", "DOCX-100", "P1", "结构", "正文中有未转换的 Markdown 表格行（竖线、短横线原样成段）",
-                    line=i + 1, excerpt=text.strip(), suggestion="用 build_docx.py 重新生成（支持简单管道表格），"
+            col.agg("pipe", "DOCX-100", "P1", "结构", "正文中有未转换的 Markdown 表格行\uff08竖线\u3001短横线原样成段\uff09",
+                    line=i + 1, excerpt=text.strip(), suggestion="用 build_docx.py 重新生成\uff08支持简单管道表格\uff09\uff0c"
                     "或在 Word 中插入表格", basis="references/_shared/style/output-format.md 第一部分")
 
     # ---- 全文文本类检查（正文、表格、页眉） ----
@@ -377,21 +377,21 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
         stripped = text.strip()
         if re.match(r"^抄\s*送", stripped):
             if re.match(r"^抄\s*送\s*:", stripped):
-                col.add("DOCX-060", "P1", "标点", "“抄送”后应用全角冒号", line=ln, excerpt=stripped,
-                        suggestion="抄送：", basis="GB/T 9704-2012 7.4.2")
-            if not stripped.endswith("。") and layout != "简报":  # 简报报尾无国标，不要求句号
+                col.add("DOCX-060", "P1", "标点", "\u201c抄送\u201d后应用全角冒号", line=ln, excerpt=stripped,
+                        suggestion="抄送\uff1a", basis="GB/T 9704-2012 7.4.2")
+            if not stripped.endswith("\u3002") and layout != "简报":  # 简报报尾无国标，不要求句号
                 col.add("DOCX-060", "P1", "标点", "抄送最后一个机关名称后标句号", line=ln, excerpt=stripped,
-                        suggestion=stripped + "。", basis="GB/T 9704-2012 7.4.2")
+                        suggestion=stripped + "\u3002", basis="GB/T 9704-2012 7.4.2")
         if stripped.endswith("印发") and not MARKERS_RE.search(stripped):
             if not PRINT_OK_RE.search(stripped.replace(" ", "").replace("\t", "").replace("　", "")):
-                col.add("DOCX-061", "P1", "数字", "印发日期应写作“××××年×月×日印发”，月日不编虚位", line=ln,
-                        excerpt=stripped, suggestion="如“2026年10月16日印发”", basis="GB/T 9704-2012 7.4.3")
+                col.add("DOCX-061", "P1", "数字", "印发日期应写作\u201c\u00d7\u00d7\u00d7\u00d7年\u00d7月\u00d7日印发\u201d\uff0c月日不编虚位", line=ln,
+                        excerpt=stripped, suggestion="如\u201c2026年10月16日印发\u201d", basis="GB/T 9704-2012 7.4.3")
     for text in header_texts:
         if text.strip():
             _check_text(col, text, None, in_signoff=False)
     first_texts = "".join(texts[:6]) + "".join(header_texts)
     if SECRET_WORDS_RE.search(first_texts) or parsed.find("secret"):
-        col.add("DOCX-081", "P2", "保密", "文档含密级或“内部资料”等标识，只能在涉密或内网环境处理，不得上传联网 AI 工具",
+        col.add("DOCX-081", "P2", "保密", "文档含密级或\u201c内部资料\u201d等标识\uff0c只能在涉密或内网环境处理\uff0c不得上传联网 AI 工具",
                 excerpt=(parsed.find("secret")[0].text if parsed.find("secret") else ""),
                 suggestion="确认处理环境符合保密规定", basis="references/_shared/guardrails.md 第一条")
 
@@ -404,8 +404,8 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
         if len(idxs) > 1:
             col.add("DOCX-092", "P1", "结构", f"同一行日期重复排了 {len(idxs)} 次，疑似重排时文字重复", line=idxs[-1] + 1,
                     excerpt=texts[idxs[-1]].strip(),
-                    suggestion="核对原稿是否只有一行，删去多余的一行；用 build_docx.py --keep-text 重排时文字核对会指出多出的行",
-                    basis="排版不改内容（references/layouts.md 第九部分）")
+                    suggestion="核对原稿是否只有一行\uff0c删去多余的一行\uff1b用 build_docx.py --keep-text 重排时文字核对会指出多出的行",
+                    basis="排版不改内容\uff08references/layouts.md 第九部分\uff09")
 
     # ---- 页码 ----
     _check_page_numbers(col, doc, layout)
@@ -432,10 +432,10 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
 
 
 def _apply_allow(issues: List[dict], allow: Sequence[str], notes: List[str]) -> List[dict]:
-    """--allow 列出的检查项命中时降为 P2，消息前加“按本单位制度保留：”。"""
+    """--allow 列出的检查项命中时降为 P2\uff0c消息前加\u201c按本单位制度保留\uff1a\u201d\u3002"""
     unknown = [a for a in allow if a not in KNOWN_IDS]
     if unknown:
-        notes.append(f"--allow 中的检查项 {'、'.join(unknown)} 不存在，已忽略。")
+        notes.append(f"--allow 中的检查项 {'\u3001'.join(unknown)} 不存在，已忽略。")
     wanted = set(allow) & KNOWN_IDS
     changed: List[str] = []
     for item in issues:
@@ -445,15 +445,15 @@ def _apply_allow(issues: List[dict], allow: Sequence[str], notes: List[str]) -> 
                 item["message"] = ALLOW_PREFIX + item["message"]
             changed.append(item["id"])
     if changed:
-        notes.append(f"按 --allow 降为 P2 的问题 {len(changed)} 处（{'、'.join(sorted(set(changed)))}），"
-                     "依据本单位制度保留，不计入 --strict；交付说明中写明与国标的差异。")
+        notes.append(f"按 --allow 降为 P2 的问题 {len(changed)} 处（{'\u3001'.join(sorted(set(changed)))}），"
+                     "依据本单位制度保留\uff0c不计入 --strict\uff1b交付说明中写明与国标的差异\u3002")
         order = {"P0": 0, "P1": 1, "P2": 2}
         issues.sort(key=lambda x: (order[x["level"]], x["line"] or 0))
     return issues
 
 
 def _blank_before(doc, paras, idx: int, line_pt: float) -> bool:
-    """第 idx 段前是否空了一行：前一段是空段且行高不低于半行，或本段段前距不少于大半行。"""
+    """第 idx 段前是否空了一行\uff1a前一段是空段且行高不低于半行\uff0c或本段段前距不少于大半行\u3002"""
     import gw_docx as D
     from docx.oxml.ns import qn
     ppr = paras[idx]._p.pPr
@@ -467,7 +467,7 @@ def _blank_before(doc, paras, idx: int, line_pt: float) -> bool:
 
 
 def _bottom_rule_color(p) -> Optional[str]:
-    """段落下边框的颜色（无下边框返回 None）。"""
+    """段落下边框的颜色\uff08无下边框返回 None\uff09\u3002"""
     from docx.oxml.ns import qn
     ppr = p._p.pPr
     bdr = ppr.find(qn("w:pBdr")) if ppr is not None else None
@@ -478,7 +478,7 @@ def _bottom_rule_color(p) -> Optional[str]:
 
 
 def _check_header_rule(col: Collector, doc, paras, parsed) -> None:
-    """红头、纪要：发文字号下应有红色分隔线（7.2.7）；前 15 段和联合行文版头之外找不到红色横线的报 DOCX-160。"""
+    """红头\u3001纪要\uff1a发文字号下应有红色分隔线\uff087.2.7\uff09\uff1b前 15 段和联合行文版头之外找不到红色横线的报 DOCX-160\u3002"""
     import gw_docx as D
     has_head = parsed.find("issuer") or parsed.find("docno") or any(
         D.table_mark(t._tbl) == D.JOINT_HEAD_MARK for t in doc.tables)
@@ -489,9 +489,9 @@ def _check_header_rule(col: Collector, doc, paras, parsed) -> None:
         if (color and D.is_red(color)) or (_has_top_rule(p) and D.is_red(_top_rule_color(p))):
             return
     first = (parsed.find("issuer") or parsed.find("docno"))
-    col.add("DOCX-160", "P1", "格式要素", "版头缺红色分隔线（发文字号下 4 mm 处应有与版心等宽的红色实线）",
+    col.add("DOCX-160", "P1", "格式要素", "版头缺红色分隔线\uff08发文字号下 4 mm 处应有与版心等宽的红色实线\uff09",
             line=first[0].src + 1 if first else None, excerpt=first[0].text if first else "版头",
-            suggestion="抽取全文后用 build_docx.py 重排版头（见 SKILL.md 第四步）", basis="GB/T 9704-2012 7.2.7")
+            suggestion="抽取全文后用 build_docx.py 重排版头\uff08见 SKILL.md 第四步\uff09", basis="GB/T 9704-2012 7.2.7")
 
 
 def _top_rule_color(p) -> str:
@@ -501,17 +501,17 @@ def _top_rule_color(p) -> str:
 
 
 def _check_banji(col: Collector, doc, paras, parsed) -> None:
-    """版记（7.4）：抄送、印发行用版记表格，首末粗线、行间细线，位于最后一页版心底部；普通段落、无线或不在页底的报 DOCX-163。"""
+    """版记\uff087.4\uff09\uff1a抄送\u3001印发行用版记表格\uff0c首末粗线\u3001行间细线\uff0c位于最后一页版心底部\uff1b普通段落\u3001无线或不在页底的报 DOCX-163\u3002"""
     import gw_docx as D
     from docx.oxml.ns import qn
     reasons: List[str] = []
     first = None
     for p in doc.paragraphs:  # 含附件页之后的段落
         t = p.text.strip()
-        if re.match(r"^抄\s*送\s*[：:]", t) or (t.endswith("印发") and re.search(r"\d{4}\s*年", t)):
+        if re.match(r"^抄\s*送\s*[\uff1a:]", t) or (t.endswith("印发") and re.search(r"\d{4}\s*年", t)):
             first = first or type("X", (), {"src": paras.index(p) if p in paras else -1, "text": t})
             if not (_has_top_rule(p) or _bottom_rule_color(p)):
-                reasons.append("抄送、印发行是没有分隔线的普通段落")
+                reasons.append("抄送\u3001印发行是没有分隔线的普通段落")
                 break
     for tbl in doc.tables:
         el = tbl._tbl
@@ -525,9 +525,9 @@ def _check_banji(col: Collector, doc, paras, parsed) -> None:
         if tblpr is None or tblpr.find(qn("w:tblpPr")) is None:
             reasons.append("版记表格没有固定在最后一页版心底部")
     if reasons:
-        col.add("DOCX-163", "P1", "格式要素", "版记不合要求：" + "；".join(dict.fromkeys(reasons)) +
-                "（版记应有首末粗线、行间细线，位于最后一页版心底部）", line=first.src + 1 if first and first.src >= 0 else None,
-                excerpt=first.text if first else "版记", suggestion="抽取全文后用 build_docx.py 重排（见 SKILL.md 第四步）",
+        col.add("DOCX-163", "P1", "格式要素", "版记不合要求\uff1a" + "\uff1b".join(dict.fromkeys(reasons)) +
+                "\uff08版记应有首末粗线\u3001行间细线\uff0c位于最后一页版心底部\uff09", line=first.src + 1 if first and first.src >= 0 else None,
+                excerpt=first.text if first else "版记", suggestion="抽取全文后用 build_docx.py 重排\uff08见 SKILL.md 第四步\uff09",
                 basis="GB/T 9704-2012 7.4.1")
 
 
@@ -540,25 +540,25 @@ def _has_top_rule(p) -> bool:
 
 
 def _check_brief_frame(col: Collector, doc, paras, parsed) -> None:
-    """简报的报头、报尾。简报没有国家标准格式，这里只查常见做法：报头有简报名称（红色居中）、期号、
-    编印单位和日期，其下有红色分隔线；报尾（有的话）上方有分隔线。报头、报尾要素不当作正文检查。"""
+    """简报的报头\u3001报尾\u3002简报没有国家标准格式\uff0c这里只查常见做法\uff1a报头有简报名称\uff08红色居中\uff09\u3001期号\u3001
+    编印单位和日期\uff0c其下有红色分隔线\uff1b报尾\uff08有的话\uff09上方有分隔线\u3002报头\u3001报尾要素不当作正文检查\u3002"""
     import gw_docx as D
     from docx.oxml.ns import qn
     from gw_layout import BRIEF_SEP_RE
-    basis = "实践（简报无国家标准格式，以本单位往期简报为准）"
+    basis = "实践\uff08简报无国家标准格式\uff0c以本单位往期简报为准\uff09"
     by = {it.role: it for it in parsed.items if it.role in ("brief_name", "brief_issue", "brief_editor")}
     missing = [label for role, label in (("brief_name", "简报名称"), ("brief_issue", "期号"),
                                          ("brief_editor", "编印单位和日期")) if role not in by]
     if missing:
-        col.add("DOCX-110", "P1", "结构", "简报报头缺少：" + "、".join(missing), excerpt="报头",
-                suggestion="报头依次为简报名称、期号行、编印单位与日期同一行，缺的先写【待补】；运行 build_docx.py --layout 简报 重排",
+        col.add("DOCX-110", "P1", "结构", "简报报头缺少\uff1a" + "\u3001".join(missing), excerpt="报头",
+                suggestion="报头依次为简报名称\u3001期号行\u3001编印单位与日期同一行\uff0c缺的先写【待补】\uff1b运行 build_docx.py --layout 简报 重排",
                 basis=basis)
     name = by.get("brief_name")
     if name is not None:
         p = paras[name.src]
         if not D.para_is_red(p, doc) or D.para_align(p, doc) != "center":
-            col.add("DOCX-111", "P1", "格式要素", "简报名称应为红色、居中", line=name.src + 1, excerpt=name.text,
-                    suggestion="简报名称设为红色、居中、大字号", basis=basis)
+            col.add("DOCX-111", "P1", "格式要素", "简报名称应为红色\u3001居中", line=name.src + 1, excerpt=name.text,
+                    suggestion="简报名称设为红色\u3001居中\u3001大字号", basis=basis)
     head = [paras[it.src] for it in by.values()]
     if head and not any(_bottom_rule_color(p) is not None and D.is_red(_bottom_rule_color(p)) for p in head):
         last = by.get("brief_editor") or by.get("brief_issue") or name
@@ -579,7 +579,7 @@ def _check_brief_frame(col: Collector, doc, paras, parsed) -> None:
     foot_ok = None
     for tbl in doc.tables:
         text = "".join(t.text or "" for t in tbl._tbl.iter(qn("w:t"))).strip()
-        if D.is_banji_table(tbl._tbl) and re.match(r"^(?:报|送|发|抄\s*送)\s*[：:]|^[（(]?共印", text):
+        if D.is_banji_table(tbl._tbl) and re.match(r"^(?:报|送|发|抄\s*送)\s*[\uff1a:]|^[\uff08(]?共印", text):
             top = tbl._tbl.find(qn("w:tblPr") + "/" + qn("w:tblBorders") + "/" + qn("w:top"))
             foot_ok = top is not None and top.get(qn("w:val")) not in ("nil", "none")
             excerpt = text[:20]
@@ -596,11 +596,11 @@ def _check_brief_frame(col: Collector, doc, paras, parsed) -> None:
             excerpt = foots[0].text
     if foot_ok is False:
         col.add("DOCX-113", "P1", "格式要素", "简报报尾上方没有分隔线", excerpt=excerpt,
-                suggestion="报尾（报、送、发、抄送、印数）与正文之间加一条分隔线", basis=basis)
+                suggestion="报尾\uff08报\u3001送\u3001发\u3001抄送\u3001印数\uff09与正文之间加一条分隔线", basis=basis)
 
 
 def _gap_lines(doc, paras, a: int, b: int, line_pt: float) -> float:
-    """第 a 段与第 b 段之间空了几行：中间空段的行高、a 的段后距、b 的段前距，折合成行。"""
+    """第 a 段与第 b 段之间空了几行\uff1a中间空段的行高\u3001a 的段后距\u3001b 的段前距\uff0c折合成行\u3002"""
     import gw_docx as D
     from docx.oxml.ns import qn
 
@@ -617,7 +617,7 @@ def _gap_lines(doc, paras, a: int, b: int, line_pt: float) -> float:
 
 
 def _right_space_chars(doc, p, text: str, chars_req: int) -> float:
-    """成文日期右空几字：右对齐时取右缩进，否则 每行字数 − 左缩进 − 日期宽度。"""
+    """成文日期右空几字\uff1a右对齐时取右缩进\uff0c否则 每行字数 − 左缩进 − 日期宽度\u3002"""
     import gw_docx as D
     from docx.oxml.ns import qn
     left = D.para_left_chars(p, doc)
@@ -637,26 +637,26 @@ def _right_space_chars(doc, p, text: str, chars_req: int) -> float:
 
 
 def _check_order(col: Collector, doc, paras, parsed, line_pt: float, chars_req: int) -> None:
-    """命令（令）格式（10.2、7.3.5.3）：标志为发文机关全称加“令”或“命令”，居中、红色；标志下空二行居中编令号，
-    令号下空二行编正文；签发人职务、签名章和成文日期按 7.3.5.3（成文日期右空四字，签名章下空一行）。"""
+    """命令\uff08令\uff09格式\uff0810.2\u30017.3.5.3\uff09\uff1a标志为发文机关全称加\u201c令\u201d或\u201c命令\u201d\uff0c居中\u3001红色\uff1b标志下空二行居中编令号\uff0c
+    令号下空二行编正文\uff1b签发人职务\u3001签名章和成文日期按 7.3.5.3\uff08成文日期右空四字\uff0c签名章下空一行\uff09\u3002"""
     import gw_docx as D
     basis = "GB/T 9704-2012 10.2"
     issuer = parsed.find("issuer")
     lingno = parsed.find("lingno")
     if not issuer:
-        col.add("DOCX-120", "P1", "格式要素", "命令（令）格式缺少发文机关标志", excerpt="版头",
-                suggestion="标志为发文机关全称加“命令”或“令”字，红色小标宋，居中", basis=basis)
+        col.add("DOCX-120", "P1", "格式要素", "命令\uff08令\uff09格式缺少发文机关标志", excerpt="版头",
+                suggestion="标志为发文机关全称加\u201c命令\u201d或\u201c令\u201d字\uff0c红色小标宋\uff0c居中", basis=basis)
     else:
         it = issuer[0]
         if not it.text.endswith("令"):
-            col.add("DOCX-120", "P1", "格式要素", "命令（令）格式的发文机关标志应为发文机关全称加“命令”或“令”字",
-                    line=it.src + 1, excerpt=it.text, suggestion="如“某市人民政府令”", basis=basis)
+            col.add("DOCX-120", "P1", "格式要素", "命令\uff08令\uff09格式的发文机关标志应为发文机关全称加\u201c命令\u201d或\u201c令\u201d字",
+                    line=it.src + 1, excerpt=it.text, suggestion="如\u201c某市人民政府令\u201d", basis=basis)
         if D.para_align(paras[it.src], doc) != "center":
-            col.add("DOCX-121", "P1", "段落", "命令（令）的发文机关标志应居中", line=it.src + 1, excerpt=it.text,
+            col.add("DOCX-121", "P1", "段落", "命令\uff08令\uff09的发文机关标志应居中", line=it.src + 1, excerpt=it.text,
                     suggestion="标志居中编排", basis=basis)
     if not lingno:
-        col.add("DOCX-122", "P1", "格式要素", "命令（令）格式缺少令号（标志下空二行居中编令号）", excerpt="令号",
-                suggestion="标志下空二行居中编令号，如“第12号”", basis=basis)
+        col.add("DOCX-122", "P1", "格式要素", "命令\uff08令\uff09格式缺少令号\uff08标志下空二行居中编令号\uff09", excerpt="令号",
+                suggestion="标志下空二行居中编令号\uff0c如\u201c第12号\u201d", basis=basis)
         return
     ln = lingno[0]
     if D.para_align(paras[ln.src], doc) != "center":
@@ -678,7 +678,7 @@ def _check_order(col: Collector, doc, paras, parsed, line_pt: float, chars_req: 
         space = _right_space_chars(doc, paras[d.src], d.text, chars_req)
         if abs(space - 4) > 0.8:
             col.add("DOCX-125", "P1", "段落", f"成文日期应右空四字，现约右空 {space:.1f} 字", line=d.src + 1,
-                    excerpt=d.text, suggestion="成文日期右空四字（签名章下空一行）", basis="GB/T 9704-2012 7.3.5.3")
+                    excerpt=d.text, suggestion="成文日期右空四字\uff08签名章下空一行\uff09", basis="GB/T 9704-2012 7.3.5.3")
         sigs = parsed.find("signature")
         if sigs:
             gap = _gap_lines(doc, paras, sigs[-1].src, d.src, line_pt)
@@ -686,12 +686,12 @@ def _check_order(col: Collector, doc, paras, parsed, line_pt: float, chars_req: 
                 col.add("DOCX-126", "P2", "段落", f"签发人职务（签名章）与成文日期之间应空一行，现为 {gap:.1f} 行",
                         line=d.src + 1, excerpt=d.text, suggestion="签名章下空一行编成文日期", basis="GB/T 9704-2012 7.3.5.3")
     else:
-        col.add("DOCX-125", "P1", "格式要素", "命令（令）缺少成文日期", excerpt="成文日期",
-                suggestion="签名章下空一行，右空四字编成文日期", basis="GB/T 9704-2012 7.3.5.3")
+        col.add("DOCX-125", "P1", "格式要素", "命令\uff08令\uff09缺少成文日期", excerpt="成文日期",
+                suggestion="签名章下空一行\uff0c右空四字编成文日期", basis="GB/T 9704-2012 7.3.5.3")
 
 
 def _check_joint(col: Collector, doc, params: dict) -> None:
-    """联合行文版头（7.2.4）和联署署名（7.3.5.1）。只查本工具生成的表格（tblCaption 标记）。"""
+    """联合行文版头\uff087.2.4\uff09和联署署名\uff087.3.5.1\uff09\u3002只查本工具生成的表格\uff08tblCaption 标记\uff09\u3002"""
     import gw_docx as D
     from docx.oxml.ns import qn
     seal_mm = float(D.pv(params, "elements.joint.seal_diameter_mm")) if "joint" in params["elements"] else 42.0
@@ -704,43 +704,43 @@ def _check_joint(col: Collector, doc, params: dict) -> None:
                 continue
             left, right = row.cells[0], row.cells[1]
             names = [p for p in left.paragraphs if p.text.strip()]
-            excerpt = "、".join(p.text.strip() for p in names)
+            excerpt = "\u3001".join(p.text.strip() for p in names)
             if len(names) < 2:
-                col.add("DOCX-140", "P1", "格式要素", "联合行文版头应并列至少两个联署机关名称，主办机关在前",
-                        excerpt=excerpt, suggestion="联署机关名称自上而下排列，主办机关在前", basis="GB/T 9704-2012 7.2.4")
+                col.add("DOCX-140", "P1", "格式要素", "联合行文版头应并列至少两个联署机关名称\uff0c主办机关在前",
+                        excerpt=excerpt, suggestion="联署机关名称自上而下排列\uff0c主办机关在前", basis="GB/T 9704-2012 7.2.4")
             not_red = [r for p in names for r in p.runs if r.text.strip() and not D.is_red(D.run_color(r, p, doc))]
             if not_red:
                 col.add("DOCX-140", "P1", "格式要素", "联合行文的发文机关标志应为红色", excerpt=excerpt,
-                        suggestion="机关名称和“文件”二字设为红色小标宋", basis="GB/T 9704-2012 7.2.4")
+                        suggestion="机关名称和\u201c文件\u201d二字设为红色小标宋", basis="GB/T 9704-2012 7.2.4")
             tcpr = right._tc.tcPr
             valign = tcpr.find(qn("w:vAlign")) if tcpr is not None else None
             if "文件" not in right.text or valign is None or valign.get(qn("w:val")) != "center":
-                col.add("DOCX-141", "P1", "格式要素", "“文件”二字应置于联署机关名称右侧，并以名称为准上下居中",
-                        excerpt=right.text.strip() or "文件", suggestion="名称右侧单元格内放“文件”，垂直居中",
+                col.add("DOCX-141", "P1", "格式要素", "\u201c文件\u201d二字应置于联署机关名称右侧\uff0c并以名称为准上下居中",
+                        excerpt=right.text.strip() or "文件", suggestion="名称右侧单元格内放\u201c文件\u201d\uff0c垂直居中",
                         basis="GB/T 9704-2012 7.2.4")
         elif mark == D.JOINT_SEAL_MARK:
             grid = [int(c.get(qn("w:w")) or 0) for c in tbl._tbl.iter(qn("w:gridCol"))]
-            excerpt = "、".join(c.text.strip() for r in tbl.rows for c in r.cells if c.text.strip())
+            excerpt = "\u3001".join(c.text.strip() for r in tbl.rows for c in r.cells if c.text.strip())
             if grid and min(grid) < D.mm_to_twips(seal_mm) - 20:
                 col.add("DOCX-143", "P1", "格式要素",
                         f"联署署名每格宽约 {D.twips_to_mm(min(grid)):.0f} mm，小于印章直径 {seal_mm:g} mm，印章会相交或相切后超出",
-                        excerpt=excerpt, suggestion="每行并排的署名减少，使印章互不相交", basis="GB/T 9704-2012 7.3.5.1")
+                        excerpt=excerpt, suggestion="每行并排的署名减少\uff0c使印章互不相交", basis="GB/T 9704-2012 7.3.5.1")
             if sum(grid) > width_tw + 57:
-                col.add("DOCX-144", "P1", "页面", "联署署名表格超出版心，印章两端不得超出版心", excerpt=excerpt,
+                col.add("DOCX-144", "P1", "页面", "联署署名表格超出版心\uff0c印章两端不得超出版心", excerpt=excerpt,
                         suggestion="表格宽度不超过版心 15.6 cm", basis="GB/T 9704-2012 7.3.5.1")
 
 
 def _check_overprint(col: Collector, doc, paras, parsed, params: dict, line_pt: float) -> None:
-    """预印红头纸套打：不应输出红色版头要素；版头留白不少于发文机关标志所占高度，使发文字号落在预印纸版头之下。"""
+    """预印红头纸套打\uff1a不应输出红色版头要素\uff1b版头留白不少于发文机关标志所占高度\uff0c使发文字号落在预印纸版头之下\u3002"""
     import gw_docx as D
     from docx.oxml.ns import qn
     red_hits = [p for p in paras if p.text.strip() and D.para_is_red(p, doc)]
     rules = [p for p in paras if (_bottom_rule_color(p) is not None and D.is_red(_bottom_rule_color(p)))]
     heads = [t for t in doc.tables if D.table_mark(t._tbl) == D.JOINT_HEAD_MARK]
     if red_hits or rules or heads:
-        col.add("DOCX-150", "P1", "格式要素", "预印红头纸套打稿不应输出红色发文机关标志和红色分隔线（预印纸上已有）",
+        col.add("DOCX-150", "P1", "格式要素", "预印红头纸套打稿不应输出红色发文机关标志和红色分隔线\uff08预印纸上已有\uff09",
                 excerpt=(red_hits[0].text if red_hits else "红色版头"),
-                suggestion="用 build_docx.py --overprint 重新生成；或确认该稿不是套打", basis="实践（预印红头纸套打）")
+                suggestion="用 build_docx.py --overprint 重新生成\uff1b或确认该稿不是套打", basis="实践\uff08预印红头纸套打\uff09")
     docno = parsed.find("docno")
     if not docno:
         return
@@ -759,12 +759,12 @@ def _check_overprint(col: Collector, doc, paras, parsed, params: dict, line_pt: 
     if top_mm < need - 1.5:
         col.add("DOCX-151", "P1", "页面",
                 f"套打稿发文字号上沿距版心上边缘约 {top_mm:.0f} mm，小于预印红头所占高度约 {need:g} mm，会压到预印版头",
-                line=src + 1, excerpt=docno[0].text, suggestion="版头区域留空（标志 35 mm 起加标志行高），"
-                "或在版式信息写“套打版头高度”后重排", basis="GB/T 9704-2012 7.2.4、7.2.5（位置与正式版头一致）；留白高度为实践值")
+                line=src + 1, excerpt=docno[0].text, suggestion="版头区域留空\uff08标志 35 mm 起加标志行高\uff09\uff0c"
+                "或在版式信息写\u201c套打版头高度\u201d后重排", basis="GB/T 9704-2012 7.2.4\u30017.2.5\uff08位置与正式版头一致\uff09\uff1b留白高度为实践值")
 
 
 def _has_page_break_before(doc, paras, idx: int) -> bool:
-    """第 idx 段是否另起一页：段前分页、上一段含分页符或分节符。"""
+    """第 idx 段是否另起一页\uff1a段前分页\u3001上一段含分页符或分节符\u3002"""
     from docx.oxml.ns import qn
     p = paras[idx]
     ppr = p._p.pPr
@@ -783,13 +783,13 @@ def _has_page_break_before(doc, paras, idx: int) -> bool:
 
 
 def _norm_name(text: str) -> str:
-    return re.sub(r"[\s　]", "", re.sub(r"^\d{1,2}\s*[.．、]\s*|^附\s*件\s*[：:]\s*", "", text.strip()))
+    return re.sub(r"[\s　]", "", re.sub(r"^\d{1,2}\s*[.．\u3001]\s*|^附\s*件\s*[\uff1a:]\s*", "", text.strip()))
 
 
 def _check_attachment_pages(col: Collector, doc, parsed, att_paras, att_texts, offset: int, std: dict, line_pt: float,
                             body_pt: float, lines_req: int, grid_pitch, unit_over, chars_req: int) -> None:
-    """附件另面编排（7.3.7）：另面，“附件”或“附件1”三号黑体顶格在第一行，附件标题居中在第三行；
-    页码与正文连续；正文的附件说明与附件页的顺序号、标题一致。"""
+    """附件另面编排\uff087.3.7\uff09\uff1a另面\uff0c\u201c附件\u201d或\u201c附件1\u201d三号黑体顶格在第一行\uff0c附件标题居中在第三行\uff1b
+    页码与正文连续\uff1b正文的附件说明与附件页的顺序号\u3001标题一致\u3002"""
     import gw_docx as D
     from docx.oxml.ns import qn
     basis = "GB/T 9704-2012 7.3.7"
@@ -802,7 +802,7 @@ def _check_attachment_pages(col: Collector, doc, parsed, att_paras, att_texts, o
         pg = section._sectPr.find(qn("w:pgNumType"))
         if pg is not None and pg.get(qn("w:start")) is not None:
             col.add("DOCX-134", "P1", "页码", f"第 {k} 节重新起了页码，附件与正文一起装订时页码应连续编排",
-                    excerpt=f"页码从 {pg.get(qn('w:start'))} 起", suggestion="删除“起始页码”设置，续前节编号",
+                    excerpt=f"页码从 {pg.get(qn('w:start'))} 起", suggestion="删除\u201c起始页码\u201d设置\uff0c续前节编号",
                     basis="GB/T 9704-2012 7.5")
     titles: List[str] = []
     labels: List[str] = []
@@ -823,17 +823,17 @@ def _check_attachment_pages(col: Collector, doc, parsed, att_paras, att_texts, o
         if D.para_align(p, doc) not in ("left", "both") or D.leading_offset_chars(p, doc) > 0.3:
             bad.append("未顶格")
         if bad:
-            col.add("DOCX-130", "P1", "格式要素", "附件标识应为三号黑体、顶格：" + "，".join(bad), line=idx + 1, excerpt=label,
-                    suggestion="“附件”或“附件1”设为三号黑体，顶格编排在版心左上角第一行", basis=basis)
+            col.add("DOCX-130", "P1", "格式要素", "附件标识应为三号黑体\u3001顶格\uff1a" + "\uff0c".join(bad), line=idx + 1, excerpt=label,
+                    suggestion="\u201c附件\u201d或\u201c附件1\u201d设为三号黑体\uff0c顶格编排在版心左上角第一行", basis=basis)
         if not _has_page_break_before(doc, att_paras, s):
-            col.add("DOCX-131", "P1", "页面", "附件应另面编排，附件标识前没有分页", line=idx + 1, excerpt=label,
-                    suggestion="附件标识所在段设“段前分页”，使附件另起一页", basis=basis)
+            col.add("DOCX-131", "P1", "页面", "附件应另面编排\uff0c附件标识前没有分页", line=idx + 1, excerpt=label,
+                    suggestion="附件标识所在段设\u201c段前分页\u201d\uff0c使附件另起一页", basis=basis)
         j = s + 1
         while j < end and not att_texts[j].strip():
             j += 1
         if j >= end:
-            col.add("DOCX-132", "P1", "格式要素", "附件缺少标题（应居中编排在版心第三行）", line=idx + 1, excerpt=label,
-                    suggestion="标识下空一行，居中编附件标题", basis=basis)
+            col.add("DOCX-132", "P1", "格式要素", "附件缺少标题\uff08应居中编排在版心第三行\uff09", line=idx + 1, excerpt=label,
+                    suggestion="标识下空一行\uff0c居中编附件标题", basis=basis)
             titles.append("")
             continue
         gap = _gap_lines(doc, att_paras, s, j, line_pt)
@@ -845,8 +845,8 @@ def _check_attachment_pages(col: Collector, doc, parsed, att_paras, att_texts, o
                 why.append(f"与标识相隔 {gap:.1f} 行，应空一行")
             if D.para_align(tp, doc) != "center":
                 why.append("未居中")
-            col.add("DOCX-132", "P1", "格式要素", "附件标题应居中编排在版心第三行：" + "，".join(why), line=offset + j + 1,
-                    excerpt=tp.text.strip(), suggestion="标识在第一行，空一行，标题居中在第三行", basis=basis)
+            col.add("DOCX-132", "P1", "格式要素", "附件标题应居中编排在版心第三行\uff1a" + "\uff0c".join(why), line=offset + j + 1,
+                    excerpt=tp.text.strip(), suggestion="标识在第一行\uff0c空一行\uff0c标题居中在第三行", basis=basis)
         att_levels, _ = heading_levels([t.strip() for t in att_texts[j + 1:end]])
         for k in range(j + 1, end):
             text = att_texts[k]
@@ -860,22 +860,22 @@ def _check_attachment_pages(col: Collector, doc, parsed, att_paras, att_texts, o
                              text, std, line_pt, body_pt, lines_req, grid_pitch, unit_roles=frozenset(unit_over))
     # 附件说明与附件对应
     if not descr:
-        col.add("DOCX-133", "P1", "格式要素", "有附件页，但正文没有附件说明（正文后应有“附件：”说明，与附件对应）",
-                excerpt=labels[0], suggestion="在正文下空一行，左空二字编“附件：附件名称”", basis=basis)
+        col.add("DOCX-133", "P1", "格式要素", "有附件页\uff0c但正文没有附件说明\uff08正文后应有\u201c附件\uff1a\u201d说明\uff0c与附件对应\uff09",
+                excerpt=labels[0], suggestion="在正文下空一行\uff0c左空二字编\u201c附件\uff1a附件名称\u201d", basis=basis)
         return
     n = len(starts)
     expect = ["附件" + str(i + 1) for i in range(n)] if n > 1 else None
     if expect is not None and labels != expect:
-        col.add("DOCX-133", "P1", "格式要素", "多个附件的顺序号应依次为 附件1、附件2……，现为：" + "、".join(labels),
+        col.add("DOCX-133", "P1", "格式要素", "多个附件的顺序号应依次为 附件1\u3001附件2……\uff0c现为\uff1a" + "\u3001".join(labels),
                 excerpt=labels[0], suggestion="附件标识的顺序号与附件说明一致", basis=basis)
     if len(descr) != n or any(d != t for d, t in zip(descr, titles)):
-        col.add("DOCX-133", "P1", "格式要素", "附件说明与附件页的标题或个数不一致：说明为“" + "；".join(descr) +
-                "”，附件页为“" + "；".join(titles) + "”", excerpt=labels[0],
+        col.add("DOCX-133", "P1", "格式要素", "附件说明与附件页的标题或个数不一致\uff1a说明为\u201c" + "\uff1b".join(descr) +
+                "\u201d\uff0c附件页为\u201c" + "\uff1b".join(titles) + "\u201d", excerpt=labels[0],
                 suggestion="附件顺序号和标题与正文的附件说明保持一致", basis=basis)
 
 
 def _check_attendance_gap(col: Collector, doc, paras, parsed, line_pt: float) -> None:
-    """纪要：第一个出席（请假、列席）段前应空一行；排在开头、前面没有正文的不查。"""
+    """纪要\uff1a第一个出席\uff08请假\u3001列席\uff09段前应空一行\uff1b排在开头\u3001前面没有正文的不查\u3002"""
     items = [it for it in parsed.items if it.src >= 0 or it.role == "table"]
     for k, it in enumerate(items):
         if it.role != "attendance":
@@ -883,12 +883,12 @@ def _check_attendance_gap(col: Collector, doc, paras, parsed, line_pt: float) ->
         prev = items[k - 1].role if k > 0 else None
         if prev in ("body", "h1", "h2", "h3", "h4", "attachment") and not _blank_before(doc, paras, it.src, line_pt):
             col.add("DOCX-047", "P1", "段落", "纪要出席名单前应空一行", line=it.src + 1, excerpt=paras[it.src].text,
-                    suggestion="在第一个“出席”段前加一个空行，或运行 fix_docx.py", basis="GB/T 9704-2012 10.3")
+                    suggestion="在第一个\u201c出席\u201d段前加一个空行\uff0c或运行 fix_docx.py", basis="GB/T 9704-2012 10.3")
         break
 
 
 def _check_tables(col: Collector, doc, tables: Sequence) -> None:
-    """正文表格：宽度不超过版心；文字一般用仿宋或宋体，小四至四号（国标未规定，按实践提示）。"""
+    """正文表格\uff1a宽度不超过版心\uff1b文字一般用仿宋或宋体\uff0c小四至四号\uff08国标未规定\uff0c按实践提示\uff09\u3002"""
     import gw_docx as D
     from docx.oxml.ns import qn
     from docx.table import Table
@@ -901,8 +901,8 @@ def _check_tables(col: Collector, doc, tables: Sequence) -> None:
             w = max(w, int(tblw.get(qn("w:w")) or 0))
         if w > width_tw + 57:  # 容差约 1 mm
             col.add("DOCX-101", "P1", "页面", f"第 {n} 张表格宽约 {D.twips_to_mm(w):.0f} mm，超出版心（156 mm）",
-                    excerpt=f"表格 {n}", suggestion="表格宽度设为不超过 15.6 厘米，或缩小列宽",
-                    basis="GB/T 9704-2012 5.2.1（版心）")
+                    excerpt=f"表格 {n}", suggestion="表格宽度设为不超过 15.6 厘米\uff0c或缩小列宽",
+                    basis="GB/T 9704-2012 5.2.1\uff08版心\uff09")
         fonts: List[tuple] = []
         sizes: List[tuple] = []
         seen = set()
@@ -922,8 +922,8 @@ def _check_tables(col: Collector, doc, tables: Sequence) -> None:
         bad_size = size is not None and not 11.75 <= size <= 14.25
         if bad_font or bad_size:
             col.add("DOCX-102", "P2", "字体", f"第 {n} 张表格文字为“{font}”{size} 磅，一般用仿宋或宋体小四至四号",
-                    excerpt=f"表格 {n}", suggestion="表格文字设为仿宋或宋体，小四（12 磅）至四号（14 磅），表头加粗",
-                    basis="实践（国标未规定表格字号，按本单位规定）")
+                    excerpt=f"表格 {n}", suggestion="表格文字设为仿宋或宋体\uff0c小四\uff0812 磅\uff09至四号\uff0814 磅\uff09\uff0c表头加粗",
+                    basis="实践\uff08国标未规定表格字号\uff0c按本单位规定\uff09")
 
 
 # check_document 可能报出的检查项，--allow 只接受这些 ID
@@ -935,7 +935,7 @@ KNOWN_IDS = {f"DOCX-{n:03d}" for n in (1, 2, 3, 4, 10, 11, 12, 13, 14, 15, 16, 2
 
 
 def _majority(values: List[tuple]) -> Optional[object]:
-    """values: (值, 字数)。返回字数最多的值。"""
+    """values: (值, 字数)\u3002返回字数最多的值\u3002"""
     weight: Dict[object, int] = {}
     for v, n in values:
         weight[v] = weight.get(v, 0) + n
@@ -974,7 +974,7 @@ def _check_body_para(col: Collector, doc, p, role: str, split: int, line: int, t
             pass  # 本单位制度规定的字体（--unit-fonts），视为合规，不再按字体类别判断
         elif role == "body" and cls != "仿宋":
             col.agg("font-body", "DOCX-010", "P0", "字体", f"正文字体为“{main_font}”，应为仿宋体（仿宋_GB2312）",
-                    line=line, excerpt=text, suggestion="正文设为 3 号仿宋_GB2312（本机没有时先下载安装，不要用其他字体代替）",
+                    line=line, excerpt=text, suggestion="正文设为 3 号仿宋_GB2312\uff08本机没有时先下载安装\uff0c不要用其他字体代替\uff09",
                     basis="GB/T 9704-2012 7.3.3")
         elif role != "body" and cls != expected:
             iid = {"h1": "DOCX-030", "h2": "DOCX-031"}.get(role, "DOCX-032")
@@ -987,7 +987,7 @@ def _check_body_para(col: Collector, doc, p, role: str, split: int, line: int, t
                     suggestion=NON_STANDARD_HINT.format(std=std.get(expected)), basis=NON_STANDARD_BASIS)
         if role == "body" and len({F.font_class(f) for f, _ in fonts}) > 1:
             col.agg("font-mixed", "DOCX-010", "P2", "字体", "正文段落中夹有非仿宋字体的文字", line=line, excerpt=text,
-                    suggestion="核对是否有意强调；一般正文统一用仿宋", basis="GB/T 9704-2012 7.3.3")
+                    suggestion="核对是否有意强调\uff1b一般正文统一用仿宋", basis="GB/T 9704-2012 7.3.3")
     main_size = _majority(sizes)
     if main_size is not None and abs((main_size or 0) - 16) > 0.25:
         lvl = "P0" if role == "body" else "P1"
@@ -1018,7 +1018,7 @@ def _check_body_para(col: Collector, doc, p, role: str, split: int, line: int, t
     # 首行缩进
     if p.text[:1] in (" ", "　", "\t"):
         col.agg("space-indent", "DOCX-014", "P1", "段落", "段首用空格缩进", line=line, excerpt=p.text,
-                suggestion="删除段首空格，改为首行缩进 2 字符", basis="GB/T 9704-2012 7.3.3")
+                suggestion="删除段首空格\uff0c改为首行缩进 2 字符", basis="GB/T 9704-2012 7.3.3")
     else:
         fl = D.para_first_line_chars(p, doc)
         if abs(fl - 2) > 0.25:
@@ -1038,7 +1038,7 @@ def _check_title(col: Collector, doc, p, line: int, text: str, std: dict, unit_r
     elif cls in ("小标宋", "宋体") and not F.same_font(main_font, std_title):
         # 华文中宋、宋体（含加粗）、方正小标宋_GBK 等都不是方正小标宋简体，严格模式不接受替代字体
         col.add("DOCX-016", "P1", "字体", f"标题使用非标准字体“{main_font}”，应为“{std_title}”（宋体、华文中宋、宋体加粗等不能代替）",
-                line=line, excerpt=text, suggestion=NON_STANDARD_HINT.format(std=std_title) + "；该字体为商业字体，需单位授权",
+                line=line, excerpt=text, suggestion=NON_STANDARD_HINT.format(std=std_title) + "\uff1b该字体为商业字体\uff0c需单位授权",
                 basis=NON_STANDARD_BASIS)
     elif cls != "小标宋":
         col.add("DOCX-020", "P1", "字体", f"标题字体为“{main_font}”，应为小标宋体", line=line, excerpt=text,
@@ -1059,38 +1059,38 @@ def _check_title(col: Collector, doc, p, line: int, text: str, std: dict, unit_r
             continue
         tail = width % max_chars if width > max_chars else width
         if 0 < tail < 3 and text_width_chars(text.replace("\n", "")) >= 3:
-            col.add("DOCX-024", "P2", "段落", "标题回行后有一行少于 3 字，排列不匀", line=line, excerpt=text,
-                    suggestion="在词意完整处手动换行，上行不短于下行，排成梯形或菱形", basis="GB/T 9704-2012 7.3.1")
+            col.add("DOCX-024", "P2", "段落", "标题回行后有一行少于 3 字\uff0c排列不匀", line=line, excerpt=text,
+                    suggestion="在词意完整处手动换行\uff0c上行不短于下行\uff0c排成梯形或菱形", basis="GB/T 9704-2012 7.3.1")
             break
 
 
 def _check_text(col: Collector, text: str, line: Optional[int], *, in_signoff: bool) -> None:
     compact = text.strip()
     for m in DOCNO_BRACKET_RE.finditer(compact):
-        col.add("DOCX-050", "P0", "格式要素", "发文字号年份应用六角括号“〔〕”", line=line, excerpt=m.group(0),
-                suggestion=re.sub(r"[\[［(（【﹝{｛](\s*\d{4}\s*)[\]］)）】﹞}｝]", r"〔\1〕", m.group(0)),
+        col.add("DOCX-050", "P0", "格式要素", "发文字号年份应用六角括号\u201c〔〕\u201d", line=line, excerpt=m.group(0),
+                suggestion=re.sub(r"[\[［(\uff08【﹝{\uff5b](\s*\d{4}\s*)[\]］)\uff09】﹞}\uff5d]", r"〔\1〕", m.group(0)),
                 basis="GB/T 9704-2012 7.2.5")
     for m in DOCNO_SHORT_YEAR_RE.finditer(compact):
         col.add("DOCX-051", "P0", "格式要素", "发文字号年份应标全称", line=line, excerpt=m.group(0),
-                suggestion="如“〔2026〕”", basis="GB/T 9704-2012 7.2.5")
+                suggestion="如\u201c〔2026〕\u201d", basis="GB/T 9704-2012 7.2.5")
     for m in DOCNO_DI_RE.finditer(compact):
-        col.add("DOCX-052", "P0", "格式要素", "发文字号顺序号不加“第”字", line=line, excerpt=m.group(0),
+        col.add("DOCX-052", "P0", "格式要素", "发文字号顺序号不加\u201c第\u201d字", line=line, excerpt=m.group(0),
                 suggestion=re.sub(r"第\s*", "", m.group(0)), basis="GB/T 9704-2012 7.2.5")
     for m in DOCNO_ZERO_RE.finditer(compact):
         col.add("DOCX-053", "P0", "格式要素", "发文字号顺序号不编虚位", line=line, excerpt=m.group(0),
                 suggestion=re.sub(r"〕\s*0+", "〕", m.group(0)), basis="GB/T 9704-2012 7.2.5")
     if not in_signoff:
         for m in DATE_ZERO_RE.finditer(compact.replace(" ", "")):
-            col.add("DOCX-090", "P1", "数字", "日期月、日一般不编虚位", line=line, excerpt=compact,
-                    suggestion="如“2026年1月5日”", basis="GB/T 9704-2012 7.3.5.4；GB/T 15835-2011")
+            col.add("DOCX-090", "P1", "数字", "日期月\u3001日一般不编虚位", line=line, excerpt=compact,
+                    suggestion="如\u201c2026年1月5日\u201d", basis="GB/T 9704-2012 7.3.5.4\uff1bGB/T 15835-2011")
             break
     for m in MARKERS_RE.finditer(compact):
-        col.add("DOCX-080", "P2", "残留", "文中仍有待补或待核实标记，补齐后再定稿", line=line, excerpt=m.group(0),
+        col.add("DOCX-080", "P2", "残留", "文中仍有待补或待核实标记\uff0c补齐后再定稿", line=line, excerpt=m.group(0),
                 suggestion="补齐信息并删除标记", basis="references/_shared/guardrails.md 第二条")
 
 
 def _check_headers(col: Collector, doc, layout: str) -> None:
-    """页眉里有内容（含旧页码）：公文不用页眉，页码放页脚（7.5）。信函首页页眉是发文机关标志和红色双线，不算。"""
+    """页眉里有内容\uff08含旧页码\uff09\uff1a公文不用页眉\uff0c页码放页脚\uff087.5\uff09\u3002信函首页页眉是发文机关标志和红色双线\uff0c不算\u3002"""
     import gw_docx as D
     for idx, section in enumerate(doc.sections, start=1):
         for name, part, is_first in (("页眉", section.header, False), ("双页页眉", section.even_page_header, False),
@@ -1115,37 +1115,37 @@ def _check_page_numbers(col: Collector, doc, layout: str) -> None:
         settings.find(qn("w:evenAndOddHeaders")).get(qn("w:val")) not in ("0", "false")
     odd = _footer_info(section.footer._element) if not section.footer.is_linked_to_previous else {"has_page": False}
     if not odd.get("has_page"):
-        col.add("DOCX-070", "P1", "页码", "页脚中没有页码", excerpt="无页码", suggestion="插入“— 1 —”格式页码",
+        col.add("DOCX-070", "P1", "页码", "页脚中没有页码", excerpt="无页码", suggestion="插入\u201c\u2014 1 \u2014\u201d格式页码",
                 basis="GB/T 9704-2012 7.5")
         return
     if not PAGE_TEXT_RE.match(odd["text"]):
-        col.add("DOCX-071", "P1", "页码", "页码格式应为“— 1 —”（数字两侧各一条一字线）", excerpt=odd["text"],
-                suggestion="— 1 —", basis="GB/T 9704-2012 7.5")
+        col.add("DOCX-071", "P1", "页码", "页码格式应为\u201c\u2014 1 \u2014\u201d\uff08数字两侧各一条一字线\uff09", excerpt=odd["text"],
+                suggestion="\u2014 1 \u2014", basis="GB/T 9704-2012 7.5")
     fonts = {F.font_class(f) for f in odd["fonts"]}
     if (fonts and fonts != {"宋体"}) or (odd["sizes"] and odd["sizes"] != {14.0}):
         col.add("DOCX-072", "P2", "页码", "页码一般用 4 号半角宋体", excerpt=odd["text"],
                 suggestion="页码设为宋体四号", basis="GB/T 9704-2012 7.5")
     if not even_odd:
-        col.add("DOCX-073", "P2", "页码", "未设置奇偶页不同，双页页码无法居左", excerpt=odd["text"],
-                suggestion="页面设置→版式→奇偶页不同；单页居右空一字，双页居左空一字", basis="GB/T 9704-2012 7.5")
+        col.add("DOCX-073", "P2", "页码", "未设置奇偶页不同\uff0c双页页码无法居左", excerpt=odd["text"],
+                suggestion="页面设置→版式→奇偶页不同\uff1b单页居右空一字\uff0c双页居左空一字", basis="GB/T 9704-2012 7.5")
     else:
         even = _footer_info(section.even_page_footer._element) if not section.even_page_footer.is_linked_to_previous \
             else {"has_page": False}
         if odd.get("align") != "right" or not even.get("has_page") or even.get("align") not in ("left", None):
-            col.add("DOCX-073", "P2", "页码", "单页页码应居右空一字，双页页码居左空一字", excerpt=odd["text"],
+            col.add("DOCX-073", "P2", "页码", "单页页码应居右空一字\uff0c双页页码居左空一字", excerpt=odd["text"],
                     suggestion="运行 fix_docx.py 重设页码", basis="GB/T 9704-2012 7.5")
     if layout == "信函":
         first = section.first_page_footer
         has_first = section.different_first_page_header_footer and not first.is_linked_to_previous
         if not has_first or _footer_info(first._element).get("has_page"):
             col.add("DOCX-074", "P1", "页码", "信函格式首页不显示页码", excerpt="首页页码",
-                    suggestion="设置首页不同，首页页脚不放页码", basis="GB/T 9704-2012 10.1")
+                    suggestion="设置首页不同\uff0c首页页脚不放页码", basis="GB/T 9704-2012 10.1")
 
 
 def render_text(result: dict) -> str:
     s = result["summary"]
     out = [f"文件：{result['file']}（版式：{result.get('layout')}，文种：{result['doc_type']}）",
-           f"结论：P0 {s['P0']} 项，P1 {s['P1']} 项，P2 {s['P2']} 项。" + ("可以交付。" if s["P0"] == 0 else "存在 P0，修改后再交付。")]
+           f"结论：P0 {s['P0']} 项，P1 {s['P1']} 项，P2 {s['P2']} 项。" + ("可以交付\u3002" if s["P0"] == 0 else "存在 P0\uff0c修改后再交付\u3002")]
     out += [f"说明：{n}" for n in result.get("notes", [])]
     for i, it in enumerate(result["issues"], start=1):
         loc = f"第 {it['line']} 段" if it.get("line") else "全文"
@@ -1160,23 +1160,23 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
-    parser = argparse.ArgumentParser(description="检查 docx 是否符合 GB/T 9704-2012《党政机关公文格式》。",
-                                     epilog="退出码：默认 0；--strict 时存在 P0 返回 1；输入错误返回 2。")
+    parser = argparse.ArgumentParser(description="检查 docx 是否符合 GB/T 9704-2012《党政机关公文格式》\u3002",
+                                     epilog="退出码\uff1a默认 0\uff1b--strict 时存在 P0 返回 1\uff1b输入错误返回 2\u3002")
     parser.add_argument("file", help="待检查的 .docx 文件")
-    parser.add_argument("--layout", help="版式：红头、信函、纪要、命令、白头、材料、简报；不写时自动判断")
+    parser.add_argument("--layout", help="版式\uff1a红头\u3001信函\u3001纪要\u3001命令\u3001白头\u3001材料\u3001简报\uff1b不写时自动判断")
     parser.add_argument("--overprint", action="store_true",
-                        help="文档是预印红头纸套打稿：不应有红色版头，版头区域应留空（DOCX-150、151）；版式缺省按红头")
-    parser.add_argument("--json", action="store_true", help="以机检 JSON 输出（开发规范第 8 节）")
+                        help="文档是预印红头纸套打稿\uff1a不应有红色版头\uff0c版头区域应留空\uff08DOCX-150\u3001151\uff09\uff1b版式缺省按红头")
+    parser.add_argument("--json", action="store_true", help="以机检 JSON 输出\uff08开发规范第 8 节\uff09")
     parser.add_argument("--strict", action="store_true", help="存在 P0 时返回 1")
     parser.add_argument("--allow", metavar="DOCX-050",
-                        help="本单位制度明文规定、与国标不同的写法对应的检查项（逗号分隔，如 DOCX-050 方括号文号），"
-                             "命中时降为 P2、注明“按本单位制度保留”，不计入 --strict")
+                        help="本单位制度明文规定\u3001与国标不同的写法对应的检查项\uff08逗号分隔\uff0c如 DOCX-050 方括号文号\uff09\uff0c"
+                             "命中时降为 P2\u3001注明\u201c按本单位制度保留\u201d\uff0c不计入 --strict")
     parser.add_argument("--unit-fonts", metavar="角色=字体名,…", help=F.UNIT_FONTS_HELP)
     args = parser.parse_args(argv)
     try:
         import docx  # noqa: F401
     except ImportError:
-        print("缺少 python-docx。请先安装：pip install -U python-docx（需要 1.2.0 及以上版本）")
+        print("缺少 python-docx\u3002请先安装\uff1apip install -U python-docx\uff08需要 1.2.0 及以上版本\uff09")
         return 2
     try:
         unit_fonts = F.parse_unit_fonts(args.unit_fonts, F.load_params())
@@ -1188,7 +1188,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"错误：找不到 docx 文件 {path}")
         return 2
     if args.layout and args.layout not in LAYOUT_NAMES:
-        print(f"错误：无法识别的版式：{args.layout}。可选：{'、'.join(LAYOUT_NAMES)}")
+        print(f"错误：无法识别的版式：{args.layout}。可选：{'\u3001'.join(LAYOUT_NAMES)}")
         return 2
     try:
         result = check_document(path, layout=args.layout, allow=args.allow, unit_fonts=unit_fonts,

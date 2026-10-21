@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""把核稿意见写成 Word 批注。
+"""把核稿意见写成 Word 批注\u3002
 
-读取 gongwen-review 输出的“核稿意见.json”（docs/开发规范.md 第 8.2 节），按 excerpt 在 docx 中定位，
-用 python-docx 1.2 的 add_comment 添加批注。check_docx.py 或 gongwen_lint.py 的 --json 输出同样可用。
-找不到位置的条目列入报告，不写入文档。输出新文件，不修改原文件。
+读取 gongwen-review 输出的\u201c核稿意见.json\u201d\uff08docs/开发规范.md 第 8.2 节\uff09\uff0c按 excerpt 在 docx 中定位\uff0c
+用 python-docx 1.2 的 add_comment 添加批注\u3002check_docx.py 或 gongwen_lint.py 的 --json 输出同样可用\u3002
+找不到位置的条目列入报告\uff0c不写入文档\u3002输出新文件\uff0c不修改原文件\u3002
 
-退出码：0 成功（含部分未定位）；2 输入错误、缺少依赖或 python-docx 版本过低。
+退出码\uff1a0 成功\uff08含部分未定位\uff09\uff1b2 输入错误\u3001缺少依赖或 python-docx 版本过低\u3002
 """
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ def _find_exact(text: str, excerpt: str, used: List[Tuple[int, int]]) -> Tuple[O
 
 
 def _find_loose(text: str, excerpt: str, used: List[Tuple[int, int]]) -> Tuple[Optional[Tuple[int, int]], int]:
-    """忽略空格（含全角空格）匹配，返回原文中的区间。"""
+    """忽略空格\uff08含全角空格\uff09匹配\uff0c返回原文中的区间\u3002"""
     keep = [i for i, ch in enumerate(text) if not SPACE_RE.match(ch)]
     compact = "".join(text[i] for i in keep)
     target = SPACE_RE.sub("", excerpt)
@@ -112,7 +112,7 @@ def annotate(src: Path, issues: List[dict], dst: Path, *, author: str = "gongwen
             if hit or total:
                 break
         if hit is None:
-            reason = "原文中找不到这段文字（可能跨段、已改动，或在页眉页脚、文本框中）"
+            reason = "原文中找不到这段文字\uff08可能跨段\u3001已改动\uff0c或在页眉页脚\u3001文本框中\uff09"
             if total:
                 reason = "这段文字的每一处都已有批注"
             unlocated.append(dict(brief, reason=reason))
@@ -120,7 +120,7 @@ def annotate(src: Path, issues: List[dict], dst: Path, *, author: str = "gongwen
         idx, (start, end) = hit
         runs = D.runs_for_range(paras[idx], start, end)
         if runs is None:
-            unlocated.append(dict(brief, reason="所在文字含域代码、图片或超链接，无法拆分定位"))
+            unlocated.append(dict(brief, reason="所在文字含域代码\u3001图片或超链接\uff0c无法拆分定位"))
             continue
         lines = comment_lines(issue)
         comment = doc.add_comment(list(runs), text=lines[0], author=author, initials=initials)
@@ -143,7 +143,7 @@ def render_report(report: dict) -> str:
            f"- 批注作者：{report['author']}",
            f"- 核稿意见 {report['total']} 条：已写入批注 {len(report['located'])} 条，未定位 {len(report['unlocated'])} 条", ""]
     if report["unlocated"]:
-        out.append("## 未定位的意见（未写入文档，请人工处理）")
+        out.append("## 未定位的意见\uff08未写入文档\uff0c请人工处理\uff09")
         out.append("")
         out.append("| 序号 | 级别 | 原文片段 | 问题 | 原因 |")
         out.append("|---|---|---|---|---|")
@@ -162,20 +162,20 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
-    parser = argparse.ArgumentParser(description="把核稿意见 JSON 写成 Word 批注，输出新文件和批注报告。",
-                                     epilog="示例：python scripts/annotate_docx.py 成稿.docx 核稿意见.json")
-    parser.add_argument("file", help="要加批注的 .docx（不会被修改）")
-    parser.add_argument("issues", help="核稿意见.json（开发规范 8.2）或机检 JSON")
-    parser.add_argument("-o", "--output", help="输出路径；默认“原文件名-批注.docx”，已存在时加 -v2、-v3")
-    parser.add_argument("--author", default="gongwen-review", help="批注作者名，默认 gongwen-review")
-    parser.add_argument("--initials", default="GR", help="作者缩写，默认 GR")
-    parser.add_argument("--report", help="批注报告路径；默认与输出文件同名加“-批注报告.md”")
+    parser = argparse.ArgumentParser(description="把核稿意见 JSON 写成 Word 批注\uff0c输出新文件和批注报告\u3002",
+                                     epilog="示例\uff1apython scripts/annotate_docx.py 成稿.docx 核稿意见.json")
+    parser.add_argument("file", help="要加批注的 .docx\uff08不会被修改\uff09")
+    parser.add_argument("issues", help="核稿意见.json\uff08开发规范 8.2\uff09或机检 JSON")
+    parser.add_argument("-o", "--output", help="输出路径\uff1b默认\u201c原文件名-批注.docx\u201d\uff0c已存在时加 -v2\u3001-v3")
+    parser.add_argument("--author", default="gongwen-review", help="批注作者名\uff0c默认 gongwen-review")
+    parser.add_argument("--initials", default="GR", help="作者缩写\uff0c默认 GR")
+    parser.add_argument("--report", help="批注报告路径\uff1b默认与输出文件同名加\u201c-批注报告.md\u201d")
     parser.add_argument("--json", action="store_true", help="以 JSON 输出报告")
     args = parser.parse_args(argv)
     try:
         import docx  # noqa: F401
     except ImportError:
-        print("缺少 python-docx。请先安装：pip install -U python-docx（需要 1.2.0 及以上版本）")
+        print("缺少 python-docx\u3002请先安装\uff1apip install -U python-docx\uff08需要 1.2.0 及以上版本\uff09")
         return 2
     if not supports_comments() or docx_version() < MIN_VERSION:
         ver = ".".join(str(x) for x in docx_version())

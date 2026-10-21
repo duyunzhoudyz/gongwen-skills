@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""保密标识检查：扫描 txt、md、docx、xlsx 中的密级标识和内部标注，命中即退出码 1。
+"""保密标识检查\uff1a扫描 txt\u3001md\u3001docx\u3001xlsx 中的密级标识和内部标注\uff0c命中即退出码 1\u3002
 
-用法：python secret_check.py <文件...>
+用法\uff1apython secret_check.py <文件...>
 
-docx 读取范围：正文段落、表格、页眉、页脚（含首页、奇偶页）、文本框、脚注、尾注、批注，
-输出位置带来源标签，如“[页眉(首页)]”“[文本框]”“[表格]”。xlsx 读取单元格文字、批注、
-工作表名、页眉页脚。只依赖标准库。
+docx 读取范围\uff1a正文段落\u3001表格\u3001页眉\u3001页脚\uff08含首页\u3001奇偶页\uff09\u3001文本框\u3001脚注\u3001尾注\u3001批注\uff0c
+输出位置带来源标签\uff0c如\u201c[页眉(首页)]\u201d\u201c[文本框]\u201d\u201c[表格]\u201d\u3002xlsx 读取单元格文字\u3001批注\u3001
+工作表名\u3001页眉页脚\u3002只依赖标准库\u3002
 
-检出：“秘密★”“机密★”“绝密★”（含 5年 等保密期限写法）、“工作秘密”“内部资料”
-“不得外传”“内部使用”等。“保密工作”“涉密人员管理”之类业务用语不算。
-输出只给位置和命中词，不复述材料内容。
+检出\uff1a\u201c秘密★\u201d\u201c机密★\u201d\u201c绝密★\u201d\uff08含 5年 等保密期限写法\uff09\u3001\u201c工作秘密\u201d\u201c内部资料\u201d
+\u201c不得外传\u201d\u201c内部使用\u201d等\u3002\u201c保密工作\u201d\u201c涉密人员管理\u201d之类业务用语不算\u3002
+输出只给位置和命中词\uff0c不复述材料内容\u3002
 
-退出码：0 未发现；1 发现标识；2 文件无法读取。
+退出码\uff1a0 未发现\uff1b1 发现标识\uff1b2 文件无法读取\u3002
 """
 from __future__ import annotations
 
@@ -44,12 +44,12 @@ Item = Tuple[str, str]  # (位置标签, 文字)
 
 def _root(zf: zipfile.ZipFile, name: str) -> ET.Element:
     if zf.getinfo(name).file_size > MAX_XML:
-        raise ValueError("部件过大：" + name)
+        raise ValueError("部件过大\uff1a" + name)
     return ET.fromstring(zf.read(name))
 
 
 def _para_text(p: ET.Element) -> str:
-    """段落文字：含修订删除的文字（保守起见一并检查）。"""
+    """段落文字\uff1a含修订删除的文字\uff08保守起见一并检查\uff09\u3002"""
     parts = []
     for e in p.iter():
         if e.tag in (W + "t", W + "delText"):
@@ -60,7 +60,7 @@ def _para_text(p: ET.Element) -> str:
 
 
 def _paragraphs(root: ET.Element, base: str) -> List[Item]:
-    """遍历部件内全部段落；文本框、表格内的段落单独标注来源。"""
+    """遍历部件内全部段落\uff1b文本框\u3001表格内的段落单独标注来源\u3002"""
     out: List[Item] = []
     counter = [0]
 
@@ -94,7 +94,7 @@ def _paragraphs(root: ET.Element, base: str) -> List[Item]:
 
 
 def _hf_labels(zf: zipfile.ZipFile) -> Dict[str, str]:
-    """部件路径 -> 页眉/页脚标签（区分首页、偶数页）。"""
+    """部件路径 -> 页眉/页脚标签\uff08区分首页\u3001偶数页\uff09\u3002"""
     labels: Dict[str, str] = {}
     names = set(zf.namelist())
     if "word/document.xml" not in names:
@@ -115,7 +115,7 @@ def _hf_labels(zf: zipfile.ZipFile) -> Dict[str, str]:
 
 
 def extract_docx(path: Path) -> List[Item]:
-    """抽取 docx 全部文字，返回 [(位置标签, 文字)]。"""
+    """抽取 docx 全部文字\uff0c返回 [(位置标签, 文字)]\u3002"""
     items: List[Item] = []
     with zipfile.ZipFile(path) as zf:
         labels = _hf_labels(zf)
@@ -181,7 +181,7 @@ def extract(path: Path) -> List[Item]:
 
 
 def scan(items: List[Item]) -> List[Tuple[str, str, str]]:
-    """返回 [(位置, 类型, 命中词)]。"""
+    """返回 [(位置, 类型, 命中词)]\u3002"""
     hits = []
     for label, text in items:
         flat = re.sub(r"\s+", " ", text)
@@ -197,8 +197,8 @@ def main(argv=None) -> int:
             stream.reconfigure(encoding="utf-8")
         except Exception:
             pass
-    ap = argparse.ArgumentParser(description="检查文件中的保密标识（含页眉页脚、文本框、表格），命中退出码 1。")
-    ap.add_argument("files", nargs="+", help="txt、md、docx、xlsx 文件")
+    ap = argparse.ArgumentParser(description="检查文件中的保密标识\uff08含页眉页脚\u3001文本框\u3001表格\uff09\uff0c命中退出码 1\u3002")
+    ap.add_argument("files", nargs="+", help="txt\u3001md\u3001docx\u3001xlsx 文件")
     args = ap.parse_args(argv)
     code = 0
     for f in args.files:
@@ -206,7 +206,7 @@ def main(argv=None) -> int:
         try:
             items = extract(path)
         except (OSError, zipfile.BadZipFile, ET.ParseError, ValueError, KeyError) as exc:
-            print("[读取失败] %s：%s" % (path.name, exc))
+            print("[读取失败] %s\uff1a%s" % (path.name, exc))
             code = 2
             continue
         hits = scan(items)
@@ -215,12 +215,12 @@ def main(argv=None) -> int:
             continue
         if code == 0:
             code = 1
-        print("[发现保密标识] %s：共 %d 处，请立即停止处理并按保密红线告知用户" % (path.name, len(hits)))
+        print("[发现保密标识] %s\uff1a共 %d 处\uff0c请立即停止处理并按保密红线告知用户" % (path.name, len(hits)))
         seen = set()
         for label, kind, word in hits:
             if (label, word) not in seen:
                 seen.add((label, word))
-                print("  [%s] %s：%s" % (label, kind, word))
+                print("  [%s] %s\uff1a%s" % (label, kind, word))
     return code
 
 

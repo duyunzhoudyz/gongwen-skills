@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-"""公文正文结构识别（只依赖标准库）。
+"""公文正文结构识别\uff08只依赖标准库\uff09\u3002
 
-从按行排列的纯文本中识别版头要素、标题、主送机关、层次标题、正文、附件说明、
-署名、成文日期、附注、版记等角色。build_docx.py、check_docx.py、fix_docx.py 共用。
+从按行排列的纯文本中识别版头要素\u3001标题\u3001主送机关\u3001层次标题\u3001正文\u3001附件说明\u3001
+署名\u3001成文日期\u3001附注\u3001版记等角色\u3002build_docx.py\u3001check_docx.py\u3001fix_docx.py 共用\u3002
 
-识别规则：
-1. 首个非空行以"关于"开头或以文种结尾时作标题；标题回行的，合并后续行。
-2. 紧随标题、以全角冒号结尾的短行作主送机关。
-3. 以"附件："开头的行及其后的"2. ××"行作附件说明。
-4. 从末尾倒推：印发行、抄送行、附注、成文日期、署名。
+识别规则\uff1a
+1. 首个非空行以"关于"开头或以文种结尾时作标题\uff1b标题回行的\uff0c合并后续行\u3002
+2. 紧随标题\u3001以全角冒号结尾的短行作主送机关\u3002
+3. 以"附件\uff1a"开头的行及其后的"2. \u00d7\u00d7"行作附件说明\u3002
+4. 从末尾倒推\uff1a印发行\u3001抄送行\u3001附注\u3001成文日期\u3001署名\u3002
 """
 from __future__ import annotations
 
@@ -36,29 +36,29 @@ CN_NUM = "一二三四五六七八九十百零〇"
 H1_RE = re.compile(rf"^[{CN_NUM}]+、")
 H2_RE = re.compile(rf"^（[{CN_NUM}]+）")
 H3_RE = re.compile(r"^\d{1,2}[.．](?!\d)")
-H4_RE = re.compile(r"^（\d{1,2}）")
+H4_RE = re.compile(r"^\uff08\d{1,2}\uff09")
 # 不规范的层次序数写法（仍按对应层级识别，检查时报出）
 H2_BAD_RE = re.compile(rf"^\([{CN_NUM}]+\)")
 H4_BAD_RE = re.compile(r"^\(\d{1,2}\)")
-H3_BAD_RE = re.compile(r"^\d{1,2}、")
+H3_BAD_RE = re.compile(r"^\d{1,2}\u3001")
 
 # 日可以留空（起草时成文日期以签发日为准，写作“2026年10月　日”，签发时填）
 DATE_AR_RE = re.compile(r"^(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})?\s*日$")
 DATE_CN_RE = re.compile(r"^[〇○零一二三四五六七八九]{4}年[一二三四五六七八九十]{1,2}月[一二三四五六七八九十]{1,3}日$")
-DATE_MARK_RE = re.compile(r"^【待补[：:][^】]*日期[^】]*】$")
+DATE_MARK_RE = re.compile(r"^【待补[\uff1a:][^】]*日期[^】]*】$")
 # 顺序号可以是数字，也可以是还没编号时的占位“【待补：序号】”（推荐写法：代字〔年份〕【待补：序号】号）
-DOCNO_PAT = (r"[\u4e00-\u9fffA-Za-z]{1,15}\s*[〔\[［(（【﹝{｛]\s*(?:19|20)?\d{2,4}\s*[〕\]］)）】﹞}｝]\s*第?\s*"
+DOCNO_PAT = (r"[\u4e00-\u9fffA-Za-z]{1,15}\s*[〔\[［(\uff08【﹝{\uff5b]\s*(?:19|20)?\d{2,4}\s*[〕\]］)\uff09】﹞}\uff5d]\s*第?\s*"
              r"(?:\d+|【待补[^】]*】)\s*号")
 DOCNO_RE = re.compile(DOCNO_PAT)
 # 发文字号行：可带份号（信函格式同一行）和签发人（上行文）
 DOCNO_LINE_RE = re.compile(rf"^(?:(?P<copy>\d{{1,6}})\s+)?(?P<docno>{DOCNO_PAT})\s*(?:签发人\s*[：:]\s*(?P<signer>.+))?$")
 # 排版时写入的占位标记（修复、检查时要能认出来）
-DOCNO_MARK_RE = re.compile(r"^(?P<docno>【待补[：:][^】]*(?:发文字号|文号|序号)[^】]*】)\s*(?:签发人\s*[：:]\s*(?P<signer>.+))?$")
-ISSUER_MARK_RE = re.compile(r"^【待补[：:][^】]*(?:发文机关标志|纪要标志)[^】]*】$")
-QIHAO_RE = re.compile(r"^(?:[\u4e00-\u9fff]{0,15}\s*[〔\[［(（]\s*\d{4}\s*[〕\]］)）]\s*)?第\s*\d+\s*期$")
-SIGNER_RE = re.compile(r"签发人\s*[：:]\s*(.+)$")
+DOCNO_MARK_RE = re.compile(r"^(?P<docno>【待补[\uff1a:][^】]*(?:发文字号|文号|序号)[^】]*】)\s*(?:签发人\s*[\uff1a:]\s*(?P<signer>.+))?$")
+ISSUER_MARK_RE = re.compile(r"^【待补[\uff1a:][^】]*(?:发文机关标志|纪要标志)[^】]*】$")
+QIHAO_RE = re.compile(r"^(?:[\u4e00-\u9fff]{0,15}\s*[〔\[［(\uff08]\s*\d{4}\s*[〕\]］)\uff09]\s*)?第\s*\d+\s*期$")
+SIGNER_RE = re.compile(r"签发人\s*[\uff1a:]\s*(.+)$")
 # 命令（令）格式的令号：“第12号”，或尚未编号的占位“【待补：令号】”（GB/T 9704-2012 10.2）
-LINGHAO_RE = re.compile(r"^(?:第\s*[0-9０-９一二三四五六七八九十百零〇]{1,6}\s*号|【待补[：:][^】]*令号[^】]*】)$")
+LINGHAO_RE = re.compile(r"^(?:第\s*[0-9０-９一二三四五六七八九十百零〇]{1,6}\s*号|【待补[\uff1a:][^】]*令号[^】]*】)$")
 # 附件另面编排：正文文件中的附件分界行“【附件1】标题”“【附件】标题”（GB/T 9704-2012 7.3.7）；
 # 排好的 docx 中，附件页首行只有“附件”或“附件1”
 ATTACH_SECTION_RE = re.compile(r"^【\s*附件\s*([0-9０-９]{1,2})?\s*】\s*(.*)$")
@@ -68,25 +68,25 @@ SECRET_RE = re.compile(r"^(绝密|机密|秘密)(\s*★.*)?$")
 URGENCY_RE = re.compile(r"^(特急|加急|特提|平急)$")
 # 印发机关以非空白字符结尾（贪婪匹配），避免“懒惰匹配 + 空白串”在超长空白行上二次方回溯
 PRINT_RE = re.compile(r"^(?P<org>\S(?:.*\S)?)\s+(?P<date>\d{4}年\d{1,2}月\d{1,2}日)\s*印发$")
-CC_RE = re.compile(r"^抄\s*送\s*[：:]")
-BANJI_MAIN_RE = re.compile(r"^主\s*送\s*[：:]")
-ATTACH_RE = re.compile(r"^附\s*件\s*[：:]")
+CC_RE = re.compile(r"^抄\s*送\s*[\uff1a:]")
+BANJI_MAIN_RE = re.compile(r"^主\s*送\s*[\uff1a:]")
+ATTACH_RE = re.compile(r"^附\s*件\s*[\uff1a:]")
 ATTACH_CONT_RE = re.compile(r"^\d{1,2}\s*[.．]\s*\S")
-NOTE_RE = re.compile(r"^[（(].+[）)]$")
-CONTACT_RE = re.compile(r"^联系(?:人|电话|方式)\s*[：:]")  # 没加括号的联系人行，同附注（成文日期下一行）
-ATTENDANCE_RE = re.compile(r"^(出\s*席|请\s*假|列\s*席|缺\s*席)\s*[：:]")
-SUBTITLE_RE = re.compile(r"^(——|—|－－|--)")
-TITLE_NOTE_RE = re.compile(r"^[（(]\s*\d{4}年\d{1,2}月\d{1,2}日\s*[）)]$")
+NOTE_RE = re.compile(r"^[\uff08(].+[\uff09)]$")
+CONTACT_RE = re.compile(r"^联系(?:人|电话|方式)\s*[\uff1a:]")  # 没加括号的联系人行，同附注（成文日期下一行）
+ATTENDANCE_RE = re.compile(r"^(出\s*席|请\s*假|列\s*席|缺\s*席)\s*[\uff1a:]")
+SUBTITLE_RE = re.compile(r"^(\u2014\u2014|\u2014|－－|--)")
+TITLE_NOTE_RE = re.compile(r"^[\uff08(]\s*\d{4}年\d{1,2}月\d{1,2}日\s*[\uff09)]$")
 CLOSING_RE = re.compile(r"^(特此|此复|此致|敬礼|妥否|以上|当否|专此)")
-SENT_PUNCT = "。，；！？、"
-MARKERS_RE = re.compile(r"【(待补|待核实)[：:][^】]*】")
+SENT_PUNCT = "\u3002\uff0c\uff1b\uff01\uff1f\u3001"
+MARKERS_RE = re.compile(r"【(待补|待核实)[\uff1a:][^】]*】")
 SECRET_WORDS_RE = re.compile(r"(绝密|机密|秘密)\s*★|★\s*\d+\s*年|内部资料|工作秘密|不得外传|涉密")
 DRAFT_NOTE_LINE = "【起草说明】"
 # 正文表格在行列表中的占位（私用区字符，用户文字中不会出现）。build 把管道表格换成它，
 # check、fix 在 docx 正文表格的位置插入它；识别时作“table”角色，不参与标题、署名等判断。
 TABLE_MARK = "表格"
 # 表题：表格上一行，“表1”“附表2”开头，或以“表”“清单”“台账”结尾（可带括注，如“（单位：万元）”）
-CAPTION_RE = re.compile(r"^(?:附表|表)\s*[0-9０-９一二三四五六七八九十]|(?:表|清单|台账)(?:[（(][^（）()]*[）)])?$")
+CAPTION_RE = re.compile(r"^(?:附表|表)\s*[0-9０-９一二三四五六七八九十]|(?:表|清单|台账)(?:[\uff08(][^\uff08\uff09()]*[\uff09)])?$")
 # Markdown 管道表格：分隔行（|---|:---:|）和数据行（首尾都是竖线、至少两格）
 PIPE_DELIM_CELL_RE = re.compile(r"^:?-{3,}:?$")
 PIPE_ROW_RE = re.compile(r"^\|.*\|.*\|$")
@@ -112,10 +112,10 @@ BODY_ROLES = ("body", "h1", "h2", "h3", "h4", "attendance")
 # ---------------------------------------------------------------------------
 
 def is_draft_note_line(line: str) -> bool:
-    """是否【起草说明】分界行。
+    """是否【起草说明】分界行\u3002
 
-    与 gongwen_lint.py 一致：去掉行首空白（含全角空格）后以【起草说明】开头即算；
-    另外兼容 Markdown 标题、加粗包裹的写法（“## 【起草说明】”“**【起草说明】**”），避免起草说明被排进正文。
+    与 gongwen_lint.py 一致\uff1a去掉行首空白\uff08含全角空格\uff09后以【起草说明】开头即算\uff1b
+    另外兼容 Markdown 标题\u3001加粗包裹的写法\uff08\u201c## 【起草说明】\u201d\u201c**【起草说明】**\u201d\uff09\uff0c避免起草说明被排进正文\u3002
     """
     text = line.strip()
     if text.startswith(DRAFT_NOTE_LINE):
@@ -126,7 +126,7 @@ def is_draft_note_line(line: str) -> bool:
 
 
 def draft_note_index(texts: Sequence[str]) -> Optional[int]:
-    """返回第一个【起草说明】分界行的下标；没有时返回 None。读取 docx 段落时用。"""
+    """返回第一个【起草说明】分界行的下标\uff1b没有时返回 None\u3002读取 docx 段落时用\u3002"""
     for i, text in enumerate(texts):
         if is_draft_note_line(text or ""):
             return i
@@ -134,10 +134,10 @@ def draft_note_index(texts: Sequence[str]) -> Optional[int]:
 
 
 def read_body_text(path: Path) -> Tuple[List[str], List[str]]:
-    """读取 .txt/.md 正文，遇到【起草说明】停止。返回 (行列表, 提示)。
+    """读取 .txt/.md 正文\uff0c遇到【起草说明】停止\u3002返回 (行列表, 提示)\u3002
 
-    先按 UTF-8（可带 BOM）解码，失败时按 GB18030 解码（与 gongwen_lint.py 一致）；
-    都失败时抛出 ValueError，由调用方提示用户另存为 UTF-8。
+    先按 UTF-8\uff08可带 BOM\uff09解码\uff0c失败时按 GB18030 解码\uff08与 gongwen_lint.py 一致\uff09\uff1b
+    都失败时抛出 ValueError\uff0c由调用方提示用户另存为 UTF-8\u3002
     """
     notes: List[str] = []
     data = path.read_bytes()
@@ -146,9 +146,9 @@ def read_body_text(path: Path) -> Tuple[List[str], List[str]]:
     except UnicodeDecodeError:
         try:
             raw = data.decode("gb18030")
-            notes.append("文件不是 UTF-8 编码，已按 GB18030 读取。")
+            notes.append("文件不是 UTF-8 编码\uff0c已按 GB18030 读取\u3002")
         except UnicodeDecodeError as exc:
-            raise ValueError("无法识别文件编码，请另存为 UTF-8 后重试。") from exc
+            raise ValueError("无法识别文件编码\uff0c请另存为 UTF-8 后重试\u3002") from exc
     lines: List[str] = []
     md_hit = False
     for line in raw.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
@@ -162,20 +162,20 @@ def read_body_text(path: Path) -> Tuple[List[str], List[str]]:
             line = new
         lines.append(line)
     if md_hit:
-        notes.append("输入含 Markdown 标记（# 或 **），已去掉标记符号，文字未改动")
+        notes.append("输入含 Markdown 标记\uff08# 或 **\uff09\uff0c已去掉标记符号\uff0c文字未改动")
     return lines, notes
 
 
 def clean_line(line: str) -> str:
-    """去掉行首行尾空白（含全角空格），行首空格缩进由排版统一处理。"""
+    """去掉行首行尾空白\uff08含全角空格\uff09\uff0c行首空格缩进由排版统一处理\u3002"""
     return line.strip().strip("　").strip()
 
 
-FULL_WIDTH_PUNCT = "—…“”‘’"  # 码位低于 0x2E80，但按 eastAsia 字体排时占一个字位置（GB/T 15834）
+FULL_WIDTH_PUNCT = "\u2014…\u201c\u201d\u2018\u2019"  # 码位低于 0x2E80，但按 eastAsia 字体排时占一个字位置（GB/T 15834）
 
 
 def text_width_chars(text: str) -> float:
-    """按字估算宽度：汉字和全角符号（含中文引号、破折号、省略号）记 1 字，ASCII 字符记 0.5 字。"""
+    """按字估算宽度\uff1a汉字和全角符号\uff08含中文引号\u3001破折号\u3001省略号\uff09记 1 字\uff0cASCII 字符记 0.5 字\u3002"""
     width = 0.0
     for ch in text:
         width += 0.5 if ord(ch) < 0x2E80 and ch not in FULL_WIDTH_PUNCT else 1.0
@@ -183,12 +183,12 @@ def text_width_chars(text: str) -> float:
 
 
 def is_heading(text: str) -> Optional[str]:
-    """返回层次标题级别（h1～h4），不是标题时返回 None。
+    """返回层次标题级别\uff08h1～h4\uff09\uff0c不是标题时返回 None\u3002
 
-    一级标题独占一行、末尾不加标点；"一、二季度共完成……。"这类带句号的长句按正文处理。
+    一级标题独占一行\u3001末尾不加标点\uff1b"一\u3001二季度共完成……\u3002"这类带句号的长句按正文处理\u3002
     """
     if H1_RE.match(text):
-        return "h1" if "。" not in text and len(text) <= 50 else None
+        return "h1" if "\u3002" not in text and len(text) <= 50 else None
     if H2_RE.match(text) or H2_BAD_RE.match(text):
         return "h2"
     if H4_RE.match(text) or H4_BAD_RE.match(text):
@@ -204,25 +204,25 @@ GREETING_RE = re.compile(r"同志|朋友|同学|老师|各位|女士|先生|代�
 
 def is_salutation(text: str) -> bool:
     t = text.strip()
-    return bool(t) and len(t) <= 30 and t.endswith(("：", ":")) and not any(ch in t for ch in "。；！？") \
+    return bool(t) and len(t) <= 30 and t.endswith(("\uff1a", ":")) and not any(ch in t for ch in "\u3002\uff1b\uff01\uff1f") \
         and bool(GREETING_RE.search(t))
 
 
 # 阿拉伯数字多级序号（1.1、1.1.1）：国标没有这种写法，识别后按嵌套层级套用一至四级标题字体，序号文字不改
-DEC3_RE = re.compile(r"^(\d{1,2})\.(\d{1,2})\.(\d{1,2})(?!\d)(?P<sep>[\s　、．.]?)(?=\S)")
-DEC2_RE = re.compile(r"^(\d{1,2})\.(\d{1,2})(?!\d)(?P<sep>[\s　、．.]?)(?=\S)")
+DEC3_RE = re.compile(r"^(\d{1,2})\.(\d{1,2})\.(\d{1,2})(?!\d)(?P<sep>[\s　\u3001．.]?)(?=\S)")
+DEC2_RE = re.compile(r"^(\d{1,2})\.(\d{1,2})(?!\d)(?P<sep>[\s　\u3001．.]?)(?=\S)")
 LEVEL_FONT_NAME = {1: "黑体", 2: "楷体", 3: "仿宋", 4: "仿宋"}
-STD_MARK = {1: "一、", 2: "（一）", 3: "1.", 4: "（1）"}
+STD_MARK = {1: "一\u3001", 2: "\uff08一\uff09", 3: "1.", 4: "\uff081\uff09"}
 STD_KIND = {"h1": "cn1", "h2": "cn2", "h3": "ar1", "h4": "p4"}
-KIND_SAMPLE = {"cn1": "一、", "cn2": "（一）", "ar1": "1.", "p4": "（1）", "ar2": "1.1", "ar3": "1.1.1"}
+KIND_SAMPLE = {"cn1": "一\u3001", "cn2": "\uff08一\uff09", "ar1": "1.", "p4": "\uff081\uff09", "ar2": "1.1", "ar3": "1.1.1"}
 
 
 def heading_levels(texts: Sequence[str]) -> Tuple[Dict[int, str], Dict[int, str]]:
-    """文档含“1.1”这类多级阿拉伯数字序号时，按嵌套层级判各行的标题级别。
+    """文档含\u201c1.1\u201d这类多级阿拉伯数字序号时\uff0c按嵌套层级判各行的标题级别\u3002
 
-    返回 (级别, 说明)：级别 {下标: "h1"～"h4"}，说明 {下标: 序号写法不规范的提示}。没有多级阿拉伯数字序号时返回两个空字典，
-    调用方按 is_heading 的标准写法（一、（一）1.（1））识别。层级按首次出现时的嵌套深度定：第一种序号为一级，
-    出现在它之下的新写法依次为二、三、四级；超过四级的按四级。序号文字不改。
+    返回 (级别, 说明)\uff1a级别 {下标: "h1"～"h4"}\uff0c说明 {下标: 序号写法不规范的提示}\u3002没有多级阿拉伯数字序号时返回两个空字典\uff0c
+    调用方按 is_heading 的标准写法\uff08一\u3001\uff08一\uff091.\uff081\uff09\uff09识别\u3002层级按首次出现时的嵌套深度定\uff1a第一种序号为一级\uff0c
+    出现在它之下的新写法依次为二\u3001三\u3001四级\uff1b超过四级的按四级\u3002序号文字不改\u3002
     """
     kinds: Dict[int, str] = {}
     last: Dict[str, int] = {}  # 序号前缀 -> 其下已出现的最大序号（“1” -> 2 表示已有 1.1、1.2）
@@ -258,7 +258,7 @@ def heading_levels(texts: Sequence[str]) -> Tuple[Dict[int, str], Dict[int, str]
         levels[i] = f"h{d}"
         std_kind = KIND_SAMPLE[k]
         if k in ("ar2", "ar3") or STD_MARK[d] != std_kind:
-            marker = re.match(r"^(?:\d{1,2}(?:\.\d{1,2}){0,2}[.．、]?|（[一二三四五六七八九十\d]+）|\([一二三四五六七八九十\d]+\)|[一二三四五六七八九十]+、)",
+            marker = re.match(r"^(?:\d{1,2}(?:\.\d{1,2}){0,2}[.．\u3001]?|\uff08[一二三四五六七八九十\d]+\uff09|\([一二三四五六七八九十\d]+\)|[一二三四五六七八九十]+\u3001)",
                               texts[i].strip())
             mark = marker.group(0) if marker else std_kind
             notes[i] = f"序号“{mark}”不是国标层次序数，已按第 {d} 层识别并套用{LEVEL_FONT_NAME[d]}；建议改为“{STD_MARK[d]}”"
@@ -278,7 +278,7 @@ class PipeTable:
 
 
 def split_pipe_row(line: str) -> List[str]:
-    """按未转义的竖线拆分一行，去掉首尾竖线；“\\|”还原为竖线文字。"""
+    """按未转义的竖线拆分一行\uff0c去掉首尾竖线\uff1b\u201c\\|\u201d还原为竖线文字\u3002"""
     text = line.strip()
     cells: List[str] = []
     buf: List[str] = []
@@ -308,7 +308,7 @@ def _has_pipe(line: str) -> bool:
 
 
 def parse_pipe_delimiter(line: str) -> Optional[List[Optional[str]]]:
-    """分隔行返回各列对齐方式，不是分隔行返回 None。"""
+    """分隔行返回各列对齐方式\uff0c不是分隔行返回 None\u3002"""
     if not _has_pipe(line):
         return None
     cells = split_pipe_row(line)
@@ -329,7 +329,7 @@ def parse_pipe_delimiter(line: str) -> Optional[List[Optional[str]]]:
 
 
 def clean_cell(text: str) -> str:
-    """去掉单元格中的 Markdown 加粗、行内代码记号，<br> 换成换行；文字不改。"""
+    """去掉单元格中的 Markdown 加粗\u3001行内代码记号\uff0c<br> 换成换行\uff1b文字不改\u3002"""
     value = BR_RE.sub("\n", text)
     parts = []
     for part in value.split("\n"):
@@ -340,15 +340,15 @@ def clean_cell(text: str) -> str:
 
 
 def is_pipe_residue(text: str) -> bool:
-    """段落是不是没转换的 Markdown 表格行（分隔行，或首尾都是竖线的数据行）。"""
+    """段落是不是没转换的 Markdown 表格行\uff08分隔行\uff0c或首尾都是竖线的数据行\uff09\u3002"""
     t = text.strip()
     return bool(PIPE_ROW_RE.match(t)) or (t.count("|") >= 2 and parse_pipe_delimiter(t) is not None)
 
 
 def extract_pipe_tables(lines: Sequence[str]) -> Tuple[List[str], List[PipeTable], List[str]]:
-    """把行列表中的管道表格换成 TABLE_MARK 占位行。返回 (新行列表, 表格列表, 提示)。
+    """把行列表中的管道表格换成 TABLE_MARK 占位行\u3002返回 (新行列表, 表格列表, 提示)\u3002
 
-    表格须有表头行和分隔行，数据行连续、中间不空行。各行格数不一致时按最多的一行补空格，不丢文字。
+    表格须有表头行和分隔行\uff0c数据行连续\u3001中间不空行\u3002各行格数不一致时按最多的一行补空格\uff0c不丢文字\u3002
     """
     out: List[str] = []
     tables: List[PipeTable] = []
@@ -384,17 +384,17 @@ def extract_pipe_tables(lines: Sequence[str]) -> Tuple[List[str], List[PipeTable
 
 @dataclass
 class AttachSection:
-    """正文文件中的一个附件（另面编排）：标识（“附件”或“附件1”）、标题、正文行。"""
+    """正文文件中的一个附件\uff08另面编排\uff09\uff1a标识\uff08\u201c附件\u201d或\u201c附件1\u201d\uff09\u3001标题\u3001正文行\u3002"""
     label: str
     title: str
     lines: List[str]
 
 
 def extract_attachments(lines: Sequence[str]) -> Tuple[List[str], List[AttachSection], List[str]]:
-    """把“【附件1】标题”分界行之后的内容拆成附件。返回 (主文行, 附件列表, 提示)。
+    """把\u201c【附件1】标题\u201d分界行之后的内容拆成附件\u3002返回 (主文行, 附件列表, 提示)\u3002
 
-    分界行之前是主文（正文、落款），之后每个分界行开始一个附件。只有一个附件、没写序号的，标识为“附件”；
-    多个附件没写序号的，按出现顺序编号并提示。附件标题缺失的由调用方写【待补】。
+    分界行之前是主文\uff08正文\u3001落款\uff09\uff0c之后每个分界行开始一个附件\u3002只有一个附件\u3001没写序号的\uff0c标识为\u201c附件\u201d\uff1b
+    多个附件没写序号的\uff0c按出现顺序编号并提示\u3002附件标题缺失的由调用方写【待补】\u3002
     """
     main: List[str] = []
     secs: List[Tuple[str, str, List[str]]] = []
@@ -420,16 +420,16 @@ def extract_attachments(lines: Sequence[str]) -> Tuple[List[str], List[AttachSec
 
 
 def is_table_caption(text: str) -> bool:
-    """表格上一行是不是表题：“表1”“附表2”开头，或以“表”“清单”“台账”结尾，短且没有句末标点。"""
+    """表格上一行是不是表题\uff1a\u201c表1\u201d\u201c附表2\u201d开头\uff0c或以\u201c表\u201d\u201c清单\u201d\u201c台账\u201d结尾\uff0c短且没有句末标点\u3002"""
     t = text.strip()
-    if not t or len(t) > 40 or any(ch in t for ch in "。；！？") or is_heading(t) or ATTACH_RE.match(t):
+    if not t or len(t) > 40 or any(ch in t for ch in "\u3002\uff1b\uff01\uff1f") or is_heading(t) or ATTACH_RE.match(t):
         return False
     return bool(CAPTION_RE.search(t))
 
 
 def heading_split(text: str) -> int:
-    """标题与正文同段时，返回标题部分的结束位置（含句号）；整段是标题时返回全长。"""
-    idx = text.find("。")
+    """标题与正文同段时\uff0c返回标题部分的结束位置\uff08含句号\uff09\uff1b整段是标题时返回全长\u3002"""
+    idx = text.find("\u3002")
     if idx == -1 or idx >= len(text) - 1:
         return len(text)
     return idx + 1
@@ -438,8 +438,8 @@ def heading_split(text: str) -> int:
 # 标题回行时优先在这些词之后断开（词意完整）
 TITLE_BREAK_AFTER = ("关于印发", "关于转发", "关于", "印发", "转发", "开展", "做好", "加强", "进一步", "委员会",
                      "办公室", "办公厅", "公司", "集团", "政府", "中心", "大学", "学院", "医院", "学校", "年度",
-                     "局", "部", "院", "委", "厅", "办", "处", "年", "的", "》", "）")
-TITLE_NO_LINE_START = "的了和与及、，。；：）》"
+                     "局", "部", "院", "委", "厅", "办", "处", "年", "的", "》", "\uff09")
+TITLE_NO_LINE_START = "的了和与及\u3001\uff0c\u3002\uff1b\uff1a\uff09》"
 # 公文标题常用词：回行时不从词中间断开（贪心最长匹配分词，只用于找断点）
 TITLE_WORDS = set("""
 基本 医疗 保险 参保 缴费 工作 安全 生产 管理 建设 发展 服务 改革 教育 卫生 健康 社会 经济 质量 实施 方案 意见
@@ -457,7 +457,7 @@ TITLE_WORDS = set("""
 
 
 def _segment_bounds(text: str) -> set:
-    """贪心最长匹配分词，返回落在词中间的位置集合。"""
+    """贪心最长匹配分词\uff0c返回落在词中间的位置集合\u3002"""
     inside = set()
     i = 0
     while i < len(text):
@@ -472,16 +472,16 @@ def _segment_bounds(text: str) -> set:
 
 
 def _protected(text: str):
-    """返回 (不能断开的位置, 括号内部的位置)：数字连写和“2026年”中间不能断；书名号、括号内部尽量不断。"""
+    """返回 (不能断开的位置, 括号内部的位置)\uff1a数字连写和\u201c2026年\u201d中间不能断\uff1b书名号\u3001括号内部尽量不断\u3002"""
     hard = [False] * (len(text) + 1)
     soft = [False] * (len(text) + 1)
     depth = 0
     for i, ch in enumerate(text):
         if depth > 0:
             soft[i] = True
-        if ch in "《（(":
+        if ch in "《\uff08(":
             depth += 1
-        elif ch in "》）)" and depth > 0:
+        elif ch in "》\uff09)" and depth > 0:
             depth -= 1
         prev = text[i - 1] if i > 0 else ""
         if prev and prev.isascii() and prev.isalnum() and ch.isascii() and ch.isalnum():
@@ -492,9 +492,9 @@ def _protected(text: str):
 
 
 def break_title(text: str, max_chars: float = 20.0, min_chars: float = 3.0) -> List[str]:
-    """把超长标题分成几行：每行不超过 max_chars，上行不短于下行，尽量在词边界断开（7.3.1）。
+    """把超长标题分成几行\uff1a每行不超过 max_chars\uff0c上行不短于下行\uff0c尽量在词边界断开\uff087.3.1\uff09\u3002
 
-    宽度按汉字 1 字、半角字符 0.5 字估算。放得下一行时原样返回。
+    宽度按汉字 1 字\u3001半角字符 0.5 字估算\u3002放得下一行时原样返回\u3002
     """
     total = text_width_chars(text)
     if total <= max_chars or len(text) < 4:
@@ -556,7 +556,7 @@ def break_title(text: str, max_chars: float = 20.0, min_chars: float = 3.0) -> L
 
 
 def doc_kind(title: str) -> Tuple[str, Optional[str]]:
-    """根据标题末尾判断文书类别。返回 (类别, 文种)，类别为"法定""内部""材料""未知"。"""
+    """根据标题末尾判断文书类别\u3002返回 (类别, 文种)\uff0c类别为"法定""内部""材料""未知"\u3002"""
     t = re.sub(r"[\s　]", "", title or "")
     if not t:
         return "未知", None
@@ -586,9 +586,9 @@ def looks_like_date(text: str) -> bool:
 
 
 def normalize_date(value: str) -> Tuple[str, bool]:
-    """把 2026-10-16、2026/10/16、2026.10.16 写法转成"2026年10月16日"。返回 (结果, 是否转换)。
+    """把 2026-10-16\u30012026/10/16\u30012026.10.16 写法转成"2026年10月16日"\u3002返回 (结果, 是否转换)\u3002
 
-    已是"××××年×月×日"写法的原样保留，由 check_docx.py 检查虚位等问题。
+    已是"\u00d7\u00d7\u00d7\u00d7年\u00d7月\u00d7日"写法的原样保留\uff0c由 check_docx.py 检查虚位等问题\u3002
     """
     v = (value or "").strip()
     m = re.fullmatch(r"(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})", v)
@@ -636,7 +636,7 @@ def _is_signature_line(text: str) -> bool:
     if text == TABLE_MARK:
         return False
     text = MARKERS_RE.sub("某", text)
-    if len(text) > 40 or has_sentence_punct(text) or "：" in text or ":" in text:
+    if len(text) > 40 or has_sentence_punct(text) or "\uff1a" in text or ":" in text:
         return False
     if is_heading(text) or ATTACH_RE.match(text) or CLOSING_RE.match(text):
         return False
@@ -645,11 +645,11 @@ def _is_signature_line(text: str) -> bool:
 
 def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
                 tables_after: Optional[Sequence[int]] = None) -> Parsed:
-    """识别各行角色。raw_lines 可含空行，空行不进入结果。
+    """识别各行角色\u3002raw_lines 可含空行\uff0c空行不进入结果\u3002
 
-    red：与 raw_lines 对应的“整段为红色”标记（读已有 docx 时传入），开头的红色短行按发文机关标志处理。
-    tables_after：读已有 docx 时传入，每张正文表格前一段的下标（表格在最前面时为 -1）；
-    识别时在该段之后插入一个表格占位（角色 table，src 为 -1），表格上一行像表题的识别为 table_caption。
+    red\uff1a与 raw_lines 对应的\u201c整段为红色\u201d标记\uff08读已有 docx 时传入\uff09\uff0c开头的红色短行按发文机关标志处理\u3002
+    tables_after\uff1a读已有 docx 时传入\uff0c每张正文表格前一段的下标\uff08表格在最前面时为 -1\uff09\uff1b
+    识别时在该段之后插入一个表格占位\uff08角色 table\uff0csrc 为 -1\uff09\uff0c表格上一行像表题的识别为 table_caption\u3002
     """
     res = Parsed()
     lines: List[Tuple[int, str]] = []
@@ -666,7 +666,7 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
             lines.append((idx, text))
         lines.extend((-1, TABLE_MARK) for _ in range(anchors.get(idx, 0)))
     if indent_hit:
-        res.warnings.append("部分段落用空格缩进，排版时已去掉行首空格，缩进统一按首行缩进 2 字处理")
+        res.warnings.append("部分段落用空格缩进\uff0c排版时已去掉行首空格\uff0c缩进统一按首行缩进 2 字处理")
     if not lines:
         res.warnings.append("正文为空")
         return res
@@ -706,11 +706,11 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
     # 2. 标题（可能回行）
     title_items: List[Item] = []
     if any(it.role == "lingno" for it in head):
-        res.detected.append("命令（令）格式：令号之后直接是正文，没有标题（GB/T 9704-2012 10.2）")
+        res.detected.append("命令\uff08令\uff09格式\uff1a令号之后直接是正文\uff0c没有标题\uff08GB/T 9704-2012 10.2\uff09")
     elif pos < n:
         idx, text = lines[pos]
         if (text.startswith("关于") or ends_with_doc_type(text)) and not is_heading(text) \
-                and not text.endswith(("：", ":")) and len(text) <= 80:
+                and not text.endswith(("\uff1a", ":")) and len(text) <= 80:
             title_items.append(Item("title", text, idx))
             pos += 1
             # 回行标题：首行未以文种结尾，后续短行以文种结尾时合并
@@ -718,7 +718,7 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
                 look = pos
                 while look < n and look < pos + 2:
                     t2 = lines[look][1]
-                    if t2 == TABLE_MARK or has_sentence_punct(t2) or t2.endswith(("：", ":")) or is_heading(t2) or len(t2) > 40:
+                    if t2 == TABLE_MARK or has_sentence_punct(t2) or t2.endswith(("\uff1a", ":")) or is_heading(t2) or len(t2) > 40:
                         break
                     if ends_with_doc_type(t2):
                         for k in range(pos, look + 1):
@@ -726,14 +726,14 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
                         pos = look + 1
                         break
                     look += 1
-            res.detected.append("标题：按首行" + ("以“关于”开头" if text.startswith("关于") else "以文种结尾") + "识别")
+            res.detected.append("标题\uff1a按首行" + ("以\u201c关于\u201d开头" if text.startswith("关于") else "以文种结尾") + "识别")
         elif _looks_title(text) and pos + 1 < n:
             title_items.append(Item("title", text, idx))
             pos += 1
-            res.detected.append("标题：首行较短且无句末标点，推断为标题，请核对")
+            res.detected.append("标题\uff1a首行较短且无句末标点\uff0c推断为标题\uff0c请核对")
             res.warnings.append(f"标题“{text}”是按首行推断的，不是按“关于”或文种识别，请核对")
         else:
-            res.warnings.append("未识别到标题：首行既不以“关于”开头，也不以文种结尾。如首行是标题，请在版式信息中填写“标题”")
+            res.warnings.append("未识别到标题\uff1a首行既不以\u201c关于\u201d开头\uff0c也不以文种结尾\u3002如首行是标题\uff0c请在版式信息中填写\u201c标题\u201d")
     if title_items:
         title = "".join(it.text for it in title_items)
         res.fields["标题"] = title
@@ -749,7 +749,7 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
                 res.warnings.append(f"版头已有发文字号“{res.fields['发文字号']}”，标题下另有文号行“{text}”，已以版头为准")
             else:
                 _record_docno(res, text)
-            res.detected.append("发文字号：标题下的文号行，排版时移到版头")
+            res.detected.append("发文字号\uff1a标题下的文号行\uff0c排版时移到版头")
             pos += 1
         elif SUBTITLE_RE.match(text) and len(text) <= 60:
             title_items.append(Item("subtitle", text, idx))
@@ -758,11 +758,11 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
         elif TITLE_NOTE_RE.match(text):
             title_items.append(Item("title_note", text, idx))
             pos += 1
-        elif text != TABLE_MARK and len(text) <= 25 and not has_sentence_punct(text) and not is_heading(text)                 and not text.endswith(("：", ":")) and (nxt.endswith(("：", ":")) or TITLE_NOTE_RE.match(nxt)):
+        elif text != TABLE_MARK and len(text) <= 25 and not has_sentence_punct(text) and not is_heading(text)                 and not text.endswith(("\uff1a", ":")) and (nxt.endswith(("\uff1a", ":")) or TITLE_NOTE_RE.match(nxt)):
             title_items.append(Item("title_note", text, idx))
             pos += 1
-        elif text != TABLE_MARK and len(text) <= 40 and not any(ch in text for ch in "。，；！？") and not is_heading(text) \
-                and not text.endswith(("：", ":")) and _salutation_ahead(lines, pos + 1):
+        elif text != TABLE_MARK and len(text) <= 40 and not any(ch in text for ch in "\u3002\uff0c\uff1b\uff01\uff1f") and not is_heading(text) \
+                and not text.endswith(("\uff1a", ":")) and _salutation_ahead(lines, pos + 1):
             # 讲话稿标题下的讲话人、会议名称等行：含顿号、较长，或后面还隔着几行才到“同志们：”
             title_items.append(Item("title_note", text, idx))
             pos += 1
@@ -774,13 +774,13 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
     if pos < n:
         idx, text = lines[pos]
         # “现将有关事项通告如下：”这类引出下文的句子是正文首段（通告、公告没有主送机关），不是主送机关
-        if text.endswith(("：", ":")) and len(text) <= 80 and "。" not in text and "如下" not in text \
+        if text.endswith(("\uff1a", ":")) and len(text) <= 80 and "\u3002" not in text and "如下" not in text \
                 and not is_heading(text) and not ATTENDANCE_RE.match(text) and not ATTACH_RE.match(text):
             recipient = Item("recipient", text, idx)
-            res.fields["主送机关"] = text.rstrip("：:")
-            res.detected.append("主送机关：标题后以冒号结尾的行")
+            res.fields["主送机关"] = text.rstrip("\uff1a:")
+            res.detected.append("主送机关\uff1a标题后以冒号结尾的行")
             if text.endswith(":"):
-                res.warnings.append("主送机关后用了半角冒号，应为全角冒号（GB/T 9704-2012 7.3.2）")
+                res.warnings.append("主送机关后用了半角冒号\uff0c应为全角冒号\uff08GB/T 9704-2012 7.3.2\uff09")
             pos += 1
 
     # 4. 从末尾倒推版记、附注、成文日期、署名
@@ -803,10 +803,10 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
     if cc_items:
         for it in cc_items:
             if it.role == "cc":
-                res.fields["抄送"] = re.sub(r"^抄\s*送\s*[：:]", "", it.text).strip()
+                res.fields["抄送"] = re.sub(r"^抄\s*送\s*[\uff1a:]", "", it.text).strip()
         tail = cc_items + tail
     if any(it.role in ("print", "cc") for it in tail):
-        res.detected.append("版记：末尾的抄送行、印发行")
+        res.detected.append("版记\uff1a末尾的抄送行\u3001印发行")
 
     # 附注（在成文日期下一行）
     note_item: Optional[Item] = None
@@ -822,16 +822,16 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
         date_item = Item("date", lines[end - 1][1], lines[end - 1][0])
         res.fields["成文日期"] = lines[end - 1][1]
         end -= 1
-        res.detected.append("成文日期：末尾的“××××年×月×日”行")
+        res.detected.append("成文日期\uff1a末尾的\u201c\u00d7\u00d7\u00d7\u00d7年\u00d7月\u00d7日\u201d行")
         if DATE_CN_RE.match(date_item.text.replace(" ", "")):
-            res.warnings.append("成文日期用了汉字数字，应使用阿拉伯数字（GB/T 9704-2012 7.3.5.4）")
+            res.warnings.append("成文日期用了汉字数字\uff0c应使用阿拉伯数字\uff08GB/T 9704-2012 7.3.5.4\uff09")
         # 署名：日期前不超过 3 行短行
         while end > pos and len(sig_items) < 3 and _is_signature_line(lines[end - 1][1]):
             sig_items.insert(0, Item("signature", lines[end - 1][1], lines[end - 1][0]))
             end -= 1
         if sig_items:
             res.fields["发文机关署名"] = [it.text for it in sig_items]
-            res.detected.append("发文机关署名：成文日期前的单位名称行")
+            res.detected.append("发文机关署名\uff1a成文日期前的单位名称行")
 
     # 附件说明：主体末尾以"附件："开头的行及其续行
     attach_items: List[Item] = []
@@ -848,11 +848,11 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
             break
     if attach_items:
         names = []
-        first = re.sub(r"^附\s*件\s*[：:]\s*", "", attach_items[0].text)
+        first = re.sub(r"^附\s*件\s*[\uff1a:]\s*", "", attach_items[0].text)
         names.append(first)
         names.extend(it.text for it in attach_items[1:])
         res.fields["附件"] = names
-        res.detected.append("附件说明：以“附件：”开头的行")
+        res.detected.append("附件说明\uff1a以\u201c附件\uff1a\u201d开头的行")
 
     # 5. 主体：层次标题、出席列席、表格和表题、正文
     body: List[Item] = []
@@ -873,7 +873,7 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
         else:
             body.append(Item("body", text, idx))
     if inferred_notes:
-        sample = "；".join(list(inferred_notes.values())[:2])
+        sample = "\uff1b".join(list(inferred_notes.values())[:2])
         res.warnings.append(f"层次标题序号不是国标写法（共 {len(inferred_notes)} 处），已按嵌套层级识别并套用对应标题字体，序号文字未改：{sample}")
 
     res.items = head + title_items + ([recipient] if recipient else []) + body + attach_items \
@@ -882,28 +882,28 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
         res.warnings.append("没有识别到正文段落")
     for _, text in lines:
         if MARKERS_RE.search(text):
-            res.warnings.append("正文中仍有【待补】或【待核实】标记，请补齐后再定稿")
+            res.warnings.append("正文中仍有【待补】或【待核实】标记\uff0c请补齐后再定稿")
             break
     for _, text in lines[:6]:
         if SECRET_WORDS_RE.search(text) or SECRET_RE.match(text):
-            res.warnings.append("保密提示：材料含密级或“内部资料”等标识。涉密信息不得输入联网 AI 工具，请在单位内网环境处理")
+            res.warnings.append("保密提示\uff1a材料含密级或\u201c内部资料\u201d等标识\u3002涉密信息不得输入联网 AI 工具\uff0c请在单位内网环境处理")
             break
     return res
 
 
 def _salutation_ahead(lines: Sequence[Tuple[int, str]], start: int) -> bool:
-    """从 start 起的三行内是否有称呼（“同志们：”），且之前的行都是不带句号的短行（讲话人、会议名称等题注）。"""
+    """从 start 起的三行内是否有称呼\uff08\u201c同志们\uff1a\u201d\uff09\uff0c且之前的行都是不带句号的短行\uff08讲话人\u3001会议名称等题注\uff09\u3002"""
     for k in range(start, min(len(lines), start + 3)):
         text = lines[k][1]
         if is_salutation(text):
             return True
-        if text == TABLE_MARK or len(text) > 40 or any(ch in text for ch in "。，；！？"):
+        if text == TABLE_MARK or len(text) > 40 or any(ch in text for ch in "\u3002\uff0c\uff1b\uff01\uff1f"):
             return False
     return False
 
 
 def _record_docno(res: Parsed, text: str) -> None:
-    """从发文字号行取发文字号，以及同一行的份号、签发人。"""
+    """从发文字号行取发文字号\uff0c以及同一行的份号\u3001签发人\u3002"""
     m = DOCNO_LINE_RE.match(text)
     if m:
         res.fields["发文字号"] = m.group("docno").strip()
@@ -919,7 +919,7 @@ def _record_docno(res: Parsed, text: str) -> None:
 
 
 def _is_issuer(text: str, nxt: str) -> bool:
-    """发文机关标志：以"文件"结尾的短行，或以"纪要"结尾且下一行是发文字号、期号。"""
+    """发文机关标志\uff1a以"文件"结尾的短行\uff0c或以"纪要"结尾且下一行是发文字号\u3001期号\u3002"""
     if ISSUER_MARK_RE.match(text):
         return True
     if len(text) > 30 or text.startswith("关于") or has_sentence_punct(text):
@@ -932,9 +932,9 @@ def _is_issuer(text: str, nxt: str) -> bool:
 
 
 def _looks_title(text: str) -> bool:
-    """标题兜底判断：短、无句末标点、不是层次标题、不以冒号结尾。"""
+    """标题兜底判断\uff1a短\u3001无句末标点\u3001不是层次标题\u3001不以冒号结尾\u3002"""
     return (text != TABLE_MARK and len(text) <= 40 and not has_sentence_punct(text) and not is_heading(text)
-            and not text.endswith(("：", ":")) and not looks_like_date(text)
+            and not text.endswith(("\uff1a", ":")) and not looks_like_date(text)
             and not DOCNO_RE.search(text) and not ATTACH_RE.match(text))
 
 
@@ -944,30 +944,30 @@ def _looks_title(text: str) -> bool:
 
 BRIEF_META_KEYS = ("简报名称", "期号", "总期号", "编印单位", "报", "送", "发", "印数")
 BRIEF_ISSUE_RE = re.compile(
-    r"^(?P<no>(?:增刊\s*)?第\s*(?:[0-9０-９]+|[一二三四五六七八九十百〇零]+)\s*期|【待补[：:][^】]*期号[^】]*】)"
-    r"(?:[\s　]*[（(]?\s*(?P<total>总\s*第\s*[0-9０-９]+\s*期)\s*[）)]?)?$")
+    r"^(?P<no>(?:增刊\s*)?第\s*(?:[0-9０-９]+|[一二三四五六七八九十百〇零]+)\s*期|【待补[\uff1a:][^】]*期号[^】]*】)"
+    r"(?:[\s　]*[\uff08(]?\s*(?P<total>总\s*第\s*[0-9０-９]+\s*期)\s*[\uff09)]?)?$")
 BRIEF_EDITOR_RE = re.compile(
-    r"^(?P<editor>\S(?:.*?\S)?)[\s　]+(?P<date>\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日|【待补[：:][^】]*】)$")
+    r"^(?P<editor>\S(?:.*?\S)?)[\s　]+(?P<date>\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日|【待补[\uff1a:][^】]*】)$")
 BRIEF_EDITOR_ONLY_RE = re.compile(r"^\S.{0,28}(?:编印|编发|编)$")
-BRIEF_SEP_RE = re.compile(r"^[─━—\-=＝_＿·.]{3,}$")
-BRIEF_DIST_RE = re.compile(r"^(?P<k>抄\s*送|报|送|发)\s*[：:]\s*(?P<v>.*)$")
-BRIEF_COUNT_RE = re.compile(r"^[（(]?\s*共印\s*(?P<n>[^\s）)]+?)\s*份\s*[）)]?$")
+BRIEF_SEP_RE = re.compile(r"^[─━\u2014\-=＝_＿·.]{3,}$")
+BRIEF_DIST_RE = re.compile(r"^(?P<k>抄\s*送|报|送|发)\s*[\uff1a:]\s*(?P<v>.*)$")
+BRIEF_COUNT_RE = re.compile(r"^[\uff08(]?\s*共印\s*(?P<n>[^\s\uff09)]+?)\s*份\s*[\uff09)]?$")
 BRIEF_NAME_END_RE = re.compile(r"(?:简报|动态|信息|专报|快报|通讯|工作交流)$")
 BRIEF_TITLE_MAX = 50
-BRIEF_TITLE_END = tuple("。；：:，、！？!?…")
-BRIEF_NOTE_RE = re.compile(r"^[（(][^（）()]{0,40}[）)]$")
+BRIEF_TITLE_END = tuple("\u3002\uff1b\uff1a:\uff0c\u3001\uff01\uff1f!?…")
+BRIEF_NOTE_RE = re.compile(r"^[\uff08(][^\uff08\uff09()]{0,40}[\uff09)]$")
 BRIEF_NOT_TITLE_RE = re.compile(r"^(?:[一二三四五六七八九十]是|编者按|按语|编者的话)")
 
 
 def norm_issue(value) -> str:
-    """期号写成“第12期”：只有数字的补“第”“期”，“增刊第3期”原样保留。"""
+    """期号写成\u201c第12期\u201d\uff1a只有数字的补\u201c第\u201d\u201c期\u201d\uff0c\u201c增刊第3期\u201d原样保留\u3002"""
     v = re.sub(r"\s+", "", str(value or ""))
     return f"第{v}期" if re.fullmatch(r"[0-9０-９]+", v) else v
 
 
 def norm_total(value) -> str:
-    """总期号写成“总第68期”：只有数字的补“总第”“期”，去掉外围括号。"""
-    v = re.sub(r"\s+", "", str(value or "")).strip("（）()")
+    """总期号写成\u201c总第68期\u201d\uff1a只有数字的补\u201c总第\u201d\u201c期\u201d\uff0c去掉外围括号\u3002"""
+    v = re.sub(r"\s+", "", str(value or "")).strip("\uff08\uff09()")
     return f"总第{v}期" if re.fullmatch(r"[0-9０-９]+", v) else v
 
 
@@ -985,9 +985,9 @@ def _brief_lines(raw_lines: Sequence[str], tables_after: Optional[Sequence[int]]
 
 
 def _brief_header(lines: Sequence[Tuple[int, str]], red: Optional[Sequence[bool]], force: bool):
-    """识别开头的报头，返回 {name, issue, editor, sep, end}（各项为 (下标, 文字) 或 None），不是简报返回 None。
+    """识别开头的报头\uff0c返回 {name, issue, editor, sep, end}\uff08各项为 (下标, 文字) 或 None\uff09\uff0c不是简报返回 None\u3002
 
-    简报名称须以“简报”等结尾（force 时放宽为短行），后面接期号行或编印行；没有名称时须同时有期号行和编印行。
+    简报名称须以\u201c简报\u201d等结尾\uff08force 时放宽为短行\uff09\uff0c后面接期号行或编印行\uff1b没有名称时须同时有期号行和编印行\u3002
     """
     head = list(lines[:6])
     res: Dict[str, object] = {"name": None, "issue": None, "editor": None, "sep": None}
@@ -1023,7 +1023,7 @@ def _brief_header(lines: Sequence[Tuple[int, str]], red: Optional[Sequence[bool]
 
 
 def has_brief_header(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None) -> bool:
-    """正文开头是否有简报报头（简报名称加期号行或编印行）。"""
+    """正文开头是否有简报报头\uff08简报名称加期号行或编印行\uff09\u3002"""
     return _brief_header(_brief_lines(raw_lines, None), red, False) is not None
 
 
@@ -1034,8 +1034,8 @@ def _is_brief_title(text: str) -> bool:
 
 
 def classify_brief_body(lines: Sequence[Tuple[int, str]]) -> List[Item]:
-    """简报各篇：不带句末标点的短行是篇目标题（连续几行都算标题），标题下的括号注（如“（某街道供稿）”）是题注，
-    其余按层次标题、表格、正文识别。末尾没有正文可跟的标题行按正文处理。"""
+    """简报各篇\uff1a不带句末标点的短行是篇目标题\uff08连续几行都算标题\uff09\uff0c标题下的括号注\uff08如\u201c\uff08某街道供稿\uff09\u201d\uff09是题注\uff0c
+    其余按层次标题\u3001表格\u3001正文识别\u3002末尾没有正文可跟的标题行按正文处理\u3002"""
     items: List[Item] = []
     n = len(lines)
     for k, (idx, text) in enumerate(lines):
@@ -1059,10 +1059,10 @@ def classify_brief_body(lines: Sequence[Tuple[int, str]]) -> List[Item]:
 
 def parse_brief(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
                 tables_after: Optional[Sequence[int]] = None, force: bool = False) -> Parsed:
-    """识别简报：报头（简报名称、期号、编印单位和日期）、各篇标题与正文、报尾（报、送、发、抄送、印数）。
+    """识别简报\uff1a报头\uff08简报名称\u3001期号\u3001编印单位和日期\uff09\u3001各篇标题与正文\u3001报尾\uff08报\u3001送\u3001发\u3001抄送\u3001印数\uff09\u3002
 
-    结果的 items 依次为报头项（brief_name、brief_issue、brief_editor）、正文项、报尾项（brief_foot）；
-    fields 里是报头、报尾要素和篇目。force：版式已指定为简报时放宽简报名称的判断。
+    结果的 items 依次为报头项\uff08brief_name\u3001brief_issue\u3001brief_editor\uff09\u3001正文项\u3001报尾项\uff08brief_foot\uff09\uff1b
+    fields 里是报头\u3001报尾要素和篇目\u3002force\uff1a版式已指定为简报时放宽简报名称的判断\u3002
     """
     res = Parsed(kind="简报")
     lines = _brief_lines(raw_lines, tables_after)
@@ -1091,7 +1091,7 @@ def parse_brief(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
                 res.fields["印发日期"] = re.sub(r"\s+", "", m.group("date"))
             else:
                 res.fields["编印单位"] = frame["editor"][1]
-        res.detected.append("简报报头：开头的简报名称、期号行、编印单位和日期行")
+        res.detected.append("简报报头\uff1a开头的简报名称\u3001期号行\u3001编印单位和日期行")
     end = len(lines)
     foot_items: List[Item] = []
     while end > pos:
@@ -1107,7 +1107,7 @@ def parse_brief(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
             foot_items.insert(0, Item("brief_foot", text, idx))
         end -= 1
     if foot_items:
-        res.detected.append("简报报尾：末尾的报、送、发、抄送行和印数")
+        res.detected.append("简报报尾\uff1a末尾的报\u3001送\u3001发\u3001抄送行和印数")
     body = classify_brief_body(lines[pos:end])
     res.items = head_items + body + foot_items
     titles = [it.text for it in body if it.role == "title"]
@@ -1115,22 +1115,22 @@ def parse_brief(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
         res.fields["篇目"] = titles
         res.detected.append(f"篇目：按不带句末标点的短行识别出 {len(titles)} 篇的标题，请核对")
     else:
-        res.warnings.append("没有识别到篇目标题（不带句末标点的短行）")
+        res.warnings.append("没有识别到篇目标题\uff08不带句末标点的短行\uff09")
     if not any(it.role not in ("title", "title_note") for it in body):
         res.warnings.append("没有识别到正文段落")
     for _, text in lines:
         if MARKERS_RE.search(text):
-            res.warnings.append("正文中仍有【待补】或【待核实】标记，请补齐后再定稿")
+            res.warnings.append("正文中仍有【待补】或【待核实】标记\uff0c请补齐后再定稿")
             break
     for _, text in lines[:6]:
         if SECRET_WORDS_RE.search(text) or SECRET_RE.match(text):
-            res.warnings.append("保密提示：材料含密级或“内部资料”等标识。涉密信息不得输入联网 AI 工具，请在单位内网环境处理")
+            res.warnings.append("保密提示\uff1a材料含密级或\u201c内部资料\u201d等标识\u3002涉密信息不得输入联网 AI 工具\uff0c请在单位内网环境处理")
             break
     return res
 
 
 def summarize(parsed: Parsed) -> List[str]:
-    """生成识别结果报告，便于用户核对。"""
+    """生成识别结果报告\uff0c便于用户核对\u3002"""
     out: List[str] = []
     f = parsed.fields
     for key in ("简报名称", "期号", "总期号", "编印单位", "篇目", "发文机关标志", "发文字号", "签发人", "标题", "副标题",
@@ -1139,8 +1139,8 @@ def summarize(parsed: Parsed) -> List[str]:
         if key in f and f[key]:
             val = f[key]
             if isinstance(val, list):
-                val = "；".join(str(v).replace("\n", "") for v in val)
-            label = "主送机关（讲话稿为称谓）" if key == "主送机关" and parsed.kind != "法定" else key
+                val = "\uff1b".join(str(v).replace("\n", "") for v in val)
+            label = "主送机关\uff08讲话稿为称谓\uff09" if key == "主送机关" and parsed.kind != "法定" else key
             out.append(f"{label}：{val}")
     counts: Dict[str, int] = {}
     for it in parsed.items:
@@ -1148,7 +1148,7 @@ def summarize(parsed: Parsed) -> List[str]:
     parts = [f"{ROLE_LABELS[r]} {counts[r]} 段" for r in ("h1", "h2", "h3", "h4", "body", "attendance") if counts.get(r)]
     parts += [f"{ROLE_LABELS[r]} {counts[r]} 个" for r in ("table", "table_caption") if counts.get(r)]
     if parts:
-        out.append("主体：" + "，".join(parts))
+        out.append("主体\uff1a" + "\uff0c".join(parts))
     if parsed.doc_type:
         out.append(f"文种：{parsed.doc_type}（{parsed.kind}）")
     return out

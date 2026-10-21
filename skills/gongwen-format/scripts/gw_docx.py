@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""公文 docx 公共函数：参数读取、页面设置、段落与字体格式、页码、版记表格、属性回读。
+"""公文 docx 公共函数\uff1a参数读取\u3001页面设置\u3001段落与字体格式\u3001页码\u3001版记表格\u3001属性回读\u3002
 
-build_docx.py、check_docx.py、fix_docx.py、annotate_docx.py 共用。依赖 python-docx（1.2.0 及以上）。
+build_docx.py\u3001check_docx.py\u3001fix_docx.py\u3001annotate_docx.py 共用\u3002依赖 python-docx\uff081.2.0 及以上\uff09\u3002
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from docx.oxml.ns import qn
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PARAMS_PATH = SCRIPT_DIR.parent / "assets" / "gbt9704_params.json"
-INSTALL_HINT = "缺少 python-docx。请先安装：pip install -U python-docx（需要 1.2.0 及以上版本）"
+INSTALL_HINT = "缺少 python-docx\u3002请先安装\uff1apip install -U python-docx\uff08需要 1.2.0 及以上版本\uff09"
 
 
 def setup_console() -> None:
@@ -40,7 +40,7 @@ def load_params(path: Optional[Path] = None) -> dict:
 
 
 def pv(params: dict, dotted: str):
-    """读取 {"value": x, "basis": ...} 形式的参数值。"""
+    """读取 {"value": x, "basis": ...} 形式的参数值\u3002"""
     node = params
     for key in dotted.split("."):
         node = node[key]
@@ -74,7 +74,7 @@ def color_hex(params: dict, name: Optional[str]) -> Optional[str]:
 
 
 def unique_path(path: Path) -> Path:
-    """输出路径已存在时依次加 -v2、-v3，不覆盖已有文件。"""
+    """输出路径已存在时依次加 -v2\u3001-v3\uff0c不覆盖已有文件\u3002"""
     if not path.exists():
         return path
     stem, suffix = path.stem, path.suffix
@@ -120,7 +120,7 @@ def get_child(parent, tag: str):
 
 
 def get_or_add(parent, tag: str, order: Sequence[str]):
-    """取得子元素，没有时按 schema 顺序插入。"""
+    """取得子元素\uff0c没有时按 schema 顺序插入\u3002"""
     found = parent.find(qn(f"w:{tag}"))
     if found is not None:
         return found
@@ -144,7 +144,7 @@ def remove_child(parent, tag: str) -> bool:
 
 
 def set_attrs(el, attrs: Dict[str, Optional[str]], clear: Sequence[str] = ()) -> bool:
-    """设置属性，值为 None 的删除；返回是否有变化。"""
+    """设置属性\uff0c值为 None 的删除\uff1b返回是否有变化\u3002"""
     changed = False
     for name in clear:
         key = qn(f"w:{name}")
@@ -169,11 +169,11 @@ def set_attrs(el, attrs: Dict[str, Optional[str]], clear: Sequence[str] = ()) ->
 
 @dataclass
 class Ctx:
-    """排版上下文：参数。字体严格模式：写入文档的字体一律是标准字体名，没有可替换字体的入口。"""
+    """排版上下文\uff1a参数\u3002字体严格模式\uff1a写入文档的字体一律是标准字体名\uff0c没有可替换字体的入口\u3002"""
     params: dict
 
     def font(self, role: str) -> str:
-        """字体角色（仿宋、楷体、黑体、小标宋、宋体）对应的标准字体名。"""
+        """字体角色\uff08仿宋\u3001楷体\u3001黑体\u3001小标宋\u3001宋体\uff09对应的标准字体名\u3002"""
         return self.params["fonts"]["standard"].get(role, role)
 
     def el(self, name: str) -> dict:
@@ -202,7 +202,7 @@ def set_rpr_font(rpr, name: str) -> bool:
 
 def set_rpr(rpr, *, font: Optional[str] = None, size: Optional[float] = None, bold: Optional[bool] = None,
             color: Optional[str] = None, black: bool = False) -> bool:
-    """设置 rPr；返回是否有变化。black=True 时把非黑色文字改为黑色。"""
+    """设置 rPr\uff1b返回是否有变化\u3002black=True 时把非黑色文字改为黑色\u3002"""
     changed = False
     if font:
         changed |= set_rpr_font(rpr, font)
@@ -261,10 +261,10 @@ def set_para(paragraph, *, align: Optional[str] = None, char_pt: float = 16.0,
              reset_indent: bool = True, chars: bool = True,
              keep_next: Optional[bool] = None, keep_lines: Optional[bool] = None,
              page_break_before: Optional[bool] = None) -> bool:
-    """设置段落格式（缩进单位为字）。返回是否有变化。
+    """设置段落格式\uff08缩进单位为字\uff09\u3002返回是否有变化\u3002
 
-    chars=True 时同时写 *Chars（按字符网格）和 twips 两套属性；字号与正文不同的段落
-    （版记、页码）传 chars=False，只写 twips，避免 Word 按正文字宽换算。
+    chars=True 时同时写 *Chars\uff08按字符网格\uff09和 twips 两套属性\uff1b字号与正文不同的段落
+    \uff08版记\u3001页码\uff09传 chars=False\uff0c只写 twips\uff0c避免 Word 按正文字宽换算\u3002
     """
     ppr = paragraph._p.get_or_add_pPr()
     changed = False
@@ -362,7 +362,7 @@ def add_break(run) -> None:
 # ---------------------------------------------------------------------------
 
 def setup_document(doc, ctx: Ctx) -> None:
-    """统一文档默认字体、Normal 样式、奇偶页设置。"""
+    """统一文档默认字体\u3001Normal 样式\u3001奇偶页设置\u3002"""
     body_font = ctx.font("仿宋")
     styles_el = doc.styles.element
     defaults = styles_el.find(qn("w:docDefaults"))
@@ -416,7 +416,7 @@ def setup_section(section, ctx: Ctx, *, letter: bool = False) -> None:
 
 
 def clear_part(part_obj) -> None:
-    """清空页眉或页脚内容，只留一个空段落。"""
+    """清空页眉或页脚内容\uff0c只留一个空段落\u3002"""
     el = part_obj._element
     paras = el.findall(qn("w:p"))
     for child in list(el):
@@ -430,19 +430,19 @@ def clear_part(part_obj) -> None:
 
 
 def part_summary(part_el) -> str:
-    """页眉或页脚里的内容概要：文字，加上页码域（有 PAGE 域时写“页码域”）。没有内容返回空串。"""
+    """页眉或页脚里的内容概要\uff1a文字\uff0c加上页码域\uff08有 PAGE 域时写\u201c页码域\u201d\uff09\u3002没有内容返回空串\u3002"""
     text = "".join(t.text or "" for t in part_el.iter(qn("w:t"))).strip()
     instr = "".join(t.text or "" for t in part_el.iter(qn("w:instrText"))).upper()
     simple = " ".join((f.get(qn("w:instr")) or "") for f in part_el.iter(qn("w:fldSimple"))).upper()
     has_field = "PAGE" in instr or "PAGE" in simple
-    return (text + ("（含页码域）" if has_field else "")) if (text or has_field) else ""
+    return (text + ("\uff08含页码域\uff09" if has_field else "")) if (text or has_field) else ""
 
 
-PAGE_ONLY_RE = re.compile(r"^[\s—–0-9-]*第?[\s0-9]*页?(?:[\s]*[共/][\s0-9]*页?)?[\s—–0-9-]*$")
+PAGE_ONLY_RE = re.compile(r"^[\s\u2014–0-9-]*第?[\s0-9]*页?(?:[\s]*[共/][\s0-9]*页?)?[\s\u2014–0-9-]*$")
 
 
 def letter_head_text(section) -> str:
-    """信函首页页眉里的发文机关标志文字。只有页码（“— 1 —”“第 1 页”或页码域）的不算：那是原稿把页码放进了首页页眉。"""
+    """信函首页页眉里的发文机关标志文字\u3002只有页码\uff08\u201c\u2014 1 \u2014\u201d\u201c第 1 页\u201d或页码域\uff09的不算\uff1a那是原稿把页码放进了首页页眉\u3002"""
     if not section.different_first_page_header_footer:
         return ""
     part = section.first_page_header
@@ -455,7 +455,7 @@ def letter_head_text(section) -> str:
 
 
 def blank_part_text(part_obj) -> None:
-    """清掉页眉、页脚各段落里的文字和域，保留段落及其格式（信函首页页脚的红色双线是段落边框，不能删）。"""
+    """清掉页眉\u3001页脚各段落里的文字和域\uff0c保留段落及其格式\uff08信函首页页脚的红色双线是段落边框\uff0c不能删\uff09\u3002"""
     for p in part_obj._element.iter(qn("w:p")):
         for child in list(p):
             if _local(child.tag) != "pPr":
@@ -463,11 +463,11 @@ def blank_part_text(part_obj) -> None:
 
 
 def clear_headers_footers(doc, *, letter: bool = False) -> List[str]:
-    """清除已有文档页眉、页脚中的页码和杂项（修复时用），返回被清除内容的说明，没有内容时返回空列表。
+    """清除已有文档页眉\u3001页脚中的页码和杂项\uff08修复时用\uff09\uff0c返回被清除内容的说明\uff0c没有内容时返回空列表\u3002
 
-    公文不用页眉，页码按 7.5 放页脚：各节的页眉、双页页眉、首页页眉一律清空；页脚（单页、双页）清空后由 setup_page_numbers 重设；
-    非信函版式取消“首页不同”并清空首页页眉页脚，免得旧页码留在首页。信函版式保留首页页眉（发文机关标志和红色双线）
-    和首页页脚的红色双线，只清除首页页脚里的页码和文字。只处理本节自己的页眉页脚，沿用上一节的不动。"""
+    公文不用页眉\uff0c页码按 7.5 放页脚\uff1a各节的页眉\u3001双页页眉\u3001首页页眉一律清空\uff1b页脚\uff08单页\u3001双页\uff09清空后由 setup_page_numbers 重设\uff1b
+    非信函版式取消\u201c首页不同\u201d并清空首页页眉页脚\uff0c免得旧页码留在首页\u3002信函版式保留首页页眉\uff08发文机关标志和红色双线\uff09
+    和首页页脚的红色双线\uff0c只清除首页页脚里的页码和文字\u3002只处理本节自己的页眉页脚\uff0c沿用上一节的不动\u3002"""
     removed: List[str] = []
     for idx, section in enumerate(doc.sections, start=1):
         label = f"第 {idx} 节" if len(doc.sections) > 1 else ""
@@ -491,7 +491,7 @@ def clear_headers_footers(doc, *, letter: bool = False) -> List[str]:
 
 
 def add_page_field(paragraph, ctx: Ctx) -> None:
-    """写入“— PAGE —”，4 号宋体。"""
+    """写入\u201c\u2014 PAGE \u2014\u201d\uff0c4 号宋体\u3002"""
     pn = ctx.el("page_number")
     font = ctx.font(pn["font"])
     size = ctx.size(pn["size"])
@@ -523,7 +523,7 @@ def add_page_field(paragraph, ctx: Ctx) -> None:
 
 
 def setup_page_numbers(section, ctx: Ctx, *, first_page_blank: bool = False) -> None:
-    """单页页码居右空一字，双页居左空一字；first_page_blank 时首页不显示页码。"""
+    """单页页码居右空一字\uff0c双页居左空一字\uff1bfirst_page_blank 时首页不显示页码\u3002"""
     pn = ctx.el("page_number")
     char_pt = ctx.size(pn["size"])
     after = float(pv(ctx.params, "page.page_number_space_after_pt"))
@@ -558,10 +558,10 @@ def _border_el(tag: str, val: str, sz: int = 0, color: str = "000000"):
 
 
 def add_banji_table(doc, ctx: Ctx, rows: List[List[Tuple[str, str]]], *, with_lines=True):
-    """在文末加版记表格，浮动并对齐版心下边缘。
+    """在文末加版记表格\uff0c浮动并对齐版心下边缘\u3002
 
-    rows：每行是若干段落 (类型, 文本)，类型为 cc（抄送）、main（版记主送）、print（印发）。
-    with_lines：True 为首末粗线加行间细线，False 无线，"top" 只在表上方加一条粗线（简报报尾）。
+    rows\uff1a每行是若干段落 (类型, 文本)\uff0c类型为 cc\uff08抄送\uff09\u3001main\uff08版记主送\uff09\u3001print\uff08印发\uff09\u3002
+    with_lines\uff1aTrue 为首末粗线加行间细线\uff0cFalse 无线\uff0c"top" 只在表上方加一条粗线\uff08简报报尾\uff09\u3002
     """
     bj = ctx.el("banji")
     char_pt = ctx.size(bj["size"])
@@ -616,7 +616,7 @@ def add_banji_table(doc, ctx: Ctx, rows: List[List[Tuple[str, str]]], *, with_li
             para = cell.paragraphs[0] if first else cell.add_paragraph()
             first = False
             if kind in ("cc", "main"):
-                m_label = re.match(r"^[^：:]{1,4}[：:]", text)
+                m_label = re.match(r"^[^\uff1a:]{1,4}[\uff1a:]", text)
                 label_w = _text_width(m_label.group(0)) if m_label else 3  # “抄送：”三个字，“报：”两个字
                 set_para(para, align="left", char_pt=char_pt, left=side + label_w, hanging=label_w, right=side,
                          line_exact=ctx.line_pt, before_pt=0, after_pt=0, snap=False, chars=False)
@@ -637,17 +637,17 @@ def add_banji_table(doc, ctx: Ctx, rows: List[List[Tuple[str, str]]], *, with_li
 # 正文表格（Markdown 管道表格转换而来）
 # ---------------------------------------------------------------------------
 
-NUMERIC_CELL_RE = re.compile(r"^[-+±]?[\d.,，%％‰～~—\-/（）()万亿元个人次项件家所座台]*\d[\d.,，%％‰～~—\-/（）()万亿元个人次项件家所座台]*$")
+NUMERIC_CELL_RE = re.compile(r"^[-+±]?[\d.,\uff0c%％‰～~\u2014\-/\uff08\uff09()万亿元个人次项件家所座台]*\d[\d.,\uff0c%％‰～~\u2014\-/\uff08\uff09()万亿元个人次项件家所座台]*$")
 
 
 def _text_width(text: str) -> float:
-    """按字估算宽度，与 gw_layout.text_width_chars 口径一致（此处不依赖 gw_layout）。"""
-    full = "—…“”‘’"
+    """按字估算宽度\uff0c与 gw_layout.text_width_chars 口径一致\uff08此处不依赖 gw_layout\uff09\u3002"""
+    full = "\u2014…\u201c\u201d\u2018\u2019"
     return sum(0.5 if ord(ch) < 0x2E80 and ch not in full else 1.0 for ch in text)
 
 
 def column_widths_twips(header: Sequence[str], rows: Sequence[Sequence[str]], total: int) -> List[int]:
-    """按各列最长文字分配列宽，合计等于 total（版心宽）。每列至少 2 字宽，长列封顶，避免挤压短列。"""
+    """按各列最长文字分配列宽\uff0c合计等于 total\uff08版心宽\uff09\u3002每列至少 2 字宽\uff0c长列封顶\uff0c避免挤压短列\u3002"""
     cols = len(header)
     weights = []
     for c in range(cols):
@@ -662,9 +662,9 @@ def column_widths_twips(header: Sequence[str], rows: Sequence[Sequence[str]], to
 
 def add_body_table(doc, ctx: Ctx, header: Sequence[str], rows: Sequence[Sequence[str]],
                    aligns: Sequence[Optional[str]], *, font_role: str = "仿宋", size_name="四号"):
-    """在文末加一张正文表格：与版心同宽、居中，全框线，表头加粗、居中并在跨页时重复，单元格垂直居中。
+    """在文末加一张正文表格\uff1a与版心同宽\u3001居中\uff0c全框线\uff0c表头加粗\u3001居中并在跨页时重复\uff0c单元格垂直居中\u3002
 
-    单元格段落不对齐文档网格、行距为字号的 1.5 倍、无缩进；数字格居中，文字格居左，分隔行写了对齐方式的从其规定。
+    单元格段落不对齐文档网格\u3001行距为字号的 1.5 倍\u3001无缩进\uff1b数字格居中\uff0c文字格居左\uff0c分隔行写了对齐方式的从其规定\u3002
     """
     tb = ctx.el("table")
     width = ctx.text_width_twips
@@ -735,12 +735,12 @@ def table_mark(tbl_el) -> Optional[str]:
 
 
 def is_frame_table(tbl_el) -> bool:
-    """联合行文版头表格、联署署名表格（本工具生成，不是正文表格，也不是版记）。"""
+    """联合行文版头表格\u3001联署署名表格\uff08本工具生成\uff0c不是正文表格\uff0c也不是版记\uff09\u3002"""
     return table_mark(tbl_el) in (JOINT_HEAD_MARK, JOINT_SEAL_MARK)
 
 
 def _plain_table(doc, ctx: Ctx, widths: Sequence[int], rows: int, mark: str):
-    """无框线、定宽、居中的版面表格，标记为 mark。单元格左右边距为 0。"""
+    """无框线\u3001定宽\u3001居中的版面表格\uff0c标记为 mark\u3002单元格左右边距为 0\u3002"""
     table = doc.add_table(rows=rows, cols=len(widths))
     tbl = table._tbl
     tblpr = tbl.tblPr
@@ -776,9 +776,9 @@ def _plain_table(doc, ctx: Ctx, widths: Sequence[int], rows: int, mark: str):
 
 
 def joint_header_layout(ctx: Ctx, names: Sequence[str]) -> Tuple[float, int, int]:
-    """联合行文版头：返回 (字号磅, 名称列宽 twips, “文件”列宽 twips)。
+    """联合行文版头\uff1a返回 (字号磅, 名称列宽 twips, \u201c文件\u201d列宽 twips)\u3002
 
-    名称列宽按最长名称的字数乘字号，“文件”列宽为两个字加半字间距；两列合计不超过版心宽的 fill_ratio。
+    名称列宽按最长名称的字数乘字号\uff0c\u201c文件\u201d列宽为两个字加半字间距\uff1b两列合计不超过版心宽的 fill_ratio\u3002
     """
     el = ctx.el("joint")
     slack = float(el["name_slack"])
@@ -794,8 +794,8 @@ def joint_header_layout(ctx: Ctx, names: Sequence[str]) -> Tuple[float, int, int
 
 
 def add_joint_header(doc, ctx: Ctx, names: Sequence[str], *, wen: str = "文件", red: Optional[str] = None):
-    """联合行文版头（7.2.4）：联署机关名称自上而下排列（主办机关在前），“文件”二字置于名称右侧，
-    并以联署机关名称为准上下居中。用两列无框线表格实现：左列名称，右列“文件”（单元格垂直居中）。"""
+    """联合行文版头\uff087.2.4\uff09\uff1a联署机关名称自上而下排列\uff08主办机关在前\uff09\uff0c\u201c文件\u201d二字置于名称右侧\uff0c
+    并以联署机关名称为准上下居中\u3002用两列无框线表格实现\uff1a左列名称\uff0c右列\u201c文件\u201d\uff08单元格垂直居中\uff09\u3002"""
     el = ctx.el("joint")
     iss = ctx.el("issuer")
     size, left_w, right_w = joint_header_layout(ctx, names)
@@ -819,14 +819,14 @@ def add_joint_header(doc, ctx: Ctx, names: Sequence[str], *, wen: str = "文件"
 
 
 def joint_seal_columns(ctx: Ctx, count: int) -> int:
-    """联署署名每行并排几个：不超过 seal_cols_max，使每格宽不小于印章直径（印章互不相交）。"""
+    """联署署名每行并排几个\uff1a不超过 seal_cols_max\uff0c使每格宽不小于印章直径\uff08印章互不相交\uff09\u3002"""
     el = ctx.el("joint")
     return max(1, min(count, int(el["seal_cols_max"])))
 
 
 def add_joint_signatures(doc, ctx: Ctx, names: Sequence[str]):
-    """联合行文加盖印章（7.3.5.1）：署名按机关顺序排列，每个机关名称占一格并居中，印章一一对应下压署名。
-    每行最多并排 seal_cols_max 个，每格宽不小于印章直径，印章互不相交，两端不超出版心。"""
+    """联合行文加盖印章\uff087.3.5.1\uff09\uff1a署名按机关顺序排列\uff0c每个机关名称占一格并居中\uff0c印章一一对应下压署名\u3002
+    每行最多并排 seal_cols_max 个\uff0c每格宽不小于印章直径\uff0c印章互不相交\uff0c两端不超出版心\u3002"""
     sg = ctx.el("signature_seal")
     k = joint_seal_columns(ctx, len(names))
     rows = -(-len(names) // k)
@@ -845,20 +845,20 @@ def add_joint_signatures(doc, ctx: Ctx, names: Sequence[str]):
 
 
 def is_banji_table(tbl_el) -> bool:
-    """版记表格：浮动定位（本工具生成的版记），或含“抄送”、以“印发”结尾。"""
+    """版记表格\uff1a浮动定位\uff08本工具生成的版记\uff09\uff0c或含\u201c抄送\u201d\u3001以\u201c印发\u201d结尾\u3002"""
     if is_frame_table(tbl_el):
         return False
     tblpr = tbl_el.find(qn("w:tblPr"))
     if tblpr is not None and tblpr.find(qn("w:tblpPr")) is not None:
         return True
     text = "".join(t.text or "" for t in tbl_el.iter(qn("w:t"))).strip()
-    return "抄送" in text or text.endswith("印发") or bool(re.match(r"^(?:报|送|发)[：:]", text))
+    return "抄送" in text or text.endswith("印发") or bool(re.match(r"^(?:报|送|发)[\uff1a:]", text))
 
 
 def body_tables(doc) -> List[Tuple[int, object]]:
-    """正文中的表格（不含版记表格），按文档顺序返回 (表格前一段在 doc.paragraphs 中的下标, w:tbl 元素)。
+    """正文中的表格\uff08不含版记表格\uff09\uff0c按文档顺序返回 (表格前一段在 doc.paragraphs 中的下标, w:tbl 元素)\u3002
 
-    表格在最前面时下标为 -1。供 check、fix 识别段落角色时插入表格占位（gw_layout.parse_lines 的 tables_after）。
+    表格在最前面时下标为 -1\u3002供 check\u3001fix 识别段落角色时插入表格占位\uff08gw_layout.parse_lines 的 tables_after\uff09\u3002
     """
     out: List[Tuple[int, object]] = []
     count = 0
@@ -872,7 +872,7 @@ def body_tables(doc) -> List[Tuple[int, object]]:
 
 
 def ctx_text_width_pt(doc) -> float:
-    """读取第一节的版心宽度（磅）。"""
+    """读取第一节的版心宽度\uff08磅\uff09\u3002"""
     sect = doc.sections[0]._sectPr
     pgsz, pgmar = sect.find(qn("w:pgSz")), sect.find(qn("w:pgMar"))
     try:
@@ -987,7 +987,7 @@ def run_color(run, paragraph, doc) -> str:
 
 
 def is_red(color: Optional[str]) -> bool:
-    """红色判断：R 分量高、G 和 B 分量低（FF0000、E60000、C00000 等）。"""
+    """红色判断\uff1aR 分量高\u3001G 和 B 分量低\uff08FF0000\u3001E60000\u3001C00000 等\uff09\u3002"""
     if not color or len(color) != 6:
         return False
     try:
@@ -1025,7 +1025,7 @@ def para_align(paragraph, doc) -> str:
 
 
 def para_first_line_chars(paragraph, doc, char_pt: float = 16.0) -> Optional[float]:
-    """首行缩进（字）；悬挂缩进返回负数；未设置返回 0。"""
+    """首行缩进\uff08字\uff09\uff1b悬挂缩进返回负数\uff1b未设置返回 0\u3002"""
     def getter(ppr):
         if ppr is None:
             return None
@@ -1066,7 +1066,7 @@ def para_left_chars(paragraph, doc, char_pt: float = 16.0) -> float:
 
 
 def para_tab_stops(paragraph, doc) -> List[Tuple[str, int]]:
-    """段落直接设置的制表位：[(类型, 位置 twips)]，按位置排序。"""
+    """段落直接设置的制表位\uff1a[(类型, 位置 twips)]\uff0c按位置排序\u3002"""
     ppr = paragraph._p.pPr
     tabs = ppr.find(qn("w:tabs")) if ppr is not None else None
     out: List[Tuple[str, int]] = []
@@ -1080,10 +1080,10 @@ def para_tab_stops(paragraph, doc) -> List[Tuple[str, int]]:
 
 
 def leading_offset_chars(paragraph, doc, char_pt: float = 16.0) -> float:
-    """段落第一个字距版心左边缘的字数：左缩进、首行缩进，加上行首的制表符或空格占位。
+    """段落第一个字距版心左边缘的字数\uff1a左缩进\u3001首行缩进\uff0c加上行首的制表符或空格占位\u3002
 
-    行首是制表符时取其后第一个左对齐制表位（没有设置时按 Word 默认 420 twips 的整数倍）；
-    半角空格按 0.5 字、全角空格按 1 字计。
+    行首是制表符时取其后第一个左对齐制表位\uff08没有设置时按 Word 默认 420 twips 的整数倍\uff09\uff1b
+    半角空格按 0.5 字\u3001全角空格按 1 字计\u3002
     """
     unit = char_pt * 20
     base = para_left_chars(paragraph, doc, char_pt) + max(0.0, para_first_line_chars(paragraph, doc, char_pt) or 0.0)
@@ -1097,7 +1097,7 @@ def leading_offset_chars(paragraph, doc, char_pt: float = 16.0) -> float:
 
 
 def para_line_spacing(paragraph, doc) -> Tuple[Optional[str], Optional[float]]:
-    """返回 (lineRule, 数值)；exact/atLeast 时数值为磅，auto 时为倍数。"""
+    """返回 (lineRule, 数值)\uff1bexact/atLeast 时数值为磅\uff0cauto 时为倍数\u3002"""
     def getter(ppr):
         if ppr is None:
             return None
@@ -1134,7 +1134,7 @@ def run_splittable(run) -> bool:
 
 
 def split_run(run, offset: int):
-    """在 offset 处把 run 拆成两个（复制 rPr），返回后半个 run；不能拆时返回 None。"""
+    """在 offset 处把 run 拆成两个\uff08复制 rPr\uff09\uff0c返回后半个 run\uff1b不能拆时返回 None\u3002"""
     from docx.text.run import Run
     text = run.text
     if offset <= 0 or offset >= len(text) or not run_splittable(run):
@@ -1148,9 +1148,9 @@ def split_run(run, offset: int):
 
 
 def runs_for_range(paragraph, start: int, end: int):
-    """把段落中 [start, end) 区间对应的文字拆成完整的 run，返回 (首 run, 末 run)；失败返回 None。
+    """把段落中 [start, end) 区间对应的文字拆成完整的 run\uff0c返回 (首 run, 末 run)\uff1b失败返回 None\u3002
 
-    只使用段落的直接 run（不含超链接内的 run）。
+    只使用段落的直接 run\uff08不含超链接内的 run\uff09\u3002
     """
     if start >= end:
         return None
@@ -1183,7 +1183,7 @@ def direct_text(paragraph) -> str:
 
 
 def iter_all_paragraphs(doc) -> Iterator:
-    """正文段落和表格中的段落（按文档顺序）。"""
+    """正文段落和表格中的段落\uff08按文档顺序\uff09\u3002"""
     from docx.table import Table
     from docx.text.paragraph import Paragraph
     seen = set()  # 合并单元格会重复返回同一单元格，按元素去重

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""按角色设置段落和文字格式。build_docx.py 生成时、fix_docx.py 修复时共用同一套规则，保证结果一致。"""
+"""按角色设置段落和文字格式\u3002build_docx.py 生成时\u3001fix_docx.py 修复时共用同一套规则\uff0c保证结果一致\u3002"""
 from __future__ import annotations
 
 import re
@@ -9,12 +9,12 @@ import gw_docx as D
 from gw_layout import ATTENDANCE_RE, text_width_chars
 
 ATTACH_NUM_RE = re.compile(r"^\d{1,2}\s*[.．]\s*")
-ATTACH_LABEL_RE = re.compile(r"^附\s*件\s*[：:]\s*")
+ATTACH_LABEL_RE = re.compile(r"^附\s*件\s*[\uff1a:]\s*")
 
 
 def _font_runs(paragraph, ctx: D.Ctx, font_role: str, size_name, *, start: int = 0, end: Optional[int] = None,
                bold: Optional[bool] = None, color: Optional[str] = None, black: bool = True) -> Set[str]:
-    """给 [start, end) 范围内的 run 设字体字号（按字符位置取 run，不拆分）。"""
+    """给 [start, end) 范围内的 run 设字体字号\uff08按字符位置取 run\uff0c不拆分\uff09\u3002"""
     changes: Set[str] = set()
     name = ctx.font(font_role)
     size = ctx.size(size_name)
@@ -40,7 +40,7 @@ def _font_runs(paragraph, ctx: D.Ctx, font_role: str, size_name, *, start: int =
 
 
 def _ensure_split(paragraph, offset: int) -> bool:
-    """确保 offset 处是 run 边界；返回是否成功。"""
+    """确保 offset 处是 run 边界\uff1b返回是否成功\u3002"""
     if offset <= 0:
         return True
     pos = 0
@@ -55,7 +55,7 @@ def _ensure_split(paragraph, offset: int) -> bool:
 
 
 def strip_leading_spaces(paragraph) -> bool:
-    """删除段首用于缩进的空格（半角、全角空格和制表符），缩进改由段落格式实现。"""
+    """删除段首用于缩进的空格\uff08半角\u3001全角空格和制表符\uff09\uff0c缩进改由段落格式实现\u3002"""
     changed = False
     for run in paragraph.runs:
         text = run.text
@@ -73,7 +73,7 @@ def strip_leading_spaces(paragraph) -> bool:
 
 
 def offset_leading_spaces(paragraph) -> float:
-    """行首有空格的顶格段落（称呼、主送机关）：--keep-text 不删空格，改用等宽的负左缩进抵消，视觉上仍然顶格。返回抵消的字数。"""
+    """行首有空格的顶格段落\uff08称呼\u3001主送机关\uff09\uff1a--keep-text 不删空格\uff0c改用等宽的负左缩进抵消\uff0c视觉上仍然顶格\u3002返回抵消的字数\u3002"""
     text = D.direct_text(paragraph)
     lead = text[:len(text) - len(text.lstrip(" 　"))]
     width = sum(1.0 if ch == "　" else 0.5 for ch in lead)
@@ -83,10 +83,10 @@ def offset_leading_spaces(paragraph) -> float:
 
 
 def apply_role(paragraph, role: str, ctx: D.Ctx, *, split: int = -1, black: bool = True) -> Set[str]:
-    """按角色设置格式，返回发生变化的类别集合（段落格式、字体、字号、加粗、颜色）。
+    """按角色设置格式\uff0c返回发生变化的类别集合\uff08段落格式\u3001字体\u3001字号\u3001加粗\u3001颜色\uff09\u3002
 
-    split：层次标题与正文同段时，标题部分的结束位置；-1 表示整段都是标题。
-    署名和成文日期的缩进由 layout_signature_block 统一计算，这里只设字体。
+    split\uff1a层次标题与正文同段时\uff0c标题部分的结束位置\uff1b-1 表示整段都是标题\u3002
+    署名和成文日期的缩进由 layout_signature_block 统一计算\uff0c这里只设字体\u3002
     """
     changes: Set[str] = set()
     line = ctx.line_pt
@@ -105,7 +105,7 @@ def apply_role(paragraph, role: str, ctx: D.Ctx, *, split: int = -1, black: bool
         body = ctx.el("body")
         end = len(text) if split is None or split < 0 else split
         # 独占一行、末尾不带句号的标题设“与下段同页”，标题不落在页末；与正文同段的、以句号结尾的条目不设
-        standalone = end >= len(text) and text.rstrip()[-1:] not in "。；！？.;!?"
+        standalone = end >= len(text) and text.rstrip()[-1:] not in "\u3002\uff1b\uff01\uff1f.;!?"
         para(align=body["align"], first_line=el["first_line_chars"], line_exact=line, before_pt=0, after_pt=0,
              outline=el["outline_level"], snap=True, keep_next=True if standalone else None)
         if end < len(text) and not _ensure_split(paragraph, end):
@@ -183,7 +183,7 @@ def apply_role(paragraph, role: str, ctx: D.Ctx, *, split: int = -1, black: bool
         # 发文字号用仿宋；同一行有签发人时，“签发人：”用仿宋、姓名用楷体（7.2.6）
         el = ctx.el("docno")
         sg = ctx.el("signer")
-        m = re.search(r"签发人\s*[：:]\s*", text)
+        m = re.search(r"签发人\s*[\uff1a:]\s*", text)
         name_start = m.end() if m and _ensure_split(paragraph, m.end()) else len(text)
         changes |= _font_runs(paragraph, ctx, el["font"], el["size"], start=0, end=name_start, black=False)
         if name_start < len(text):
@@ -205,8 +205,8 @@ def apply_role(paragraph, role: str, ctx: D.Ctx, *, split: int = -1, black: bool
 
 
 def ensure_upward_docno_indent(paragraph, doc, ctx: D.Ctx) -> bool:
-    """上行文发文字号居左空一字（7.2.5）：行首空白和左缩进合计不足一字时，补足左缩进；不改文字。
-    居中的改为左对齐、左缩进一字。返回是否有改动。"""
+    """上行文发文字号居左空一字\uff087.2.5\uff09\uff1a行首空白和左缩进合计不足一字时\uff0c补足左缩进\uff1b不改文字\u3002
+    居中的改为左对齐\u3001左缩进一字\u3002返回是否有改动\u3002"""
     need = float(ctx.el("docno")["left_chars_upward"])
     have = D.leading_offset_chars(paragraph, doc)
     centered = D.para_align(paragraph, doc) in ("center", "right") and not paragraph.text.startswith("\t")
@@ -220,14 +220,14 @@ def ensure_upward_docno_indent(paragraph, doc, ctx: D.Ctx) -> bool:
 
 def layout_signature_block(sig_paras: Sequence, date_para, ctx: D.Ctx, *, seal: bool,
                            before_lines: Optional[int] = None) -> List[Set[str]]:
-    """排署名和成文日期，返回每段的改动类别（顺序为各署名段、成文日期段）。
+    """排署名和成文日期\uff0c返回每段的改动类别\uff08顺序为各署名段\u3001成文日期段\uff09\u3002
 
-    - 加盖印章（7.3.5.1）：成文日期右空四字，署名以成文日期为准居中。两段都设为居中对齐、
-      左右缩进相同，中心点完全一致；中心点按“右空四字加日期宽度的一半”估算，日期右空字数是近似值。
-    - 不加盖印章（7.3.5.2）：署名右空二字，左对齐、左缩进 = 28 − 2 − 署名字数；成文日期左对齐、
-      左缩进 = 署名左缩进 + 2，首字比署名首字右移二字（用左缩进定位，不受日期中半角数字宽度影响）。
-      日期加 2 字后会超出“右空二字”时，日期右对齐、右空二字，署名左缩进 = 28 − 2 − 日期字数 − 2。
-    before_lines：第一个要素前的段前空行数（修复已有文档时用段前距代替插入空段）。
+    - 加盖印章\uff087.3.5.1\uff09\uff1a成文日期右空四字\uff0c署名以成文日期为准居中\u3002两段都设为居中对齐\u3001
+      左右缩进相同\uff0c中心点完全一致\uff1b中心点按\u201c右空四字加日期宽度的一半\u201d估算\uff0c日期右空字数是近似值\u3002
+    - 不加盖印章\uff087.3.5.2\uff09\uff1a署名右空二字\uff0c左对齐\u3001左缩进 = 28 − 2 − 署名字数\uff1b成文日期左对齐\u3001
+      左缩进 = 署名左缩进 + 2\uff0c首字比署名首字右移二字\uff08用左缩进定位\uff0c不受日期中半角数字宽度影响\uff09\u3002
+      日期加 2 字后会超出\u201c右空二字\u201d时\uff0c日期右对齐\u3001右空二字\uff0c署名左缩进 = 28 − 2 − 日期字数 − 2\u3002
+    before_lines\uff1a第一个要素前的段前空行数\uff08修复已有文档时用段前距代替插入空段\uff09\u3002
     """
     width = float(D.pv(ctx.params, "grid.chars_per_line"))
     sig_w = [text_width_chars(D.direct_text(p)) for p in sig_paras]
@@ -279,11 +279,11 @@ def layout_signature_block(sig_paras: Sequence, date_para, ctx: D.Ctx, *, seal: 
 
 
 def keep_signoff_together(paragraphs: Sequence, first_idx: int, last_idx: int, attach_first_idx: Optional[int] = None) -> int:
-    """落款不单独成页：从正文最后一段起，经附件说明、空行、署名到成文日期（有附注时到附注），依次设“与下段同页”。
-    正文最后一段不设“段中不分页”，换页时至少有一行正文随落款下移；附件说明与正文末段、落款连在一起，不被分页割裂。
+    """落款不单独成页\uff1a从正文最后一段起\uff0c经附件说明\u3001空行\u3001署名到成文日期\uff08有附注时到附注\uff09\uff0c依次设\u201c与下段同页\u201d\u3002
+    正文最后一段不设\u201c段中不分页\u201d\uff0c换页时至少有一行正文随落款下移\uff1b附件说明与正文末段\u3001落款连在一起\uff0c不被分页割裂\u3002
 
-    paragraphs 为正文段落列表，first_idx 为第一个署名（或日期）段的下标，last_idx 为链条最后一段的下标；
-    attach_first_idx 为附件说明第一行的下标（有附件说明时传入，它在署名之前）。返回设置的段数。
+    paragraphs 为正文段落列表\uff0cfirst_idx 为第一个署名\uff08或日期\uff09段的下标\uff0clast_idx 为链条最后一段的下标\uff1b
+    attach_first_idx 为附件说明第一行的下标\uff08有附件说明时传入\uff0c它在署名之前\uff09\u3002返回设置的段数\u3002
     """
     if attach_first_idx is not None and attach_first_idx < first_idx:
         first_idx = attach_first_idx
