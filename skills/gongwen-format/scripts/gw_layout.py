@@ -56,6 +56,12 @@ DOCNO_MARK_RE = re.compile(r"^(?P<docno>【待补[：:][^】]*(?:发文字号|�
 ISSUER_MARK_RE = re.compile(r"^【待补[：:][^】]*(?:发文机关标志|纪要标志)[^】]*】$")
 QIHAO_RE = re.compile(r"^(?:[\u4e00-\u9fff]{0,15}\s*[〔\[［(（]\s*\d{4}\s*[〕\]］)）]\s*)?第\s*\d+\s*期$")
 SIGNER_RE = re.compile(r"签发人\s*[：:]\s*(.+)$")
+# 命令（令）格式的令号：“第12号”，或尚未编号的占位“【待补：令号】”（GB/T 9704-2012 10.2）
+LINGHAO_RE = re.compile(r"^(?:第\s*[0-9０-９一二三四五六七八九十百零〇]{1,6}\s*号|【待补[：:][^】]*令号[^】]*】)$")
+# 附件另面编排：正文文件中的附件分界行“【附件1】标题”“【附件】标题”（GB/T 9704-2012 7.3.7）；
+# 排好的 docx 中，附件页首行只有“附件”或“附件1”
+ATTACH_SECTION_RE = re.compile(r"^【\s*附件\s*([0-9０-９]{1,2})?\s*】\s*(.*)$")
+ATTACH_MARK_RE = re.compile(r"^附\s*件\s*([0-9０-９]{1,2})?$")
 COPY_NO_RE = re.compile(r"^\d{1,6}$")
 SECRET_RE = re.compile(r"^(绝密|机密|秘密)(\s*★.*)?$")
 URGENCY_RE = re.compile(r"^(特急|加急|特提|平急)$")
@@ -86,7 +92,7 @@ BR_RE = re.compile(r"<br\s*/?>", re.IGNORECASE)
 
 ROLE_LABELS = {
     "copy_no": "份号", "secret": "密级和保密期限", "urgency": "紧急程度",
-    "issuer": "发文机关标志", "docno": "发文字号", "signer": "签发人",
+    "issuer": "发文机关标志", "docno": "发文字号", "signer": "签发人", "lingno": "令号",
     "title": "标题", "subtitle": "副标题", "title_note": "题注",
     "recipient": "主送机关", "h1": "一级标题", "h2": "二级标题", "h3": "三级标题",
     "h4": "四级标题", "body": "正文", "attendance": "出席列席", "attachment": "附件说明",
@@ -305,6 +311,43 @@ def extract_pipe_tables(lines: Sequence[str]) -> Tuple[List[str], List[PipeTable
         out.append(line)
         i += 1
     return out, tables, notes
+
+
+@dataclass
+class AttachSection:
+    """正文文件中的一个附件（另面编排）：标识（“附件”或“附件1”）、标题、正文行。"""
+    label: str
+    title: str
+    lines: List[str]
+
+
+def extract_attachments(lines: Sequence[str]) -> Tuple[List[str], List[AttachSection], List[str]]:
+    """把“【附件1】标题”分界行之后的内容拆成附件。返回 (主文行, 附件列表, 提示)。
+
+    分界行之前是主文（正文、落款），之后每个分界行开始一个附件。只有一个附件、没写序号的，标识为“附件”；
+    多个附件没写序号的，按出现顺序编号并提示。附件标题缺失的由调用方写【待补】。
+    """
+    main: List[str] = []
+    secs: List[Tuple[str, str, List[str]]] = []
+    for line in lines:
+        m = ATTACH_SECTION_RE.match(line.strip())
+        if m:
+            secs.append((m.group(1) or "", m.group(2).strip(), []))
+        elif secs:
+            secs[-1][2].append(line)
+        else:
+            main.append(line)
+    notes: List[str] = []
+    out: List[AttachSection] = []
+    multi = len(secs) > 1
+    for i, (num, title, body) in enumerate(secs, start=1):
+        if num:
+            num = str(int(num.translate(str.maketrans("０１２３４５６７８９", "0123456789"))))
+        elif multi:
+            num = str(i)
+            notes.append(f"第 {i} 个附件分界行没写序号，已按出现顺序编为“附件{i}”")
+        out.append(AttachSection("附件" + num, title, body))
+    return main, out, notes
 
 
 def is_table_caption(text: str) -> bool:
@@ -577,6 +620,9 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
         elif _is_issuer(text, lines[pos + 1][1] if pos + 1 < n else "") or                 (red is not None and 0 <= idx < len(red) and red[idx] and pos < 4 and len(text) <= 40):
             head.append(Item("issuer", text, idx))
             res.fields["发文机关标志"] = text
+        elif LINGHAO_RE.match(text) and head and head[-1].role == "issuer" and head[-1].text.endswith("令"):
+            head.append(Item("lingno", text, idx))
+            res.fields["令号"] = text
         elif DOCNO_LINE_RE.match(text) or QIHAO_RE.match(text) or DOCNO_MARK_RE.match(text):
             head.append(Item("docno", text, idx))
             _record_docno(res, text)
@@ -589,7 +635,9 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
 
     # 2. 标题（可能回行）
     title_items: List[Item] = []
-    if pos < n:
+    if any(it.role == "lingno" for it in head):
+        res.detected.append("命令（令）格式：令号之后直接是正文，没有标题（GB/T 9704-2012 10.2）")
+    elif pos < n:
         idx, text = lines[pos]
         if (text.startswith("关于") or ends_with_doc_type(text)) and not is_heading(text) \
                 and not text.endswith(("：", ":")) and len(text) <= 80:
@@ -785,6 +833,8 @@ def _is_issuer(text: str, nxt: str) -> bool:
         return False
     if text.endswith("文件"):
         return True
+    if text.endswith("令") and LINGHAO_RE.match(nxt):
+        return True  # 命令（令）格式：发文机关全称加“命令”或“令”，下一行是令号
     return text.endswith("纪要") and bool(DOCNO_LINE_RE.match(nxt) or QIHAO_RE.match(nxt))
 
 

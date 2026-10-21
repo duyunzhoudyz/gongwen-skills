@@ -10,7 +10,7 @@ from docx import Document
 from docx.oxml.ns import qn
 from docx.shared import Mm
 
-from tests.format.helpers import NO_FONTS, OUT, build_sample, check_docx, make_messy_docx
+from tests.format.helpers import NO_FONTS, OUT, build_sample, check_docx, gw_docx, make_messy_docx
 
 import annotate_docx  # noqa: E402  helpers 已把 scripts 加入 sys.path
 import fix_docx  # noqa: E402
@@ -103,7 +103,7 @@ class FixTest(unittest.TestCase):
 
 
     def test_upward_docno_line_kept(self):
-        """上行文发文字号行：修复后行首制表符保留，签发人姓名仍为楷体。"""
+        """上行文发文字号行：修复后发文字号与签发人仍在同一行、左缩进一字，签发人姓名仍为楷体。"""
         from tests.format.helpers import FILES, build_text
         text = (FILES / "高校-请示-正文.txt").read_text(encoding="utf-8")
         src, _ = build_text(text, "上行文.docx", meta={"版式": "红头", "发文机关标志": "某理工大学文件",
@@ -113,7 +113,8 @@ class FixTest(unittest.TestCase):
         clean(dst)
         fix_docx.fix_document(src, dst, installed=NO_FONTS)
         line = [p for p in Document(str(dst)).paragraphs if "签发人" in p.text][0]
-        self.assertEqual(line.text, "	某理工发〔2026〕52号	签发人：王某")
+        self.assertEqual(line.text, "某理工发〔2026〕52号	签发人：王某")
+        self.assertEqual(gw_docx.para_left_chars(line, Document(str(dst))), 1.0)
         name = line.runs[-1]
         self.assertEqual(name.text, "王某")
         self.assertEqual(name._r.rPr.find(qn("w:rFonts")).get(qn("w:eastAsia")), "楷体_GB2312")

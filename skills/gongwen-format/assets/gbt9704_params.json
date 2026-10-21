@@ -235,10 +235,49 @@
                 "editor_before_pt": "实践值",
                 "rule_color": "实践值：报头下红色分隔线", "rule_width_pt": "实践值：约 0.5 mm",
                 "rule_gap_mm": "实践值", "blank_lines_after_rule": "实践值：分隔线下空一行排第一篇标题"}
+    },
+    "order": {
+      "top_from_body_mm": 20, "blank_lines_before_number": 2, "blank_lines_after_number": 2,
+      "number_font": "仿宋", "number_size": "三号",
+      "sign_blank_lines_before": 2, "sign_right_chars": 4, "post_gap_chars": 2, "name_slot_chars": 3,
+      "date_blank_lines": 1, "date_right_chars": 4,
+      "basis": {"top_from_body_mm": "10.2（标志上边缘距版心上边缘 20 mm）",
+                "blank_lines_before_number": "10.2（标志下空二行编令号）",
+                "blank_lines_after_number": "10.2（令号下空二行编正文）",
+                "number_font": "5.2.2（令号用三号仿宋，标准未单列）", "number_size": "5.2.2",
+                "sign_blank_lines_before": "7.3.5.3（正文下空二行加盖签名章）",
+                "sign_right_chars": "7.3.5.3（签名章右空四字）",
+                "post_gap_chars": "7.3.5.3（签名章左空二字标签发人职务）",
+                "name_slot_chars": "实践值：签名章占位宽按三个字估算，姓名为排印占位，不代替签名章",
+                "date_blank_lines": "7.3.5.3（签名章下空一行编成文日期）",
+                "date_right_chars": "7.3.5.3（成文日期右空四字）"}
+    },
+    "attach_page": {
+      "label_font": "黑体", "label_size": "三号", "title_blank_lines_before": 1, "blank_lines_after_title": 1,
+      "basis": {"label_font": "7.3.7（“附件”及顺序号用 3 号黑体）", "label_size": "7.3.7",
+                "title_blank_lines_before": "7.3.7（标识在第一行顶格，标题在第三行，中间空一行）",
+                "blank_lines_after_title": "实践值：标题下空一行排正文，同 7.3.2 的做法，标准未单列"}
+    },
+    "joint": {
+      "name_size_max_pt": 36, "multi_name_size_max_pt": 28, "name_size_min_pt": 18, "name_slack": 1.06, "fill_ratio": 0.92, "wen_gap_ratio": 0.5, "line_ratio": 1.2,
+      "seal_diameter_mm": 42, "seal_cols_max": 3, "date_right_chars": 4,
+      "basis": {"name_size_max_pt": "实践值：小初", "multi_name_size_max_pt": "实践值：三个及以上机关时名称行多，取小二",
+                "name_size_min_pt": "实践值", "name_slack": "实践值：名称列宽比名称字数宽 6%，避免不同软件的字宽误差使名称回行",
+                "fill_ratio": "实践值：名称加“文件”的宽度不超过版心宽的 92%",
+                "wen_gap_ratio": "实践值：“文件”与机关名称之间空半个字",
+                "line_ratio": "实践值：行高取字号的 1.2 倍",
+                "seal_diameter_mm": "实践值：党政机关印章直径一般为 4.2 cm（7.3.5.1 只规定印章互不相交或相切）",
+                "seal_cols_max": "推算：版心 156 mm 除以印章直径 42 mm，并排最多 3 个且互不相交",
+                "date_right_chars": "7.3.5.1（成文日期一般右空四字）"}
+    },
+    "overprint": {
+      "issuer_default_size_pt": 36, "min_docno_top_mm": 44,
+      "basis": {"issuer_default_size_pt": "实践值：未给发文机关标志文字时，按小初字号估算标志行高留白",
+                "min_docno_top_mm": "推算：标志上边缘距版心上边缘 35 mm（7.2.4）加最小标志行高 22 磅×1.2，约 44 mm"}
     }
   },
   "seal_default": {
-    "红头": true, "白头": true, "信函": true, "纪要": false, "材料": false, "简报": false,
-    "basis": "7.3.5（有发文机关署名的公文加盖印章）；纪要、材料、简报不盖章为实践值"
+    "红头": true, "白头": true, "信函": true, "纪要": false, "材料": false, "简报": false, "命令": false,
+    "basis": "7.3.5（有发文机关署名的公文加盖印章）；命令（令）用签名章（7.3.5.3），纪要、材料、简报不盖章为实践值"
   }
 }
