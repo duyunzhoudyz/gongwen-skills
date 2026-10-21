@@ -209,7 +209,8 @@ class MeasuresTest(PartyCheckTestCase):
         self.assertEqual(ids.count("MEA-001"), 1)
         self.assertIn("MEA-002", ids)
         mea1 = next(i for i in report["issues"] if i["id"] == "MEA-001")
-        self.assertEqual(mea1["level"], "P1")
+        self.assertEqual(mea1["level"], "P2")  # 材料没有时限的不强求，只作提示
+        self.assertNotIn("待补", mea1["suggestion"].replace("“待补”", "").replace("【待补】", "").replace("待补一行", ""))
         self.assertIn("进一步加强理论学习", mea1["excerpt"])
         self.assertEqual(report["stats"]["measures"], 2)
 
@@ -297,7 +298,10 @@ class MeasuresTest(PartyCheckTestCase):
 
     def test_strict_exit_code(self):
         code, _out, _err = self.run_main("measures", str(self.write("必错.txt", MEASURES_FAIL)), "--strict")
-        self.assertEqual(code, 1)
+        self.assertEqual(code, 0)  # 缺时限（MEA-001）、数量不对应均为 P2，不触发
+        nomeasure = "个人对照检查材料\n\n一、存在的问题\n\n（一）理论学习方面。今年中心组学习有3次请假。\n"
+        code, _out, _err = self.run_main("measures", str(self.write("无措施.txt", nomeasure)), "--strict")
+        self.assertEqual(code, 1)  # 有问题无措施（MEA-003）为 P1
         code, _out, _err = self.run_main("measures", str(self.write("必过.txt", MEASURES_PASS)), "--strict")
         self.assertEqual(code, 0)
 

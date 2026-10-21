@@ -515,7 +515,7 @@ class AnalyzePagesTest(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 class LetterRuleWidthTest(unittest.TestCase):
-    def test_double_rules_as_wide_as_text_area(self):
+    def test_double_rules_170mm_centered(self):
         path, _ = build_file("关于商请某事的函\n\n县局：\n\n请予研究函复。\n\n某院\n\n2026年4月8日", "r5-信函-线长.docx",
                              {"版式": "信函", "发文机关标志": "某院", "发文字号": "某院函〔2026〕1号"})
         sec = Document(str(path)).sections[0]
@@ -524,12 +524,14 @@ class LetterRuleWidthTest(unittest.TestCase):
         self.assertEqual(len(ruled), 4)  # 页眉两条、页脚两条
         for p in ruled:
             ind = p.find(qn("w:pPr") + "/" + qn("w:ind"))
-            self.assertEqual(int(ind.get(qn("w:left")) or 0), 0)  # 不再向两侧伸出版心
-            self.assertEqual(int(ind.get(qn("w:right")) or 0), 0)
+            # 10.1：线长 170 mm、居中，比版心（156 mm）两侧各宽 7 mm（397 twips）
+            self.assertAlmostEqual(int(ind.get(qn("w:left")) or 0), -397, delta=3)
+            self.assertAlmostEqual(int(ind.get(qn("w:right")) or 0), -397, delta=3)
         width_mm = gw_docx.twips_to_mm(int(sec._sectPr.find(qn("w:pgSz")).get(qn("w:w")))
                                        - int(sec._sectPr.find(qn("w:pgMar")).get(qn("w:left")))
                                        - int(sec._sectPr.find(qn("w:pgMar")).get(qn("w:right"))))
-        self.assertAlmostEqual(width_mm, 156, delta=1)
+        ind = ruled[0].find(qn("w:pPr") + "/" + qn("w:ind"))
+        self.assertAlmostEqual(width_mm - 2 * gw_docx.twips_to_mm(int(ind.get(qn("w:left")))), 170, delta=1)  # 10.1 线长 170 mm
 
 
 # ---------------------------------------------------------------------------

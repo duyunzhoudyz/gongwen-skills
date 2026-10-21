@@ -2837,7 +2837,7 @@ def _lint_document(doc: Document, doc_type: Optional[str], checks: Optional[str]
             all_notes.append(
                 f"正文含【待补】{todo} 处、【待核实】{verify} 处"
                 + (f"、格式不规范的标记 {bad} 处" if bad else "")
-                + "，定稿前须逐条补齐或核实，并在【起草说明】中汇总。")
+                + "；【待补】定稿前补齐，【待核实】建议移至起草说明的待核实清单。")
     body_chars = doc.body_char_count()
     if "length" in check_list:
         all_notes.append(f"篇幅口径：标题之后、【起草说明】之前的正文，不含空白和版记，约 {body_chars} 字。")
@@ -2894,7 +2894,7 @@ def render_text(result: Dict[str, Any]) -> str:
     ]
     markers = s.get("markers") or {}
     if markers.get("待补") or markers.get("待核实"):
-        out.append(f"待补 {markers.get('待补', 0)} 处、待核实 {markers.get('待核实', 0)} 处，定稿前补齐")
+        out.append(f"待补 {markers.get('待补', 0)} 处、待核实 {markers.get('待核实', 0)} 处；待补定稿前补齐，待核实建议移至起草说明")
     if not result["issues"]:
         out.append("")
         out.append("未发现问题。机检只覆盖可规则化的项目，内容、提法、行文规则仍需人工审读。")

@@ -1010,7 +1010,7 @@ def check_totals(table: Table) -> None:
                 table.add("DT-SUM-06", "P1", "合计校验", table.where(target, col),
                           f"{kind_label}为{fmt_num(stated.value)}，明细{len(parts)}行求和为{fmt_num(total)}，"  # type: ignore[arg-type]
                           f"相差{fmt_num(diff)}，超过末位2个单位；可能是修约，也可能填报有误",
-                          "请核对；查清前不直接引用表中合计，需要时写明细相加数并标【待核实】",
+                          "请核对；查清前不直接引用表中合计，需要时写明细相加数，存疑处写入起草说明的待核实清单",
                           {"stated": record["stated"], "computed": record["computed"], "diff": fmt_num(diff)})
             else:
                 record["status"] = "mismatch"
@@ -1019,7 +1019,7 @@ def check_totals(table: Table) -> None:
                 table.add(level_id, "P0", "合计校验", table.where(target, col),
                           f"{kind_label}为{fmt_num(stated.value)}，明细{len(parts)}行求和为{fmt_num(total)}，"  # type: ignore[arg-type]
                           f"相差{fmt_num(diff)}{extra}",
-                          "核对漏填、重复填报或手工改数；查清前不直接引用表中合计，需要时写明细相加数并标【待核实】", {
+                          "核对漏填、重复填报或手工改数；查清前不直接引用表中合计，需要时写明细相加数，存疑处写入起草说明的待核实清单", {
                               "stated": record["stated"], "computed": record["computed"], "diff": fmt_num(diff)})
             table.checks.append(record)
         for col in skip_cols:
@@ -1188,13 +1188,13 @@ def inspect_table(table: Table, marking_ok: bool = False) -> Table:
             hints = note_hints(table, empty_rows)
             table.add("DT-NUL-01", "P1", "空值", f"{where}：{_limit(empties)}",
                       f"{len(empties)} 个空白单元格。空白不等于 0，本工具不按 0 计算",
-                      _with_hints(hints, "向填报单位确认是未填报还是 0；正文涉及的写【待补：说明】"),
+                      _with_hints(hints, "向填报单位确认是未填报还是 0；正文涉及的在起草说明的待补清单列出"),
                       {"notes": hints} if hints else None)
         if nulls:
             hints = note_hints(table, null_rows)
             table.add("DT-NUL-02", "P1", "空值", f"{where}：{_limit(nulls)}",
                       f"{len(nulls)} 个单元格用符号或文字代替数值（如“—”“/”“无”），按空值处理",
-                      _with_hints(hints, "确认含义：是 0、不适用还是未填报；正文涉及的写【待补：说明】"),
+                      _with_hints(hints, "确认含义：是 0、不适用还是未填报；正文涉及的在起草说明的待补清单列出"),
                       {"notes": hints} if hints else None)
         if textnums:
             table.add("DT-TXT-01", "P1", "文本型数字", f"{where}：{_limit(textnums)}",
@@ -1209,7 +1209,7 @@ def inspect_table(table: Table, marking_ok: bool = False) -> Table:
         if approx:
             table.add("DT-TXT-03", "P1", "约数", f"{where}：{_limit(approx)}",
                       "约数（如“约20”“30多”）不能参与精确计算，合计和增速都不可靠",
-                      "请填报单位给出准确数；正文引用时写【待核实：准确数】")
+                      "请填报单位给出准确数；正文引用时存疑处写入起草说明的待核实清单")
         if units:
             table.add("DT-UNIT-01", "P0", "单位", f"{where}：{_limit(units)}",
                       f"单元格单位与本列单位“{col.unit}”不一致", "统一换算后再计算，换算过程写进计算底稿")
@@ -1583,7 +1583,7 @@ def merge_tables(tables: List[Table], key: Optional[str] = None, layout: str = "
                 notes.append(f"{'、'.join(absent)}没有这一列")
             if notes:
                 add("DT-MG-07", "P1", "汇总", f"{bucket['key']} {first['name']}", "汇总不完整：" + "；".join(notes),
-                    "补齐后重新汇总；正文引用这个合计时标【待核实：说明】")
+                    "补齐后重新汇总；正文引用这个合计时，存疑处写入起草说明的待核实清单")
             if dups:
                 with_dups = total + sum((v for _, v in dups), Decimal(0))
                 entry["value_with_dups"] = fmt_num(with_dups)
@@ -1638,7 +1638,7 @@ def merge_tables(tables: List[Table], key: Optional[str] = None, layout: str = "
         missing_units = [e for e in expect if not has(e)]
         if missing_units:
             add("DT-MG-11", "P1", "应报未报", _limit(missing_units), f"名单中有 {len(missing_units)} 个单位没有数据",
-                "催报；正文写全口径合计时注明“不含……”，或标【待补：说明】")
+                "催报；正文写全口径合计时注明“不含……”，或在起草说明的待补清单列出")
         if layout == "record":
             expected = {strip_paren(e) for e in expect}
             extra = sorted(k for k in keys_present if k not in expected)
@@ -2348,7 +2348,7 @@ def table_calc(a: argparse.Namespace, with_phrase: bool) -> dict:
         count = sum(1 for r in table.data_rows() if _usable(table.cell(r, c)))
         if bad is not None:
             top_warnings.append(f"{c.name}表中合计为{bad['stated']}，与明细相加{fmt_num(value)}不符，"
-                                f"总量改用明细相加数；正文写这个总量时用明细相加数并标【待核实】")
+                                f"总量改用明细相加数；正文写这个总量时用明细相加数，存疑处写入起草说明的待核实清单")
             return value, f"明细{count}行相加（表中合计{bad['stated']}与明细不符，未采用）"
         return value, f"明细{count}行相加"
 
@@ -2488,7 +2488,7 @@ def table_calc(a: argparse.Namespace, with_phrase: bool) -> dict:
                 full, short = describe_gaps(table, gaps, cols)
                 verify.insert(0, f"两期口径不同，{short}")
                 item["warnings"].append(f"明细口径不一致：{full}。该行结果不能直接引用；请两边同口径剔除后计算"
-                                        f"（见紧随其后的“同口径”结果），或在正文标【待核实】")
+                                        f"（见紧随其后的“同口径”结果），或把存疑处写入起草说明的待核实清单")
                 item["scope_gaps"] = [{"row": r.excel_row, "label": table.display_label(r.label),
                                        "missing": [c.name for c in lack]} for r, lack in gaps]
                 extra_item = same_scope_item(row, label, scope, gaps, item["warnings"])

@@ -276,6 +276,14 @@ class OtherProceduralTest(SoeCheckBase):
         text = "总经理办公会纪要\n现将会议议定事项纪要如下：\n一、关于A\n会议同意方案，由综合部牵头，10月31日前完成。"
         self.assertNotIn("SOE-108", ids_of(self.check(text, "纪要")))
 
+    def test_soe108_is_hint_without_placeholder_advice(self) -> None:
+        text = "总经理办公会纪要\n一、关于A\n会议同意修订值班制度。"
+        issues = [i for i in self.check(text, "纪要")["issues"] if i["id"] == "SOE-108"]
+        self.assertEqual(len(issues), 1)
+        self.assertEqual(issues[0]["level"], "P2")
+        self.assertNotIn("标【待补】", issues[0]["suggestion"])
+        self.assertIn("起草说明", issues[0]["suggestion"])
+
     def test_ledger_without_table(self) -> None:
         result = self.check("改革任务进展：已完成5项。", "改革台账")
         self.assertTrue(any("没有找到" in i["message"] for i in result["issues"]))

@@ -1103,7 +1103,7 @@ def render_ledger_text(report: dict) -> str:
         lines.append("")
     if report["added"]:
         lines.append(f"结论：{len(report['added'])} 项不在台账中。逐项处理：补进台账并写明出处，"
-                     "或在正文中改为【待补：说明】；新加的【待补】【待核实】标记核对无误即可。")
+                     "或把存疑处写入起草说明的待补、待核实清单；新加的标记核对无误即可。")
     else:
         lines.append("结论：正文中的数字、日期、标记等均能在台账中找到。")
     lines += _uncertain_conclusion(report)

@@ -486,6 +486,16 @@ class ItemCheckTest(unittest.TestCase):
     def test_min001_missing_owner(self):
         self.assertIn("MIN-001", issue_ids(wrap("会议同意修订值班制度，11月底前完成。")))
 
+    def test_min001_002_are_hints_without_placeholder_advice(self):
+        """材料没有的责任单位、时限不强求：只报 P2，建议不再要求在正文插【待补】。"""
+        issues = [i for i in mc.check_items(items_of(wrap("会议同意修订值班制度。")))
+                  if i.id in ("MIN-001", "MIN-002")]
+        self.assertEqual(sorted(i.id for i in issues), ["MIN-001", "MIN-002"])
+        for i in issues:
+            self.assertEqual(i.level, "P2")
+            self.assertNotIn("写【待补", i.suggestion)
+            self.assertIn("起草说明", i.suggestion)
+
     def test_min001_marker_passes(self):
         self.assertNotIn("MIN-001", issue_ids(wrap("会议同意修订值班制度，由【待补：责任单位】牵头，11月底前完成。")))
 

@@ -379,14 +379,14 @@ def check_measures(text: str) -> Dict[str, object]:
                     issues.append(Issue(
                         "MEA-006", "P2", "整改措施", item.line, _excerpt(item.text),
                         "这条措施只写了“长期坚持”，无法检验",
-                        "补检查频次（如“每季度对照检查1次”）或阶段目标；本人没有给出的，写【待补：检查频次】",
+                        "补检查频次（如“每季度对照检查1次”）或阶段目标；本人没有给出的不强行补，在起草说明“待补”一行列出",
                     ))
                 else:
                     issues.append(Issue(
-                        "MEA-001", "P1", "整改措施", item.line, _excerpt(item.text),
-                        "这条措施没有时限，无法检验是否完成",
-                        "写明完成时间（如“2027年3月底前”）或频次（如“每月”）；"
-                        "本人没有给出时限的，写【待补：完成时限】并列入起草说明",
+                        "MEA-001", "P2", "整改措施", item.line, _excerpt(item.text),
+                        "这条措施没有写时限，不便检验是否完成",
+                        "本人材料里有完成时间或频次的写进去（如“2027年3月底前”“每月”）；"
+                        "本人没有给出的不强行补，也不插【待补】，在起草说明“待补”一行列出",
                     ))
         elif section.role == "mixed":
             issues.append(Issue(

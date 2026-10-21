@@ -5,7 +5,7 @@
     python scripts/minutes_check.py <纪要正文> [--list 督办清单.md|.xlsx] [--emit-list 输出.md] [--json] [--strict]
 
 做三件事：
-  1. 识别纪要中的议定事项，逐条检查：责任单位、完成时限是否写明或已标【待补】；
+  1. 识别纪要中的议定事项，逐条检查：责任单位、完成时限是否写明（记录没有的不强行补，列入起草说明“待补”一行）；
      "原则同意"是否写了修改要求；"暂缓"是否写了原因或再议条件。另查口语残留、转写标签残留、出席名单。
   2. --list：与督办清单逐条对账。清单中的事项能否在纪要中找到；责任单位、配合单位、完成时限是否与纪要一致；
      纪要中需要落实的事项是否漏列。比对的是从该条识别出的牵头（负责）单位、配合单位和时限，不是"在原文中出现过"：
@@ -708,30 +708,30 @@ def check_items(items: Sequence[Item]) -> List[Issue]:
         if it.decision not in DECISION_EXEMPT and not it.no_follow:
             if not it.owner and not it.owner_marked:
                 issues.append(Issue(
-                    "MIN-001", "P1", it.line, ex,
-                    "议定事项没有写责任单位，也没有标【待补】",
-                    "按记录写明牵头单位；记录没说的写【待补：责任单位】。任职、审议通过、纯表态等无需落实的结论可以不写",
+                    "MIN-001", "P2", it.line, ex,
+                    "议定事项没有写责任单位",
+                    "核对记录：记录里有牵头单位的写进去；记录没说的不强行补，也不插【待补】，在起草说明“待补”一行列出。任职、审议通过、纯表态等无需落实的结论可以不写",
                     item=it.no))
             if it.decision != "退回修改" and not it.deadline and not it.deadline_marked:
                 if it.deadline_vague:
                     message = "完成时限只写了“尽快”“抓紧”之类，没有具体时限"
-                    suggestion = "照记录写具体时限；会上只说了“尽快”的，写“尽快完成【待补：具体完成时限】”"
+                    suggestion = "记录里有具体时限的写进去；会上只说了“尽快”的照原话保留，不插【待补】，在起草说明“待补”一行列出"
                 else:
-                    message = "议定事项没有写完成时限，也没有标【待补】"
-                    suggestion = ("按记录写完成时限；记录没说的写【待补：完成时限】，不自行补日期。"
-                                  "任职、审议通过、纯表态等无需落实的结论不必写时限，也不加【待补】")
-                issues.append(Issue("MIN-002", "P1", it.line, ex, message, suggestion, item=it.no))
+                    message = "议定事项没有写完成时限"
+                    suggestion = ("记录里有完成时限的写进去；记录没说的不强行补，也不自行补日期，在起草说明“待补”一行列出。"
+                                  "任职、审议通过、纯表态等无需落实的结论不必写时限")
+                issues.append(Issue("MIN-002", "P2", it.line, ex, message, suggestion, item=it.no))
         if it.decision == "原则同意" and not REVISION_HINT_RE.search(it.text):
             issues.append(Issue(
                 "MIN-003", "P2", it.line, ex,
                 "“原则同意”没有写出会上提出的修改要求",
-                "写明改什么、谁修改；会上没说具体要求的，标【待核实：会上提出的具体修改意见】",
+                "写明改什么、谁修改；会上没说具体要求的，不在正文标记，在起草说明“待核实”一行列出",
                 item=it.no))
         if it.decision == "暂缓" and not POSTPONE_HINT_RE.search(it.text.replace("暂缓", "")):
             issues.append(Issue(
                 "MIN-004", "P2", it.line, ex,
                 "“暂缓”没有写原因或再议条件",
-                "照记录写暂缓原因或“待……后再提交研究”；记录没有的标【待补：暂缓原因或再议条件】",
+                "照记录写暂缓原因或“待……后再提交研究”；记录没有的不在正文标记，在起草说明“待补”一行列出",
                 item=it.no))
     return issues
 

@@ -203,7 +203,9 @@ class EndToEndFindingsTest(unittest.TestCase):
         self.assertTrue(all(i["level"] == "P2" for i in markers))
         self.assertEqual(result["summary"]["markers"], {"待补": 2, "待核实": 1})
         self.assertEqual(result["summary"]["P1"], 0)
-        self.assertIn("待补 2 处、待核实 1 处，定稿前补齐", gl.render_text(result))
+        verify = next(i for i in result["issues"] if i["id"] == "MRK-002")
+        self.assertIn("建议移至起草说明", verify["suggestion"])
+        self.assertIn("待补 2 处、待核实 1 处；待补定稿前补齐，待核实建议移至起草说明", gl.render_text(result))
         # 不查 marker 类时也给出计数
         self.assertEqual(run("检查【待补：次数】次。", checks="punct")["summary"]["markers"], {"待补": 1, "待核实": 0})
         self.assertNotIn("待补 0 处", gl.render_text(run("检查12次。")))

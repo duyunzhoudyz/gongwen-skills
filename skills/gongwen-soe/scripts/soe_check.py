@@ -436,7 +436,7 @@ def check_resolution(lines: Lines, ruleset: RuleSet) -> List[Dict[str, Any]]:
     if should is None or actual is None:
         issues.append(_issue(rule, "P1", first_line, title,
                              message="决议未写明应出席和实际出席董事人数，无法核对表决",
-                             suggestion="按会议记录写明应出席、实际出席（含委托出席）人数；记录没有的标【待补】"))
+                             suggestion="按会议记录写明应出席、实际出席（含委托出席）人数；记录没有的不强行补，在起草说明“待补”一行列出"))
     else:
         n_should, n_actual = should[1], actual[1]
         if n_actual > n_should:
@@ -500,7 +500,7 @@ def check_resolution(lines: Lines, ruleset: RuleSet) -> List[Dict[str, Any]]:
     if not votes_found:
         issues.append(_issue(rule, "P1", first_line, title,
                              message="决议未写表决结果",
-                             suggestion="每项议案写“表决结果：同意X票，反对X票，弃权X票”；记录没有的标【待补】"))
+                             suggestion="每项议案写“表决结果：同意X票，反对X票，弃权X票”；记录没有的不强行补，在起草说明“待补”一行列出"))
     return issues
 
 
