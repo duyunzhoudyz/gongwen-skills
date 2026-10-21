@@ -53,7 +53,7 @@ A simulated AI draft of a district education bureau's winter campus-safety notic
 | Machine check | P0 must fix | P1 should fix | Length (Chinese characters) |
 |---|---:|---:|---:|
 | Original | 5 | 31 | 1092 |
-| After | 0 | 0 | 807 |
+| After | 0 | 0 | 814 |
 
 Changes included: "suggest that schools set up..." became "schools shall set up..."; the document number, dates and number ranges were corrected to the national standards; a threat to have parents "detained by the police" was removed because the education bureau has no such authority; every figure in the text stayed unchanged, confirmed by a fact-diff script.
 
