@@ -134,7 +134,9 @@ class ExtractCliTest(unittest.TestCase):
         self.assertEqual(res["meta"]["版式"], "红头")
         self.assertNotIn("发文机关标志", res["meta"])
         doc, rep = build_docx.build(res["lines"], res["meta"], keep_text=True, installed=set())
-        self.assertTrue(any("发文机关标志" in p for p in rep["placeholders"]))
+        self.assertTrue(any("发文机关标志" in p for p in rep["missing"]))  # 缺的要素只列出，不写【待补】
+        self.assertEqual(rep["placeholders"], [])
+        self.assertNotIn("待补", "\n".join(p.text for p in doc.paragraphs))
 
 
 if __name__ == "__main__":

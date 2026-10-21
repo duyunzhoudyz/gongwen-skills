@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import gw_fonts as F  # noqa: E402
 from gw_layout import (ATTACH_MARK_RE, BODY_ROLES, ROLE_LABELS, UPWARD_TYPES, doc_kind,  # noqa: E402
-                       draft_note_index, has_brief_header, heading_split, is_heading, parse_brief, parse_lines,
+                       draft_note_index, has_brief_header, heading_levels, heading_split, is_heading, parse_brief, parse_lines,
                        summarize)
 
 # 两个非空段落之间应保留的空行数（键为前一段角色、后一段角色；None 表示任意）
@@ -117,7 +117,7 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None,
     from docx import Document
     from docx.oxml.ns import qn
     from gw_format import (apply_role, ensure_upward_docno_indent, keep_signoff_together, layout_signature_block,
-                           strip_leading_spaces)
+                           offset_leading_spaces, strip_leading_spaces)
 
     params = params or D.load_params()
     params = F.apply_unit_fonts(params, F.parse_unit_fonts(unit_fonts, params))
@@ -159,9 +159,7 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None,
     anchors = [a for a, _ in D.body_tables(doc) if cut is None or a < cut]
     red_flags = [D.para_is_red(p, doc) for p in paras]
     sec0 = doc.sections[0]
-    is_letter = bool(sec0.different_first_page_header_footer and
-                     "".join(t.text or "" for t in sec0.first_page_header._element.iter(
-                         "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t")).strip())
+    is_letter = bool(D.letter_head_text(sec0))
     brief = layout == "简报" or (layout is None and not is_letter and has_brief_header(texts, red_flags))
     parsed = (parse_brief(texts, red=red_flags, tables_after=anchors, force=layout == "简报") if brief
               else parse_lines(texts, red=red_flags, tables_after=anchors))
@@ -207,6 +205,8 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None,
             if D.set_para(p, reset_indent=True):
                 changes.add("段落格式")
             kept_space += 1
+        elif keep_text and role in ("recipient", "salutation") and offset_leading_spaces(p):
+            changes.add("段落格式")  # 顶格的称呼、主送机关保留行首空格，用负左缩进抵消
         return changes
 
     for it in parsed.items:
@@ -311,7 +311,8 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None,
             report["notes"].append("署名和成文日期已按" + ("加盖印章（7.3.5.1）" if seal else "不加盖印章（7.3.5.2）") + "重新排列")
         notes = parsed.find("note")
         last_idx = notes[0].src if notes else (dates[0].src if dates else parsed.find("signature")[-1].src)
-        if keep_signoff_together(paras, first_idx, last_idx):
+        att_first = atts[0].src if atts and atts[-1].src < first_idx else None
+        if keep_signoff_together(paras, first_idx, last_idx, attach_first_idx=att_first):
             report["notes"].append("正文最后一段至落款已设“与下段同页”，落款不会单独成页")
 
     for role, bucket in stats.items():
@@ -328,13 +329,14 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None,
                 j += 1
             if j < end:
                 apply_role(att_paras[j], "title", ctx)
+            att_levels, _ = heading_levels(att_texts[j + 1:end])
             for k in range(j + 1, end):
                 t = att_texts[k].strip()
                 if not t:
                     continue
                 if not keep_text:
                     strip_leading_spaces(att_paras[k])
-                level = is_heading(t)
+                level = att_levels.get(k - j - 1) if att_levels else is_heading(t)
                 _apply(att_paras[k], level or "body", heading_split(t) if level else -1)
         report["notes"].append(f"附件另面编排：{len(starts)} 个附件页的标识、标题、正文格式已按 7.3.7 调整；"
                                "标识与标题之间要空一行，脚本不增删空行，请核对")
@@ -358,15 +360,16 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None,
     if other_tables:
         report["untouched"].append(f"正文中的表格 {other_tables} 个未调整（国标未规定表格字号，按本单位要求处理）")
 
-    # ---- 页码 ----
+    # ---- 页眉、页脚、页码 ----
+    # 原稿页码在页眉或页脚里的，连同其他杂项一并清除，页脚按 7.5 重设（否则旧页码残留在页眉）
+    removed = D.clear_headers_footers(doc, letter=is_letter)
     for section in doc.sections:
         D.setup_page_numbers(section, ctx, first_page_blank=False)
+    if removed:
+        report["notes"].append("已清除原页眉、页脚中的内容（页码和杂项）：" + "；".join(removed)
+                               + "。公文不用页眉，页码按标准重设在页脚；其中有需要保留的文字，请自行在 Word 中补回")
     report["notes"].append("页码已重设为 4 号宋体“— 1 —”，单页居右空一字、双页居左空一字" +
-                           ("；信函首页页脚保持原样" if is_letter else ""))
-    if any(not h.is_linked_to_previous and "".join(t.text or "" for t in h._element.iter(
-            "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t")).strip()
-           for s in doc.sections for h in (s.header, s.even_page_header)):
-        report["untouched"].append("页眉中有内容，公文一般不用页眉，请确认是否删除（未自动删除）")
+                           ("；信函首页页眉（发文机关标志、红色双线）和首页页脚双线保持原样，首页不显示页码" if is_letter else ""))
     report["stripped"] = stripped
     report["compressed"] = compressed
     if keep_text and _all_texts(doc) != before_texts:

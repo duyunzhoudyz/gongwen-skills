@@ -72,6 +72,16 @@ def strip_leading_spaces(paragraph) -> bool:
     return changed
 
 
+def offset_leading_spaces(paragraph) -> float:
+    """行首有空格的顶格段落（称呼、主送机关）：--keep-text 不删空格，改用等宽的负左缩进抵消，视觉上仍然顶格。返回抵消的字数。"""
+    text = D.direct_text(paragraph)
+    lead = text[:len(text) - len(text.lstrip(" 　"))]
+    width = sum(1.0 if ch == "　" else 0.5 for ch in lead)
+    if width:
+        D.set_para(paragraph, left=-width)
+    return width
+
+
 def apply_role(paragraph, role: str, ctx: D.Ctx, *, split: int = -1, black: bool = True) -> Set[str]:
     """按角色设置格式，返回发生变化的类别集合（段落格式、字体、字号、加粗、颜色）。
 
@@ -118,7 +128,7 @@ def apply_role(paragraph, role: str, ctx: D.Ctx, *, split: int = -1, black: bool
         el = ctx.el("table")
         para(align="center", line_exact=line, before_pt=0, after_pt=0, snap=True, keep_next=True)
         changes |= _font_runs(paragraph, ctx, el["caption_font"], el["caption_size"], bold=False, black=black)
-    elif role == "recipient":
+    elif role in ("recipient", "salutation"):  # 称呼（讲话稿“同志们：”）同主送机关：顶格，不缩进
         el = ctx.el("recipient")
         para(align=el["align"], line_exact=line, before_pt=0, after_pt=0, snap=True)
         changes |= _font_runs(paragraph, ctx, el["font"], el["size"], black=black)
@@ -268,13 +278,15 @@ def layout_signature_block(sig_paras: Sequence, date_para, ctx: D.Ctx, *, seal: 
     return result
 
 
-def keep_signoff_together(paragraphs: Sequence, first_idx: int, last_idx: int) -> int:
-    """落款不单独成页：从正文最后一段（或附件说明）起，经空行、署名到成文日期（有附注时到附注），
-    依次设“与下段同页”。正文最后一段不设“段中不分页”，换页时至少有一行正文随落款下移。
+def keep_signoff_together(paragraphs: Sequence, first_idx: int, last_idx: int, attach_first_idx: Optional[int] = None) -> int:
+    """落款不单独成页：从正文最后一段起，经附件说明、空行、署名到成文日期（有附注时到附注），依次设“与下段同页”。
+    正文最后一段不设“段中不分页”，换页时至少有一行正文随落款下移；附件说明与正文末段、落款连在一起，不被分页割裂。
 
-    paragraphs 为正文段落列表，first_idx 为第一个署名（或日期）段的下标，last_idx 为链条最后一段的下标。
-    返回设置的段数。
+    paragraphs 为正文段落列表，first_idx 为第一个署名（或日期）段的下标，last_idx 为链条最后一段的下标；
+    attach_first_idx 为附件说明第一行的下标（有附件说明时传入，它在署名之前）。返回设置的段数。
     """
+    if attach_first_idx is not None and attach_first_idx < first_idx:
+        first_idx = attach_first_idx
     count = 0
     for j in range(first_idx, last_idx):
         if D.set_para(paragraphs[j], reset_indent=False, keep_next=True):

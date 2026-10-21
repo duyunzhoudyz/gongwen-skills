@@ -21,9 +21,10 @@ from typing import Dict, List, Optional, Sequence, Tuple
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import gw_fonts as F  # noqa: E402
+from gw_verify import norm  # noqa: E402
 from gw_layout import (BODY_ROLES, BRIEF_META_KEYS, LINGHAO_RE, TABLE_MARK, UPWARD_TYPES, Item, Parsed,  # noqa: E402
                        break_title, clean_line, doc_kind, extract_attachments, extract_pipe_tables, has_brief_header,
-                       heading_split, is_heading, is_table_caption, norm_issue, norm_total, normalize_date,
+                       heading_levels, heading_split, is_heading, is_table_caption, norm_issue, norm_total, normalize_date,
                        parse_brief, parse_lines, read_body_text, summarize, text_width_chars)
 
 LAYOUTS = {"红头": "红头", "文件": "红头", "文件格式": "红头", "红头文件": "红头",
@@ -36,7 +37,7 @@ LAYOUTS = {"红头": "红头", "文件": "红头", "文件格式": "红头", "�
 META_KEYS = ("版式", "份号", "密级", "保密期限", "紧急程度", "发文机关标志", "发文字号", "签发人", "标题",
              "主送机关", "附件", "发文机关署名", "成文日期", "印章", "附注", "抄送", "印发机关", "印发日期",
              "三级标题加粗", "表格字体", "表格字号", "unit_fonts", "单位规定字体",
-             "令号", "签发人职务", "签发人姓名", "套打", "套打版头高度", "联合行文") + BRIEF_META_KEYS
+             "令号", "签发人职务", "签发人姓名", "套打", "套打版头高度", "联合行文", "留占位") + BRIEF_META_KEYS
 BRIEF_IGNORED = ("发文机关标志", "发文字号", "签发人", "主送机关", "附件", "发文机关署名", "成文日期", "印章", "附注",
                  "印发机关", "份号", "密级", "保密期限", "紧急程度")
 TABLE_FONTS = ("仿宋", "宋体")
@@ -95,9 +96,9 @@ class Builder:
 
     def para(self, role: str, text: str, split: int = -1, raw: Optional[str] = None):
         """raw：keep_text 时传入原文行；正文类段落保留段首空格（缩进由空格承担，首行缩进设为 0），不改任何文字。"""
-        from gw_format import apply_role
+        from gw_format import apply_role, offset_leading_spaces
         lead = 0
-        if self.keep_text and raw is not None and role in BODY_ROLES and raw != text and clean_line(raw) == text:
+        if self.keep_text and raw is not None and role in BODY_ROLES + ("salutation", "recipient") and raw != text                 and clean_line(raw) == text:
             lead = raw.index(text)
             if lead:
                 self.restored.append(raw)
@@ -105,7 +106,9 @@ class Builder:
         p = self.doc.add_paragraph()
         p.add_run(text)
         apply_role(p, role, self.ctx, split=split)
-        if lead:
+        if lead and role in ("salutation", "recipient"):
+            offset_leading_spaces(p)  # 称呼顶格：空格保留，用等宽负缩进抵消
+        elif lead:
             self.D.set_para(p, reset_indent=True)
         return p
 
@@ -301,8 +304,12 @@ def decide_layout(cli_layout: Optional[str], meta: dict, parsed: Parsed, report:
 
 def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
           installed: Optional[set] = None, params: Optional[dict] = None, unit_fonts=None,
-          overprint: Optional[bool] = None, keep_text: bool = False):
+          overprint: Optional[bool] = None, keep_text: bool = False, placeholders: Optional[bool] = None):
     """生成文档，返回 (Document, report)。
+
+    排版不改内容、不补内容：原稿和版式信息里没有的要素一律不写进文档（不补版记、不插【待补】、不按附件页生成附件说明），
+    只在 report["missing"] 列出，由用户决定。placeholders=True（版式信息“留占位”为“是”）时才为缺的要素写【待补】占位，
+    用于用户明确要求“缺的要素帮我留出位置”。
 
     keep_text：不改任何文字（用户要求“内容别动”“一个字都别改”时用）：不补主送机关冒号、不给附注加括号、不去段首空格、
     不转换日期写法；这类问题只列入 report["text_issues"]。保存前核对输入的每一行文字都在文档中，不一致抛出 BuildError。
@@ -323,7 +330,9 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
         params = F.apply_unit_fonts(params, {**F.parse_unit_fonts(meta_raw, params), **F.parse_unit_fonts(unit_fonts, params)})
     except ValueError as exc:
         raise BuildError(str(exc))
-    report: dict = {"warnings": [], "placeholders": [], "detected": [], "notes": []}
+    report: dict = {"warnings": [], "placeholders": [], "missing": [], "detected": [], "notes": []}
+    fill = bool(placeholders) if placeholders is not None else bool(_truthy(meta.get("留占位")))
+    report["fill_placeholders"] = fill
     # 附件另面编排：“【附件1】标题”分界行之后的内容拆成附件页，其前是主文
     lines, attach_secs, attach_notes = extract_attachments(lines)
     report["notes"] += attach_notes
@@ -387,14 +396,18 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
             report["notes"].append(f"正文标题下的发文字号“{it.text}”已移到版头发文字号位置，正文中不再保留")
 
     def need(key: str, label: Optional[str] = None) -> str:
+        """取要素：有就返回；没有时默认返回空串、不写进文档，只记入 report["missing"]；留占位模式才写【待补】。"""
         val = fields.get(key)
         if isinstance(val, list):
             val = "".join(val)
         if val:
             return str(val)
-        mark = f"【待补：{label or key}】"
-        report["placeholders"].append(f"{label or key}：版式信息和正文中都没有，已写入 {mark}，请补齐")
-        return mark
+        if fill:
+            mark = f"【待补：{label or key}】"
+            report["placeholders"].append(f"{label or key}：版式信息和正文中都没有，已按要求写入 {mark}，请补齐")
+            return mark
+        report["missing"].append(f"{label or key}：原稿和版式信息中都没有，未写入文档（排版不补内容），请用户决定是否提供")
+        return ""
 
     # 日期写法：版式信息中的 2026-10-16 写法转为“2026年10月16日”
     for key in ("成文日期", "印发日期"):
@@ -414,8 +427,8 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
         report["fields"] = {k: v for k, v in fields.items() if v not in (None, "", [])}
         report["fields"]["版式"] = lay
         report["summary"] = summarize(parsed)
-        if keep_text:
-            _verify_keep_text(b, main_lines, main_tables, attach_secs)
+        res_check, doc_texts = _text_check(b, main_lines, main_tables, attach_secs, parsed, meta, fields, [])
+        _finish_text_check(b, res_check, doc_texts, keep_text, report)
         return b.doc, report
     used_lines = 0
     head_lines: List[Tuple[str, str]] = []
@@ -481,7 +494,7 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
             b.issuer(issuer_text, top_mm, used_lines)
         b.blank(ctx.el("docno")["blank_lines_before"])
         if doc_type in UPWARD_TYPES and not signers:
-            signers = [need("签发人", "签发人姓名")]
+            signers = [x for x in [need("签发人", "签发人姓名")] if x]
             report["warnings"].append(f"{doc_type}属上行文，红头版式须标注签发人（GB/T 9704-2012 7.2.6）")
         docno_text = need("发文字号")
         if signers:
@@ -599,15 +612,29 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
         rec = "、".join(_as_list(recipient)) if isinstance(recipient, list) else str(recipient)
         if body_items and _same(body_items[0].text.rstrip("：:"), rec.rstrip("：:")):
             body_items = body_items[1:]
+        src_rec = next((it for it in parsed.items if it.role == "recipient"), None)
         if keep_text:
-            src_rec = next((it for it in parsed.items if it.role == "recipient"), None)
             if src_rec is not None and "主送机关" not in meta:
                 rec = src_rec.text  # 保持原文的冒号写法
             if not rec.endswith(("：", ":")):
                 report["text_issues"].append(f"主送机关“{rec}”末尾没有全角冒号（7.3.2），按 --keep-text 未补")
         elif not rec.endswith(("：", ":")):
             rec += "："
-        b.para("recipient", rec)
+        b.para("recipient", rec, raw=main_lines[src_rec.src] if keep_text and src_rec is not None and "主送机关" not in meta
+               and 0 <= src_rec.src < len(main_lines) else None)  # keep_text：行首空格保留，用负缩进抵消成顶格
+
+    # ---- 版式信息已给出的内容，正文里的同一行不再重复排出（否则同一行文字会排两次）----
+    deduped: List[str] = []
+    if meta:
+        supplied = set(_supplied_texts(meta))
+        kept_items = []
+        for it in body_items:
+            if it.role == "body" and norm(it.text) in supplied:
+                deduped.append(it.text)
+                report["notes"].append(f"正文中的“{it.text.strip()}”与版式信息中给出的要素是同一内容，已只排一次（避免文字重复）")
+            else:
+                kept_items.append(it)
+        body_items = kept_items
 
     # ---- 正文（含表格、表题）----
     table_queue = list(tables)
@@ -638,16 +665,19 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
     for sec in attach_secs:
         if sec.title:
             attach_titles.append(sec.title)
-        else:
+        elif fill:
             mark = f"【待补：{sec.label}标题】"
-            report["placeholders"].append(f"{sec.label}标题：附件分界行中没有写标题，已写入 {mark}，请补齐")
+            report["placeholders"].append(f"{sec.label}标题：附件分界行中没有写标题，已按要求写入 {mark}，请补齐")
             attach_titles.append(mark)
+        else:
+            report["missing"].append(f"{sec.label}标题：附件分界行中没有写标题，附件页只排标识，未补标题，请用户决定")
+            attach_titles.append("")
     if attach_secs:
-        if not attachments and keep_text:
-            report["text_issues"].append("正文没有附件说明（7.3.4），按 --keep-text 未按附件页标题补写，请自行补“附件：”行")
+        if not attachments and (keep_text or not fill):
+            report["missing"].append("附件说明（7.3.4）：正文没有“附件：”说明，未按附件页标题补写（排版不补内容），请用户决定是否补“附件：”行")
         elif not attachments:
-            attachments = list(attach_titles)
-            report["notes"].append("正文没有附件说明，已按附件页的标题生成（7.3.4、7.3.7：附件说明与附件对应）")
+            attachments = [t for t in attach_titles if t]
+            report["notes"].append("正文没有附件说明，已按要求按附件页的标题生成（7.3.4、7.3.7：附件说明与附件对应）")
         else:
             wanted = [re.sub(r"[\s　]", "", re.sub(r"^\d{1,2}\s*[.．、]\s*|^附\s*件\s*[：:]\s*", "", a)) for a in attachments]
             actual = [re.sub(r"[\s　]", "", t) for t in attach_titles]
@@ -678,7 +708,7 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
     date_text = str(fields.get("成文日期") or "")
     if lay in LEGAL_LAYOUTS:
         if not sigs:
-            sigs = [need("发文机关署名")]
+            sigs = [x for x in [need("发文机关署名")] if x]
         if not date_text:
             date_text = need("成文日期")
     if lay == "命令":
@@ -724,7 +754,8 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
         # 落款不单独成页：正文最后一段、空行、署名、日期（附注）设“与下段同页”
         elements = [p._p for p in b.doc.paragraphs]
         all_paras = b.doc.paragraphs
-        keep_signoff_together(all_paras, elements.index(signoff_first._p), elements.index(signoff_last._p))
+        keep_signoff_together(all_paras, elements.index(signoff_first._p), elements.index(signoff_last._p),
+                              attach_first_idx=elements.index(att_ps[0]._p) if attachments else None)
 
     # ---- 附件另面编排（7.3.7）：在版记之前，页码与正文连续 ----
     if attach_secs:
@@ -755,10 +786,14 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
         if rows or has_print:
             report["warnings"].append("材料版式不排版记，已省略抄送和印发信息")
     elif lay == "红头" or rows or has_print:
-        org = need("印发机关")
-        date = need("印发日期")
-        rows.append([("print", f"{org}\t{date}印发")])
-        D.add_banji_table(b.doc, ctx, rows, with_lines=True)
+        if lay == "红头" or has_print or fill:
+            org, date = need("印发机关"), need("印发日期")
+        else:  # 白头、纪要只有抄送时，印发机关不是必需要素，不记缺失
+            org = date = ""
+        if org or date:  # 原稿没有印发机关、印发日期的不写（不补版记）
+            rows.append([("print", f"{org}\t{date}印发" if date else org)])
+        if rows:
+            D.add_banji_table(b.doc, ctx, rows, with_lines=True)
 
     # 文档以表格结尾时补一个 1 磅高的空段，Word 要求表格后有段落
     last = [el for el in b.doc.element.body.iterchildren() if not el.tag.endswith("}sectPr")]
@@ -775,57 +810,95 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
     report["fields"] = {k: v for k, v in fields.items() if v not in (None, "", [])}
     report["fields"]["版式"] = lay
     report["summary"] = summarize(parsed)
-    if keep_text:
-        _verify_keep_text(b, main_lines, main_tables, attach_secs)
+    res_check, doc_texts = _text_check(b, main_lines, main_tables, attach_secs, parsed, meta, fields, deduped)
+    _finish_text_check(b, res_check, doc_texts, keep_text, report)
     return b.doc, report
 
 
-def _verify_keep_text(b: Builder, main_lines: Sequence[str], main_tables, attach_secs) -> None:
-    """keep_text 保存前核对：输入的每一行文字（去掉行首行尾空白）都能在文档段落中原样找到（标题分行时按相邻段落拼接），
-    已还原段首空格的行须逐字一致，表格单元格文字都在文档中；不一致则中止，不保存。"""
+# 版式信息中与要素无关的键（不是写进文档的文字）
+NON_TEXT_KEYS = ("版式", "套打", "套打版头高度", "联合行文", "印章", "三级标题加粗", "表格字体", "表格字号", "unit_fonts",
+                 "单位规定字体", "留占位")
+
+
+def _flat(value) -> List[str]:
+    if isinstance(value, dict):
+        return [x for v in value.values() for x in _flat(v)]
+    if isinstance(value, (list, tuple)):
+        return [x for v in value for x in _flat(v)]
+    return [str(value)] if value not in (None, "") else []
+
+
+def _supplied_texts(meta: dict) -> List[str]:
+    """版式信息中给出的要素文字（规范化后），正文里的同一行不再重复排出。"""
+    from gw_verify import norm
+    out: List[str] = []
+    for key, value in meta.items():
+        if key in NON_TEXT_KEYS or key in BRIEF_META_KEYS:
+            continue
+        for v in _flat(value):
+            out.append(norm(v))
+            if key in ("成文日期", "印发日期"):
+                out.append(norm(normalize_date(v)[0]))
+            if key == "主送机关":
+                out.append(norm(v.rstrip("：:")))
+    org, date = meta.get("印发机关"), meta.get("印发日期")
+    if org and date:
+        out.append(norm(f"{org}{normalize_date(str(date))[0]}印发"))
+    cc = meta.get("抄送")
+    if cc:
+        out.append(norm("抄送：" + "，".join(_flat(cc))) if isinstance(cc, list) else norm(str(cc)))
+    return [x for x in out if x]
+
+
+def _text_check(b: Builder, main_lines: Sequence[str], main_tables, attach_secs, parsed: Parsed, meta: dict,
+                fields: dict, deduped: Sequence[str]):
+    """核对文档全文与输入全文（正文各行、表格单元格、附件页，加版式信息中的要素）：双向、按顺序，规范化后逐字比对。"""
     from docx.oxml.ns import qn
     from docx.text.paragraph import Paragraph
-    texts = [Paragraph(p, b.doc).text for p in b.doc.element.body.iter(qn("w:p"))]
-    pool = [clean_line(t) for t in texts]
-    used = [False] * len(pool)
-    segs: List[str] = []
-    cells: List[str] = []
+    from gw_verify import compare_text, norm
+    doc_texts = [Paragraph(p, b.doc).text for p in b.doc.element.body.iter(qn("w:p"))]
+    inputs: List[str] = []
 
     def collect(lines, tables) -> None:
-        segs.extend(clean_line(x) for x in lines if clean_line(x) and clean_line(x) != TABLE_MARK)
-        for tb in tables:
-            cells.extend(c for row in [tb.header] + tb.rows for c in row if c)
-
-    def take(seg: str) -> bool:
-        for j in range(len(pool)):
-            if used[j]:
-                continue
-            acc = ""
-            for k in range(j, min(len(pool), j + 6)):
-                if used[k]:
-                    break
-                acc += pool[k]
-                if acc == seg:
-                    for m in range(j, k + 1):
-                        used[m] = True
-                    return True
-                if len(acc) >= len(seg):
-                    break
-        return False
+        queue = list(tables)
+        for x in lines:
+            c = clean_line(x)
+            if c == TABLE_MARK:
+                tb = queue.pop(0) if queue else None
+                if tb is not None:
+                    inputs.extend(cell for row in [tb.header] + tb.rows for cell in row if cell)
+            elif c:
+                inputs.append(c)
 
     collect(main_lines, main_tables)
+    labels: List[str] = []
     for sec in attach_secs:
+        labels.append(sec.label)
         if sec.title:
-            segs.append(sec.title)
+            inputs.append(sec.title)
         body, tbs, _ = extract_pipe_tables(sec.lines)
         collect(body, tbs)
-    missing = [seg for seg in segs if not take(seg)]
-    flat = re.sub(r"\s+", "", "".join(texts))
-    missing += [c for c in cells if re.sub(r"\s+", "", c) not in flat]
-    missing += [r for r in b.restored if r not in texts]
-    if missing:
-        raise BuildError("--keep-text 模式下核对发现文档文字与输入不一致，已中止，未保存。不一致的文字："
-                         + "；".join(m.strip()[:30] for m in missing[:5]))
+    for text in deduped:  # 与版式信息重复、已只排一次的行，不再计入输入
+        for k, x in enumerate(inputs):
+            if norm(x) == norm(text):
+                del inputs[k]
+                break
+    allowed = [v for key, val in {**{k: v for k, v in fields.items()}, **{k: v for k, v in meta.items()
+               if k not in NON_TEXT_KEYS}}.items() if key != "版式" for v in _flat(val)] + labels
+    movable = [it.text for it in parsed.items if it.role in HEAD_ROLES + ("cc", "print", "banji_main")]
+    return compare_text(doc_texts, inputs, allowed=allowed, movable=movable), doc_texts
+
+
+def _finish_text_check(b: Builder, check_result, doc_texts: Sequence[str], keep_text: bool, report: dict) -> None:
+    """写入报告的“文字核对”；keep_text 时不一致就中止，不保存。"""
+    problems = list(check_result.problems)
+    if keep_text:
+        problems += [f"少字：已还原段首空格的行“{r.strip()[:30]}”与文档不一致" for r in b.restored if r not in doc_texts]
+    report["text_check"] = {"keep_text": keep_text, "ok": not problems, "chars": check_result.chars,
+                            "problems": problems}
+    if keep_text and problems:
+        raise BuildError("--keep-text 模式下核对发现文档文字与输入不一致，已中止，未保存。不一致处："
+                         + "；".join(problems[:5]) + (f"；……共 {len(problems)} 处" if len(problems) > 5 else ""))
 
 
 def _order_signoff(b: Builder, fields: Dict[str, object], sigs: List[str], date_text: str, need, report: dict):
@@ -890,6 +963,7 @@ def _build_attach_pages(b: Builder, secs, titles: List[str], meta: dict, report:
         raws = [x for x in body_lines if clean_line(x)]
         items = [clean_line(x) for x in raws]
         prev = None
+        att_levels, _ = heading_levels(items)
         for k, text in enumerate(items):
             if text == TABLE_MARK:
                 if prev == "table":
@@ -903,7 +977,7 @@ def _build_attach_pages(b: Builder, secs, titles: List[str], meta: dict, report:
                 b.para("table_caption", text)
                 prev = "table_caption"
                 continue
-            level = is_heading(text)
+            level = att_levels.get(k) if att_levels else is_heading(text)
             b.para(level or "body", text, split=heading_split(text) if level else -1, raw=raws[k])
             prev = level or "body"
         if not items:
@@ -916,7 +990,7 @@ def _build_brief(b: Builder, parsed: Parsed, fields: Dict[str, object], meta: di
     """简报：报头（简报名称、期号行、编印单位和日期行、红色分隔线）、各篇标题与正文、报尾。
 
     简报无国家标准格式，参数取 gbt9704_params.json 的 elements.brief（常见做法，各单位以往期样式为准）。
-    报头要素缺失写【待补】；报尾（报、送、发、抄送、印数）有就排，没有就不排。
+    报头要素缺失不写（留占位模式才写【待补】），记入缺失要素；报尾（报、送、发、抄送、印数）有就排，没有就不排。
     """
     D, ctx = b.D, b.ctx
     el = ctx.el("brief")
@@ -951,13 +1025,14 @@ def _build_brief(b: Builder, parsed: Parsed, fields: Dict[str, object], meta: di
 
     # 编印行：左编印单位、右日期，同一行；行下红色分隔线
     editor = str(fields["编印单位"]) if fields.get("编印单位") else need("编印单位")
-    if not editor.startswith("【待补") and not editor.endswith(("编", "编印", "编发")):
+    if editor and not editor.startswith("【待补") and not editor.endswith(("编", "编印", "编发")):
         editor += "编"
     date = str(fields["印发日期"]) if fields.get("印发日期") else need("印发日期")
     if text_width_chars(editor) + text_width_chars(date) + 1 > float(D.pv(ctx.params, "grid.chars_per_line")):
         report["warnings"].append("编印单位较长，与日期排不进同一行，日期会被挤到下一行；请缩短或改用简称")
     p = b.doc.add_paragraph()
-    D.format_run(p.add_run(editor + "\t" + date), font=ctx.font(el["editor_font"]), size=ctx.size(el["editor_size"]))
+    D.format_run(p.add_run(editor + ("\t" + date if date else "")), font=ctx.font(el["editor_font"]),
+                 size=ctx.size(el["editor_size"]))
     D.set_para(p, align="left", line_exact=ctx.line_pt, before_pt=float(el["editor_before_pt"]), after_pt=0,
                snap=False, keep_next=True)
     D.set_tabs(p, [(ctx.text_width_twips, "right")])
@@ -1073,13 +1148,22 @@ def render_text(report: dict) -> str:
     status = F.status_line(report)
     if status:
         out.append("   本机检测：" + status)
-    sections = [("待补事项", report.get("placeholders", [])),
+    sections = [("缺失要素（原稿没有，未写入文档，由用户决定）", report.get("missing", [])),
+                ("待补事项", report.get("placeholders", [])),
                 ("文字类问题（按 --keep-text 未改动，需人工处理）", report.get("text_issues", [])), ("提示", report.get("warnings", []) + report.get("notes", []))]
     for head, items in sections:
         if items:
             out.append(f"{next(nums)}、{head}")
             for i, w in enumerate(items, start=1):
                 out.append(f"{i}. {w}")
+    tc = report.get("text_check")
+    if tc:
+        if tc["keep_text"] and tc["ok"]:
+            out.append(f"文字核对：输入全文与文档全文已双向、按顺序规范化比对，逐字一致（{tc['chars']} 字，无多字、少字、乱序、重复）")
+        elif tc["ok"]:
+            out.append("文字核对：未加 --keep-text，只做了允许的格式性处理；与输入逐字比对未发现差异（不代表保证逐字一致，内容别动请加 --keep-text）")
+        else:
+            out.append("文字核对：与输入有差异（含允许的格式性处理，如补冒号、加括号、日期写法），不得声称逐字一致：" + "；".join(tc["problems"][:6]))
     chk = report.get("check")
     if chk:
         s = chk["summary"]
@@ -1110,6 +1194,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--keep-text", action="store_true",
                         help="内容别动：不补主送机关冒号、不给附注加括号、不去段首空格、不改任何文字，只排版；"
                              "文字类问题只在报告中列出；保存前核对文字与输入一致，不一致则中止")
+    parser.add_argument("--placeholders", action="store_true",
+                        help="缺的要素写【待补】占位（只在用户明确要求“缺的要素帮我留出位置”时用）；默认不写，只在报告“缺失要素”中列出")
     parser.add_argument("--no-check", action="store_true", help="生成后不自动回读检查")
     parser.add_argument("--allow", metavar="DOCX-050", help="回读检查时按本单位制度保留的检查项（逗号分隔），命中降为 P2")
     parser.add_argument("--unit-fonts", metavar="角色=字体名,…", help=F.UNIT_FONTS_HELP + "（优先于版式信息中的 unit_fonts）")
@@ -1146,7 +1232,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 2
     try:
         doc, report = build(lines, meta, layout=args.layout, unit_fonts=args.unit_fonts,
-                            overprint=True if args.overprint else None, keep_text=args.keep_text)
+                            overprint=True if args.overprint else None, keep_text=args.keep_text,
+                            placeholders=True if args.placeholders else None)
     except BuildError as exc:
         print(f"错误：{exc}")
         return 2

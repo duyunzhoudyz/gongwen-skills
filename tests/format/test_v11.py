@@ -264,9 +264,14 @@ class OrderTest(unittest.TestCase):
         self.assertIn(("DOCX-124", "P1"), ids(r))
 
     def test_missing_lingno_placeholder_and_numeric(self):
-        path, report = build_text("现予公布。\n\n市长　张某\n\n2026年10月1日", "v11-命令-缺令号.docx", meta=ORDER_META)
+        path, report = build_text("现予公布。\n\n市长　张某\n\n2026年10月1日", "v11-命令-缺令号.docx",
+                                  meta=dict(ORDER_META, 留占位="是"))
         self.assertTrue(any("令号" in s for s in report["placeholders"]))
         self.assertIn("【待补：令号】", "".join(p.text for p in Document(str(path)).paragraphs))
+        # 默认不写占位：令号只在缺失要素里列出
+        path, report = build_text("现予公布。\n\n市长　张某\n\n2026年10月1日", "v11-命令-缺令号-默认.docx", meta=ORDER_META)
+        self.assertTrue(any("令号" in s for s in report["missing"]), report["missing"])
+        self.assertNotIn("待补", "".join(p.text for p in Document(str(path)).paragraphs))
         path, _ = build_text("现予公布。\n\n市长　张某\n\n2026年10月1日", "v11-命令-数字令号.docx", meta=dict(ORDER_META, 令号="7"))
         self.assertIn("第7号", [p.text for p in Document(str(path)).paragraphs])
 
@@ -297,7 +302,7 @@ class AttachmentTest(unittest.TestCase):
     """附件另面编排（7.3.7）。"""
 
     def setUp(self):
-        self.path, self.report = build_text(ATTACH_TEXT, "v11-附件.docx", meta=RED_META)
+        self.path, self.report = build_text(ATTACH_TEXT, "v11-附件.docx", meta=dict(RED_META, 留占位="是"))
         self.doc = Document(str(self.path))
 
     def test_structure(self):
@@ -376,11 +381,11 @@ class AttachmentTest(unittest.TestCase):
 
     def test_explicit_description_mismatch_warns(self):
         text = ATTACH_TEXT.replace("请认真贯彻落实。", "请认真贯彻落实。\n\n附件：1. 别的名称\n2. 整改通知书（样式）")
-        _, report = build_text(text, "v11-附件-说明不符生成.docx", meta=RED_META)
+        _, report = build_text(text, "v11-附件-说明不符生成.docx", meta=dict(RED_META, 留占位="是"))
         self.assertTrue(any("附件说明与附件页不对应" in w for w in report["warnings"]), report["warnings"])
 
     def test_single_attachment_no_number_and_missing_title(self):
-        path, report = build_text(NOTICE + "\n\n【附件】\n\n内容", "v11-附件-单个.docx", meta=RED_META)
+        path, report = build_text(NOTICE + "\n\n【附件】\n\n内容", "v11-附件-单个.docx", meta=dict(RED_META, 留占位="是"))
         self.assertTrue(any("附件标题" in s for s in report["placeholders"]), report["placeholders"])
         self.assertIn("附件", [p.text for p in Document(str(path)).paragraphs])
         self.assertFalse(has(check_docx.check_document(path, layout="红头"), "DOCX-130"))

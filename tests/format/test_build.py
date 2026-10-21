@@ -220,13 +220,15 @@ class BuildBehaviourTest(unittest.TestCase):
         _p, r2 = build_text("某科室2026年工作总结\n\n今年完成三项工作。", "默认-总结.docx")
         self.assertEqual(r2["layout"], "材料")
 
-    def test_placeholders_not_invented(self):
+    def test_placeholders_only_when_asked(self):
+        """用户明确要求“缺的要素帮我留出位置”（版式信息“留占位”为“是”）时才写【待补】占位，不编造。"""
         path, report = build_text((FILES / "请示-缺落款-正文.txt").read_text(encoding="utf-8"), "缺落款.docx",
-                                  meta={"版式": "红头", "发文机关标志": "某街道办事处文件"})
+                                  meta={"版式": "红头", "发文机关标志": "某街道办事处文件", "留占位": "是"})
         text = "\n".join(p.text for p in Document(str(path)).paragraphs)
         for mark in ("【待补：发文字号】", "【待补：签发人姓名】", "【待补：发文机关署名】", "【待补：成文日期】"):
             self.assertIn(mark, text)
         self.assertTrue(report["placeholders"])
+        self.assertEqual(report["missing"], [])
         result = check_docx.check_document(path, layout="红头")
         self.assertEqual(result["summary"]["P0"], 0)
         self.assertTrue(any(i["id"] == "DOCX-080" for i in result["issues"]))

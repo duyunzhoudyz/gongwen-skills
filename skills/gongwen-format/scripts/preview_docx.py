@@ -101,6 +101,53 @@ def to_png(pdf: Path, out_dir: Path, dpi: int = 80) -> List[Path]:
     return pages
 
 
+PAGE_NO_RE = re.compile(r"^[—-]\s*[0-9]+\s*[—-]$")
+DATE_LINE_RE = re.compile(r"^\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日$")
+TAIL_LINE_RE = re.compile(r"^(抄送|附件)\s*[：:]|^\d{1,2}\s*[.．、]\s*\S|^[（(].*[）)]$|印发$")
+
+
+def analyze_pages(pdf: Path, bottom_mm: float = 35.0) -> List[str]:
+    """读 PDF 逐页文字，给出版面事实（交付说明只能写这里核对到的）：落款是否与正文同页、首页下方留白。没有 pymupdf 时返回空列表。
+
+    落款孤页：末页（超过一页时）去掉页码、成文日期、单位名称短行、附注、抄送、印发行、附件说明后，没有正文行了。
+    首页留白：多页文档的首页，正文最后一行到版心下边缘（页下边距 bottom_mm）的距离大于 60 mm。"""
+    try:
+        import pymupdf
+    except ImportError:
+        try:
+            import fitz as pymupdf
+        except ImportError:
+            return []
+    facts: List[str] = []
+    doc = pymupdf.open(str(pdf))
+    try:
+        pages = []
+        for page in doc:
+            limit = page.rect.height - bottom_mm * 72 / 25.4
+            blocks = [b for b in page.get_text("blocks") if b[3] <= limit + 2 and b[4].strip()]
+            lines = [ln.strip() for b in blocks for ln in b[4].split("\n") if ln.strip()]
+            pages.append((lines, max([b[3] for b in blocks], default=0.0), limit))
+    finally:
+        doc.close()
+    if not pages:
+        return facts
+    facts.append(f"共 {len(pages)} 页")
+    if len(pages) > 1:
+        lines = [ln for ln in pages[-1][0] if not PAGE_NO_RE.match(ln)]
+        body = [ln for ln in lines if not (DATE_LINE_RE.match(ln.replace(" ", "")) or TAIL_LINE_RE.match(ln)
+                                           or (len(ln) <= 20 and not any(ch in ln for ch in "。，；：！？、")))]
+        has_date = any(DATE_LINE_RE.match(ln.replace(" ", "")) for ln in lines)
+        if has_date and not body:
+            facts.append("末页只有落款（署名、成文日期，可能连同附件说明、版记），落款与正文最后一段不在同一页，需要调整")
+        elif has_date:
+            facts.append("落款与正文最后一段在同一页（末页）")
+        first_bottom, limit = pages[0][1], pages[0][2]
+        gap_mm = (limit - first_bottom) * 25.4 / 72
+        if gap_mm > 60:
+            facts.append(f"首页正文下方留白约 {gap_mm:.0f} mm（页面其余部分被后移的段落占用），请核对是否合适")
+    return facts
+
+
 def check_fonts(unit_fonts=None) -> int:
     """字体严格模式：本机标准字体齐全时返回 0；缺字体或无法检测时输出缺失清单和安装引导，返回 3（拒绝渲染）。
 
@@ -163,6 +210,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 2
     pages = to_png(pdf, out_dir, dpi=max(30, min(args.dpi, 300)))
     print(f"PDF：{pdf}")
+    try:
+        facts = analyze_pages(pdf)
+    except Exception:  # noqa: BLE001 版面核对只是附加信息，PDF 读不了时不影响预览
+        facts = []
+    for fact in facts:
+        print(f"版面核对：{fact}")
     if pages:
         print(f"逐页图片 {len(pages)} 张：{out_dir}")
     else:
