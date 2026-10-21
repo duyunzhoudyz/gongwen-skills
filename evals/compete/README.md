@@ -130,3 +130,7 @@ python evals/compete/aggregate.py --bench <评测目录> --out <结果.json> --t
 判定口径：字体名必须与标准中文名完全一致（“仿宋”“FangSong”“方正仿宋_GBK”等不合规），仅 `FangSong_GB2312`、`KaiTi_GB2312`、`SimHei`、`SimSun`、`FZXiaoBiaoSong-B05S` 五个同一字体的系统别名默认视为等同（`--strict-font-names` 关闭）；版式（红头下行、上行、信函、纪要、普通材料、讲话）不同，适用的项不同；信函版式不能自动识别，须用 `--layout` 指定。F 题的版式优先取 `task.json` 的 `layout` 字段，缺失时按题号映射，F06、F07 按 `reference/_原文.txt` 的内容判断。
 
 审计量的是文件结构，遇到少见的画线、定位写法可能漏判（版记分隔线、红色分隔线最常见），所以评审员同时看渲染图；渲染机没有安装标准公文字体，LibreOffice 会用别的字体代替显示，字体是否规范只看审计结果里的字体名。
+
+## 八、运行注意：隔离会话记忆
+
+Claude Code 会把会话的项目记忆（MEMORY.md）注入子智能体。compete-v1 中，记忆里的“字体不降级”规则曾让一个竞品的执行子智能体主动改变行为（见 `evals/results/compete-v1-report.md` 局限 6）。运行执行和评审前，先把项目记忆中涉及本项目规则的条目临时移出索引，全部评审结束后再恢复；运行后用关键词扫描 `_回复.md`、`_过程.md`，确认没有引用本项目的规则。
