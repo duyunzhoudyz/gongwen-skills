@@ -178,10 +178,34 @@ def apply_role(paragraph, role: str, ctx: D.Ctx, *, split: int = -1, black: bool
         changes |= _font_runs(paragraph, ctx, el["font"], el["size"], start=0, end=name_start, black=False)
         if name_start < len(text):
             changes |= _font_runs(paragraph, ctx, sg["name_font"], sg["size"], start=name_start, black=False)
+    elif role == "lingno":
+        # 命令（令）格式的令号：居中，三号仿宋（10.2）
+        el = ctx.el("order")
+        para(align="center", line_exact=line, before_pt=0, after_pt=0, snap=True)
+        changes |= _font_runs(paragraph, ctx, el["number_font"], el["number_size"], black=black)
+    elif role == "attach_label":
+        # 附件另面编排的“附件”“附件1”：三号黑体，顶格（7.3.7）
+        el = ctx.el("attach_page")
+        para(align="left", line_exact=line, before_pt=0, after_pt=0, snap=True, keep_next=True)
+        changes |= _font_runs(paragraph, ctx, el["label_font"], el["label_size"], bold=False, black=black)
     elif role in ("cc", "print", "banji_main", "brief_foot"):
         el = ctx.el("banji")
         changes |= _font_runs(paragraph, ctx, el["font"], el["size"], black=black)
     return changes
+
+
+def ensure_upward_docno_indent(paragraph, doc, ctx: D.Ctx) -> bool:
+    """上行文发文字号居左空一字（7.2.5）：行首空白和左缩进合计不足一字时，补足左缩进；不改文字。
+    居中的改为左对齐、左缩进一字。返回是否有改动。"""
+    need = float(ctx.el("docno")["left_chars_upward"])
+    have = D.leading_offset_chars(paragraph, doc)
+    centered = D.para_align(paragraph, doc) in ("center", "right") and not paragraph.text.startswith("\t")
+    if have >= need - 0.1 and not centered:
+        return False
+    left = D.para_left_chars(paragraph, doc)
+    new_left = need if centered else left + (need - have)
+    return D.set_para(paragraph, align="left", left=max(0.0, new_left), reset_indent=True, line_exact=ctx.line_pt,
+                      before_pt=0, after_pt=0)
 
 
 def layout_signature_block(sig_paras: Sequence, date_para, ctx: D.Ctx, *, seal: bool,

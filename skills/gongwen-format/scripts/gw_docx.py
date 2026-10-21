@@ -259,7 +259,8 @@ def set_para(paragraph, *, align: Optional[str] = None, char_pt: float = 16.0,
              before_pt: Optional[float] = None, after_pt: Optional[float] = None,
              outline: Optional[int] = None, snap: Optional[bool] = None,
              reset_indent: bool = True, chars: bool = True,
-             keep_next: Optional[bool] = None, keep_lines: Optional[bool] = None) -> bool:
+             keep_next: Optional[bool] = None, keep_lines: Optional[bool] = None,
+             page_break_before: Optional[bool] = None) -> bool:
     """设置段落格式（缩进单位为字）。返回是否有变化。
 
     chars=True 时同时写 *Chars（按字符网格）和 twips 两套属性；字号与正文不同的段落
@@ -308,7 +309,7 @@ def set_para(paragraph, *, align: Optional[str] = None, char_pt: float = 16.0,
         changed |= set_attrs(sp, attrs)
     if outline is not None:
         changed |= set_attrs(get_or_add(ppr, "outlineLvl", PPR_ORDER), {"val": str(outline)})
-    for tag, flag in (("keepNext", keep_next), ("keepLines", keep_lines)):
+    for tag, flag in (("keepNext", keep_next), ("keepLines", keep_lines), ("pageBreakBefore", page_break_before)):
         if flag is None:
             continue
         el = get_child(ppr, tag)
@@ -661,8 +662,131 @@ def add_body_table(doc, ctx: Ctx, header: Sequence[str], rows: Sequence[Sequence
     return table
 
 
+# 本工具生成的版头、落款表格用 tblCaption 作标记，回读时据此识别，不当作正文表格或版记
+JOINT_HEAD_MARK = "gw:联合行文版头"
+JOINT_SEAL_MARK = "gw:联署署名"
+
+
+def table_mark(tbl_el) -> Optional[str]:
+    tblpr = tbl_el.find(qn("w:tblPr"))
+    cap = tblpr.find(qn("w:tblCaption")) if tblpr is not None else None
+    return cap.get(qn("w:val")) if cap is not None else None
+
+
+def is_frame_table(tbl_el) -> bool:
+    """联合行文版头表格、联署署名表格（本工具生成，不是正文表格，也不是版记）。"""
+    return table_mark(tbl_el) in (JOINT_HEAD_MARK, JOINT_SEAL_MARK)
+
+
+def _plain_table(doc, ctx: Ctx, widths: Sequence[int], rows: int, mark: str):
+    """无框线、定宽、居中的版面表格，标记为 mark。单元格左右边距为 0。"""
+    table = doc.add_table(rows=rows, cols=len(widths))
+    tbl = table._tbl
+    tblpr = tbl.tblPr
+    for child in list(tblpr):
+        if _local(child.tag) in ("tblStyle", "tblW", "tblLook", "tblBorders", "jc", "tblLayout", "tblCellMar", "tblInd"):
+            tblpr.remove(child)
+    set_attrs(get_or_add(tblpr, "tblW", TBLPR_ORDER), {"w": str(sum(widths)), "type": "dxa"})
+    set_attrs(get_or_add(tblpr, "jc", TBLPR_ORDER), {"val": "center"})
+    borders = get_or_add(tblpr, "tblBorders", TBLPR_ORDER)
+    for tag in ("top", "left", "bottom", "right", "insideH", "insideV"):
+        borders.append(_border_el(tag, "nil"))
+    set_attrs(get_or_add(tblpr, "tblLayout", TBLPR_ORDER), {"type": "fixed"})
+    mar = get_or_add(tblpr, "tblCellMar", TBLPR_ORDER)
+    for tag in ("left", "right"):
+        el = OxmlElement(f"w:{tag}")
+        el.set(qn("w:w"), "0")
+        el.set(qn("w:type"), "dxa")
+        mar.append(el)
+    set_attrs(get_or_add(tblpr, "tblCaption", TBLPR_ORDER), {"val": mark})
+    for col, w in zip(tbl.tblGrid.findall(qn("w:gridCol")), widths):
+        col.set(qn("w:w"), str(w))
+    for row in table.rows:
+        row._tr.get_or_add_trPr().append(OxmlElement("w:cantSplit"))
+        for cell, w in zip(row.cells, widths):
+            tcpr = cell._tc.get_or_add_tcPr()
+            tcw = tcpr.find(qn("w:tcW"))
+            if tcw is None:
+                tcw = OxmlElement("w:tcW")
+                tcpr.insert(0, tcw)
+            tcw.set(qn("w:w"), str(w))
+            tcw.set(qn("w:type"), "dxa")
+    return table
+
+
+def joint_header_layout(ctx: Ctx, names: Sequence[str]) -> Tuple[float, int, int]:
+    """联合行文版头：返回 (字号磅, 名称列宽 twips, “文件”列宽 twips)。
+
+    名称列宽按最长名称的字数乘字号，“文件”列宽为两个字加半字间距；两列合计不超过版心宽的 fill_ratio。
+    """
+    el = ctx.el("joint")
+    slack = float(el["name_slack"])
+    longest = max((_text_width(n) for n in names), default=1.0) * slack
+    units = longest + 2 + float(el["wen_gap_ratio"])
+    avail = ctx.text_width_twips / 20 * float(el["fill_ratio"])
+    cap = float(el["multi_name_size_max_pt"] if len(names) >= 3 else el["name_size_max_pt"])
+    size = max(float(el["name_size_min_pt"]), min(cap, avail / max(units, 1.0)))
+    size = int(size * 2) / 2
+    left = int(round(longest * size * 20))
+    right = int(round((2 + float(el["wen_gap_ratio"])) * size * 20))
+    return size, left, right
+
+
+def add_joint_header(doc, ctx: Ctx, names: Sequence[str], *, wen: str = "文件", red: Optional[str] = None):
+    """联合行文版头（7.2.4）：联署机关名称自上而下排列（主办机关在前），“文件”二字置于名称右侧，
+    并以联署机关名称为准上下居中。用两列无框线表格实现：左列名称，右列“文件”（单元格垂直居中）。"""
+    el = ctx.el("joint")
+    iss = ctx.el("issuer")
+    size, left_w, right_w = joint_header_layout(ctx, names)
+    table = _plain_table(doc, ctx, [left_w, right_w], 1, JOINT_HEAD_MARK)
+    font = ctx.font(iss["font"])
+    line = round(size * float(el["line_ratio"]), 1)
+    cell_l, cell_r = table.rows[0].cells
+    for k, name in enumerate(names):
+        para = cell_l.paragraphs[0] if k == 0 else cell_l.add_paragraph()
+        set_para(para, align="center", char_pt=size, line_exact=line, before_pt=0, after_pt=0, snap=False, chars=False)
+        format_run(para.add_run(name), font=font, size=size, color=red)
+    tcpr = cell_r._tc.get_or_add_tcPr()
+    valign = OxmlElement("w:vAlign")
+    valign.set(qn("w:val"), "center")
+    tcpr.append(valign)
+    para = cell_r.paragraphs[0]
+    set_para(para, align="center", char_pt=size, left=float(el["wen_gap_ratio"]), line_exact=line, before_pt=0,
+             after_pt=0, snap=False, chars=False)
+    format_run(para.add_run(wen), font=font, size=size, color=red)
+    return table
+
+
+def joint_seal_columns(ctx: Ctx, count: int) -> int:
+    """联署署名每行并排几个：不超过 seal_cols_max，使每格宽不小于印章直径（印章互不相交）。"""
+    el = ctx.el("joint")
+    return max(1, min(count, int(el["seal_cols_max"])))
+
+
+def add_joint_signatures(doc, ctx: Ctx, names: Sequence[str]):
+    """联合行文加盖印章（7.3.5.1）：署名按机关顺序排列，每个机关名称占一格并居中，印章一一对应下压署名。
+    每行最多并排 seal_cols_max 个，每格宽不小于印章直径，印章互不相交，两端不超出版心。"""
+    sg = ctx.el("signature_seal")
+    k = joint_seal_columns(ctx, len(names))
+    rows = -(-len(names) // k)
+    col_w = ctx.text_width_twips // k
+    table = _plain_table(doc, ctx, [col_w] * k, rows, JOINT_SEAL_MARK)
+    font = ctx.font(sg["font"])
+    size = ctx.size(sg["size"])
+    for idx in range(rows * k):
+        cell = table.rows[idx // k].cells[idx % k]
+        para = cell.paragraphs[0]
+        set_para(para, align="center", char_pt=size, line_exact=ctx.line_pt, before_pt=0, after_pt=0, snap=False,
+                 chars=False, keep_next=True)
+        if idx < len(names):
+            format_run(para.add_run(names[idx]), font=font, size=size)
+    return table
+
+
 def is_banji_table(tbl_el) -> bool:
     """版记表格：浮动定位（本工具生成的版记），或含“抄送”、以“印发”结尾。"""
+    if is_frame_table(tbl_el):
+        return False
     tblpr = tbl_el.find(qn("w:tblPr"))
     if tblpr is not None and tblpr.find(qn("w:tblpPr")) is not None:
         return True
@@ -681,7 +805,7 @@ def body_tables(doc) -> List[Tuple[int, object]]:
         tag = _local(child.tag)
         if tag == "p":
             count += 1
-        elif tag == "tbl" and not is_banji_table(child):
+        elif tag == "tbl" and not is_banji_table(child) and not is_frame_table(child):
             out.append((count - 1, child))
     return out
 
@@ -878,6 +1002,37 @@ def para_left_chars(paragraph, doc, char_pt: float = 16.0) -> float:
                 return int(v) / (char_pt * 20)
         return None
     return effective_ppr(paragraph, doc, getter) or 0.0
+
+
+def para_tab_stops(paragraph, doc) -> List[Tuple[str, int]]:
+    """段落直接设置的制表位：[(类型, 位置 twips)]，按位置排序。"""
+    ppr = paragraph._p.pPr
+    tabs = ppr.find(qn("w:tabs")) if ppr is not None else None
+    out: List[Tuple[str, int]] = []
+    if tabs is not None:
+        for t in tabs.findall(qn("w:tab")):
+            try:
+                out.append((t.get(qn("w:val")) or "left", int(t.get(qn("w:pos")))))
+            except (TypeError, ValueError):
+                continue
+    return sorted(out, key=lambda x: x[1])
+
+
+def leading_offset_chars(paragraph, doc, char_pt: float = 16.0) -> float:
+    """段落第一个字距版心左边缘的字数：左缩进、首行缩进，加上行首的制表符或空格占位。
+
+    行首是制表符时取其后第一个左对齐制表位（没有设置时按 Word 默认 420 twips 的整数倍）；
+    半角空格按 0.5 字、全角空格按 1 字计。
+    """
+    unit = char_pt * 20
+    base = para_left_chars(paragraph, doc, char_pt) + max(0.0, para_first_line_chars(paragraph, doc, char_pt) or 0.0)
+    text = paragraph.text
+    if text.startswith("\t"):
+        here = base * unit
+        stops = [pos for kind, pos in para_tab_stops(paragraph, doc) if kind in ("left", "start", "num") and pos > here + 1]
+        pos = min(stops) if stops else (int(here // 420) + 1) * 420
+        return pos / unit
+    return base + sum(1.0 if ch == "　" else 0.5 for ch in text[:len(text) - len(text.lstrip(" 　"))])
 
 
 def para_line_spacing(paragraph, doc) -> Tuple[Optional[str], Optional[float]]:

@@ -3,7 +3,7 @@
 """按 GB/T 9704-2012 修复已有 docx 的格式。
 
 按段落文本识别角色（标题、主送、各级层次标题、正文、附件说明、署名、日期等），统一页面设置、
-字体字号、行距、缩进和页码。只改格式，不改文字（段首用于缩进的空格除外）。
+字体字号、行距、缩进和页码。只改格式，不改文字（段首用于缩进的空格除外；加 --keep-text 时连这类空格也不动）。
 输出新文件，不修改原文件；同时输出一份修复报告（Markdown），并对新文件运行 check_docx.py。
 
 退出码：0 成功；2 输入错误或缺少依赖。
@@ -19,13 +19,14 @@ from typing import Dict, List, Optional, Sequence
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import gw_fonts as F  # noqa: E402
-from gw_layout import (BODY_ROLES, ROLE_LABELS, doc_kind, draft_note_index, has_brief_header,  # noqa: E402
-                       parse_brief, parse_lines, summarize)
+from gw_layout import (ATTACH_MARK_RE, BODY_ROLES, ROLE_LABELS, UPWARD_TYPES, doc_kind,  # noqa: E402
+                       draft_note_index, has_brief_header, heading_split, is_heading, parse_brief, parse_lines,
+                       summarize)
 
 # 两个非空段落之间应保留的空行数（键为前一段角色、后一段角色；None 表示任意）
 GAP_RULES = [
     (("issuer", None), 2), (("docno", None), 2), (("title", None), 1), (("subtitle", None), 1),
-    (("title_note", None), 1), (("brief_editor", None), 1), ((None, "attachment"), 1), ((None, "signature"), -1), ((None, "date"), -1),
+    (("title_note", None), 1), (("lingno", None), 2), (("brief_editor", None), 1), ((None, "attachment"), 1), ((None, "signature"), -1), ((None, "date"), -1),
 ]
 
 
@@ -38,6 +39,11 @@ def _gap_wanted(prev_role: Optional[str], next_role: Optional[str], seal: bool) 
     return 0
 
 
+# 要改文字才能消除的检查项（标点、数字、发文字号写法、序数写法、附注括号、段首空格缩进、残留标记等）：
+# --keep-text 时只在报告中列出，不改
+TEXT_ISSUE_IDS = {"DOCX-014", "DOCX-033", "DOCX-041", "DOCX-042", "DOCX-043", "DOCX-044", "DOCX-045", "DOCX-050",
+                  "DOCX-051", "DOCX-052", "DOCX-053", "DOCX-054", "DOCX-060", "DOCX-061", "DOCX-080", "DOCX-082",
+                  "DOCX-090"}
 GAP_BEFORE_ATTENDANCE = ("body", "h1", "h2", "h3", "h4", "attachment")
 
 
@@ -88,26 +94,37 @@ def _describe_page_change(before: Dict[str, str], after: Dict[str, str]) -> List
     return out
 
 
+def _all_texts(doc) -> List[str]:
+    """正文段落和表格单元格的全部文字（按文档顺序），用于核对“文字没有被改动”。"""
+    import gw_docx as D
+    return [p.text for p in D.iter_all_paragraphs(doc)]
+
+
 def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None,
                  seal: Optional[bool] = None, installed: Optional[set] = None, params: Optional[dict] = None,
-                 unit_fonts=None) -> dict:
+                 unit_fonts=None, keep_text: bool = False) -> dict:
     """修复 src，保存到 dst（调用方保证 dst 不覆盖已有文件）。返回报告字典。
 
     字体严格模式：各角色一律改为标准字体名；installed（已安装字体名集合，空集合表示无法检测）只用于核对，
     缺字体时在报告中给出字体核对结果（font_status、missing_fonts、font_notice 等），不替代、不降级。
     unit_fonts：按单位规定指定标准字体（“仿宋=方正仿宋_GBK”字符串或 {角色: 字体名}），指定后该角色改为单位字体名，严格模式不变；
     角色或字体名不合法时抛 ValueError。
+    keep_text：不改任何文字（用户要求“内容别动”“一个字都别改”时用）。只调页面、字体字号、行距、缩进、页码；
+    段首用于缩进的空格也保留（该段首行缩进设为 0，缩进由空格承担）；标点、文字问题只在报告中列出。
+    保存前核对全部文字与原文件一致，不一致时抛 ValueError 且不保存。
     """
     import gw_docx as D
     from docx import Document
     from docx.oxml.ns import qn
-    from gw_format import apply_role, keep_signoff_together, layout_signature_block, strip_leading_spaces
+    from gw_format import (apply_role, ensure_upward_docno_indent, keep_signoff_together, layout_signature_block,
+                           strip_leading_spaces)
 
     params = params or D.load_params()
     params = F.apply_unit_fonts(params, F.parse_unit_fonts(unit_fonts, params))
     doc = Document(str(src))
+    before_texts = _all_texts(doc) if keep_text else []
     report: dict = {"input": str(src), "output": str(dst), "page": [], "roles": {}, "notes": [], "warnings": [],
-                    "untouched": []}
+                    "untouched": [], "keep_text": keep_text}
     method = ""
     if installed is None:
         installed, method = F.installed_fonts()
@@ -132,6 +149,12 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None,
         report["untouched"].append(f"第 {cut + 1} 段为【起草说明】，从该段起共 {len(paras) - cut} 段未排版；"
                                    "起草说明不是正文，成稿中应删除")
         paras, texts = paras[:cut], texts[:cut]
+    # 附件另面编排：首行只有“附件”“附件1”的段落起是附件页，主文识别到它之前为止，附件页另行调整
+    att_starts = [i for i, t in enumerate(texts) if ATTACH_MARK_RE.match(t.strip())]
+    att_paras, att_texts = [], []
+    if att_starts:
+        att_paras, att_texts = paras[att_starts[0]:], texts[att_starts[0]:]
+        paras, texts = paras[:att_starts[0]], texts[:att_starts[0]]
     # 正文表格（不含版记）在识别时作占位，表格上一行的表题按表题排，不当成署名或正文
     anchors = [a for a, _ in D.body_tables(doc) if cut is None or a < cut]
     red_flags = [D.para_is_red(p, doc) for p in paras]
@@ -149,7 +172,10 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None,
         elif is_letter:
             layout = "信函"
         elif parsed.find("issuer"):
-            layout = "纪要" if parsed.find("issuer")[0].text.endswith("纪要") else "红头"
+            layout = ("纪要" if parsed.find("issuer")[0].text.endswith("纪要")
+                      else "命令" if parsed.find("lingno") else "红头")
+        elif any(D.table_mark(t._tbl) == D.JOINT_HEAD_MARK for t in doc.tables):
+            layout = "红头"  # 联合行文版头在表格里，没有可识别的标志段
         else:
             layout = "白头" if kind == "法定" else "材料"
     is_letter = is_letter or layout == "信函"
@@ -171,22 +197,40 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None,
     role_of: Dict[int, str] = {}
     stats: Dict[str, Dict[str, int]] = {}
     stripped = 0
+    kept_space = 0
+
+    def _apply(p, role: str, split: int = -1):
+        """按角色设格式；keep_text 时段首空格保留，该段首行缩进设为 0（缩进由空格承担），不改文字。"""
+        nonlocal kept_space
+        changes = apply_role(p, role, ctx, split=split)
+        if keep_text and role in BODY_ROLES and p.text[:1] in (" ", "　", "\t"):
+            if D.set_para(p, reset_indent=True):
+                changes.add("段落格式")
+            kept_space += 1
+        return changes
+
     for it in parsed.items:
         if it.role == "table":
             continue  # 正文表格不调整（见下文“表格”）
         p = paras[it.src]
         role_of[it.src] = it.role
         # 发文字号行的行首制表符用于“居左空一字”，版头要素不删行首空白
-        if it.role not in ("docno", "signer", "issuer", "copy_no", "secret", "urgency", "brief_name", "brief_issue",
-                           "brief_editor") and strip_leading_spaces(p):
+        if not keep_text and it.role not in ("docno", "signer", "issuer", "copy_no", "secret", "urgency", "brief_name",
+                                             "brief_issue", "brief_editor") and strip_leading_spaces(p):
             stripped += 1
-        changes = apply_role(p, it.role, ctx, split=it.split)
+        changes = _apply(p, it.role, it.split)
+        if it.role == "docno" and layout == "红头" and doc_type in UPWARD_TYPES and ensure_upward_docno_indent(p, doc, ctx):
+            changes.add("段落格式")
+            report["notes"].append(f"{doc_type}属上行文，发文字号已设为居左空一字（7.2.5）：" + p.text.strip())
         bucket = stats.setdefault(it.role, {"段数": 0})
         bucket["段数"] += 1
         for c in changes:
             bucket[c] = bucket.get(c, 0) + 1
     if stripped:
         report["notes"].append(f"删除段首空格缩进 {stripped} 段，缩进改由“首行缩进 2 字符”实现")
+    if keep_text:
+        report["notes"].append("按 --keep-text：未改动任何文字（含段首空格、标点、数字、文字写法），只调整格式"
+                               + (f"；{kept_space} 段用空格缩进的，保留空格并把首行缩进设为 0，缩进仍由空格承担" if kept_space else ""))
 
     # 空行：结构性空行保留，其余压到 1 磅
     nonempty = [i for i in range(len(paras)) if not _is_empty(paras[i])]
@@ -248,7 +292,13 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None,
     sigs = [paras[it.src] for it in parsed.find("signature")]
     dates = parsed.find("date")
     date_p = paras[dates[0].src] if dates else None
-    if sigs or date_p is not None:
+    joint_seal = any(D.table_mark(t._tbl) == D.JOINT_SEAL_MARK for t in doc.tables)
+    if layout == "命令":
+        report["untouched"].append("命令（令）的签发人职务、签名章位置和成文日期（7.3.5.3）未调整；"
+                                   "需要按标准排时用 build_docx.py --layout 命令 重排")
+    elif joint_seal:
+        report["untouched"].append("联署署名表格和成文日期位置（7.3.5.1）未调整，请人工核对印章对应关系")
+    elif sigs or date_p is not None:
         first_idx = (parsed.find("signature") or dates)[0].src
         need = (2 if seal else 1) - empties_before(first_idx)
         per_para = layout_signature_block(sigs, date_p, ctx, seal=seal, before_lines=max(0, need))
@@ -267,11 +317,33 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None,
     for role, bucket in stats.items():
         report["roles"][ROLE_LABELS.get(role, role)] = bucket
 
+    # ---- 附件页（7.3.7）：标识三号黑体顶格并另页，标题居中，正文同主文 ----
+    if att_paras:
+        starts = [i for i, t in enumerate(att_texts) if ATTACH_MARK_RE.match(t.strip())]
+        for s, end in zip(starts, starts[1:] + [len(att_texts)]):
+            apply_role(att_paras[s], "attach_label", ctx)
+            D.set_para(att_paras[s], reset_indent=False, page_break_before=True)
+            j = s + 1
+            while j < end and not att_texts[j].strip():
+                j += 1
+            if j < end:
+                apply_role(att_paras[j], "title", ctx)
+            for k in range(j + 1, end):
+                t = att_texts[k].strip()
+                if not t:
+                    continue
+                if not keep_text:
+                    strip_leading_spaces(att_paras[k])
+                level = is_heading(t)
+                _apply(att_paras[k], level or "body", heading_split(t) if level else -1)
+        report["notes"].append(f"附件另面编排：{len(starts)} 个附件页的标识、标题、正文格式已按 7.3.7 调整；"
+                               "标识与标题之间要空一行，脚本不增删空行，请核对")
+
     # ---- 表格 ----
     other_tables = 0
     for table in doc.tables:
-        if table._tbl in after_cut:
-            continue  # 起草说明中的附表不处理
+        if table._tbl in after_cut or D.is_frame_table(table._tbl):
+            continue  # 起草说明中的附表、联合行文版头和联署署名表格不处理
         cells_text = "".join(c.text for row in table.rows for c in row.cells)
         if "抄送" in cells_text or cells_text.strip().endswith("印发") or (
                 layout == "简报" and D.is_banji_table(table._tbl)):
@@ -297,6 +369,8 @@ def fix_document(src: Path, dst: Path, *, layout: Optional[str] = None,
         report["untouched"].append("页眉中有内容，公文一般不用页眉，请确认是否删除（未自动删除）")
     report["stripped"] = stripped
     report["compressed"] = compressed
+    if keep_text and _all_texts(doc) != before_texts:
+        raise ValueError("--keep-text 模式下检测到文字被改动，已中止，未保存")
     dst.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(dst))
     return report
@@ -337,6 +411,12 @@ def render_report(report: dict) -> str:
         out += [f"- {n}" for n in report.get("untouched", []) + report.get("warnings", [])]
         out.append("")
     chk = report.get("check")
+    if report.get("keep_text") and chk:
+        text_ids = [it for it in chk["issues"] if it["id"] in TEXT_ISSUE_IDS]
+        out.append(f"## {next(nums)}、文字类问题（按 --keep-text 未改动，需人工处理）")
+        out += [f"- [{it['level']}] {it['message']}（{('第 %d 段' % it['line']) if it.get('line') else '全文'}："
+                f"{it['excerpt']}）建议：{it['suggestion']}" for it in text_ids] or ["- 未发现"]
+        out.append("")
     if chk:
         s = chk["summary"]
         out.append(f"## {next(nums)}、修复后检查")
@@ -357,7 +437,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("file", help="待修复的 .docx（不会被修改）")
     parser.add_argument("-o", "--output", help="输出路径；默认“原文件名-修复.docx”，已存在时加 -v2、-v3")
     parser.add_argument("--report", help="修复报告路径；默认与输出文件同名加“-修复报告.md”")
-    parser.add_argument("--layout", help="版式：红头、信函、纪要、白头、材料、简报；不写时自动判断")
+    parser.add_argument("--layout", help="版式：红头、信函、纪要、命令、白头、材料、简报；不写时自动判断")
+    parser.add_argument("--keep-text", action="store_true",
+                        help="不改任何文字：用户要求“内容别动”“一个字都别改”时用。只调页面、字体字号、行距、缩进、页码，"
+                             "段首空格、标点、文字问题只在报告中列出；保存前核对全部文字与原文件一致")
     parser.add_argument("--seal", choices=["是", "否"], help="署名是否按加盖印章排列；不写时法定公文按加盖处理")
     parser.add_argument("--json", action="store_true", help="以 JSON 输出报告")
     parser.add_argument("--allow", metavar="DOCX-050", help="修复后检查时按本单位制度保留的检查项（逗号分隔），命中降为 P2")
@@ -391,7 +474,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"错误：{exc}")
         return 2
     try:
-        report = fix_document(src, final, layout=args.layout, seal=seal, unit_fonts=unit_fonts)
+        report = fix_document(src, final, layout=args.layout, seal=seal, unit_fonts=unit_fonts,
+                              keep_text=args.keep_text)
     except Exception as exc:
         print(f"错误：无法处理 {src}：{exc}")
         return 2
