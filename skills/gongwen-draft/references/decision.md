@@ -95,6 +95,4 @@
 | 医院上会议题和专用文书 | gongwen-hospital（装有时） | 医院的通知、请示、函、签报归本 skill |
 | 致家长的一封信 | gongwen-k12（装有时） | 学校的请示、通知归本 skill |
 
-没装行业包的，这几行中的签报和通知由本 skill 按单位画像和通用写法处理，不拒绝。
-
-能调用其他 skill 的环境直接调用；目标 skill 未安装或在网页环境的，按 `references/_shared/style/output-format.md` 第四部分转交：给交接卡、“新开对话粘贴 dist/prompts/<skill>.md 继续”的说明和安装命令。
+没装行业包的，这几行中的签报和通知由本 skill 按单位画像和通用写法处理，不拒绝。转交方式见 SKILL.md 适用范围。

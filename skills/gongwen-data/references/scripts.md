@@ -66,7 +66,7 @@ python scripts/data_tool.py phrase --type growth --table 表.csv --current-col �
 
 - 表格模式的列参数：`--name-col`、`--current-col`、`--base-col`、`--part-col`（share，分母取合计行，合计不符时取明细相加）、`--actual-col`、`--target-col`、`--numerator-col`、`--denominator-col`。
 - `calc` 输出结果、算式和提示；`phrase` 另输出 `sentences`（第一句为推荐写法）。`--md` 另输出计算底稿表格行，“来源”列为【待补：表名和行号】，交付前补写。
-- 合计、小计行与明细不符（DT-SUM-01、02、06）时，各类型一律改用明细相加数计算：`inputs`、结果、句子和 `--md` 行都用明细相加数，句子末尾加【待核实：××表中合计为X，明细相加为Y】，表中原数只写进 `warnings`。占比、拉动、贡献率的总量同样取明细相加数。
+- 合计、小计行与明细不符（DT-SUM-01、02、06）时，各类型一律改用明细相加数计算：`inputs`、结果、句子和 `--md` 行都用明细相加数，句子末尾加【待核实：××表中合计为X，明细相加为Y】（该标记进正文前删去，写进起草说明“待核实”一行），表中原数只写进 `warnings`。占比、拉动、贡献率的总量同样取明细相加数。
 - 未给 `--unit` 时，growth、change、multiple、share、pull、contrib、completion 取所用列的单位（如“本年累计（万元）”取万元）。
 - 默认百分比、百分点保留1位小数，`--decimals` 可改。提示（`warnings`）要逐条看：基期为0或负数、基数小、未写基期、合计不符。
 

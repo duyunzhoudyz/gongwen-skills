@@ -104,4 +104,4 @@
 ## 九、交付物
 
 1. `台账-工作版.md`、`台账-展示版.md`：Markdown 表格，有 Python 和 openpyxl 时可运行 `python scripts/md2xlsx.py 台账-展示版.md 台账-展示版.xlsx --title 台账名称` 转为 Excel（没有 openpyxl 或脚本报错时，提示用户把表格复制到 Excel）。
-2. `起草说明.md`：缺项汇总、待核实、体检问题清单、保密提示。
+2. 起草说明只在对话中给出（不超过 5 行），体检问题清单附其后。
