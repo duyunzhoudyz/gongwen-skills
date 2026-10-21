@@ -28,6 +28,7 @@ AI 写的公文常给自己留后路：结尾挂“仅供参考”，部署写�
 ## 开工检查
 
 1. 保密：按红线文件 `references/_shared/guardrails.md` 第一条执行，具体做法见第一步。
+   - 有 Python 时，先运行 `python scripts/secret_check.py <文件>` 检查保密标识（含页眉页脚），命中即停。
 2. 单位画像：工作目录存在 `.gongwen/单位画像.md` 时先读取（没有则查 `~/.gongwen/单位画像.md`），取单位类型和默认模式；都不存在时按“无画像降级”处理（`references/_shared/profiles/roles.md` 第九节）。`.gongwen/禁用词.md` 存在时一并读取。
 3. 角色模式：按 `references/_shared/profiles/roles.md` 第一节确定，差异见本文件“角色适配”。
 4. 原稿：本 skill 只改用户给的稿子。用户只有需求没有稿子的，告诉用户转对应起草 skill（见“适用范围”），不在这里写。

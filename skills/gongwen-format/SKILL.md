@@ -24,7 +24,8 @@ license: MIT
 
 ## 开工检查
 
-1. 保密：按 `references/_shared/guardrails.md` 第一条执行。材料或版式信息中出现密级标识（绝密、机密、秘密、★）或“内部资料”“工作秘密”等字样时，立即停止，建议用户在单位内网自行运行脚本。
+1. 保密：按 `references/_shared/guardrails.md` 第一条执行。材料或版式信息中有密级标识（绝密、机密、秘密、★）或“内部资料”“工作秘密”等字样时立即停止，建议在内网自行运行脚本。
+   - 有 Python 时，先运行 `python scripts/secret_check.py <文件>` 检查保密标识（含页眉页脚），命中即停。
 2. 单位画像：先读工作目录 `.gongwen/单位画像.md`（没有则查 `~/.gongwen/单位画像.md`），取发文机关标志、发文字号格式、红头或白头、党政两套代字、单位规定字体、写作角色和默认模式；都没有时按 `references/_shared/profiles/roles.md` 第九节“无画像降级”处理，版式按第二步第2款先排，末尾问一句要红头、白头还是材料；画像没有红头设置的，按第二步第3款说明。
 3. 运行环境：能执行命令时，先运行 `python -c "import docx; print(docx.__version__)"`。报错或低于 1.2.0 时，提示 `pip install -U python-docx`；用户不能安装的，走“没有 Python 环境时”。
 4. 首轮交付：材料在手直接排版交付，不先问版式细节。排版不改内容、不补内容：原稿没有的要素一律不写进文档（不补版记、不插【待补】），只在报告和回复中列出，由用户决定；用户明确要求“缺的要素帮我留出位置”才加 `--placeholders` 写占位。提问不超过 3 个，放在回复末尾（`references/_shared/profiles/roles.md` 第十节）。

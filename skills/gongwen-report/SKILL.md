@@ -26,6 +26,7 @@ license: MIT
 ## 开工检查
 
 1. 保密：按 `references/_shared/guardrails.md` 第一条执行。材料出现敏感信号时，才在起草说明末尾提示一句（回复开头不放），普通工作材料不提示，同一会话只说一次；材料带密级标识或“内部资料”“不得外传”等字样的，立即停止，不建台账、不摘录；患者、学生、群众的个人敏感信息提醒脱敏，台账和正文改用“张某”“138****0000”等代称，起草说明写明已替换；机关干部和材料署名人员的姓名照写。
+   - 有 Python 时，先运行 `python scripts/secret_check.py <文件>` 检查保密标识（含页眉页脚），命中即停。
 2. 单位画像：先读 `.gongwen/单位画像.md`，没有再找 `~/.gongwen/单位画像.md`，或用对话开头粘贴的画像；有 `.gongwen/领导偏好卡.md`、`.gongwen/禁用词.md` 的一并读取。再读 `references/_shared/profiles/units/` 下对应文件和 `references/units.md` 对应小节。没有画像时按 `references/_shared/profiles/roles.md` 第九节处理。
 3. 定工作模式：多份下级材料要合成一份的，用汇总模式；同一批素材要出两种以上材料的，用多版模式；其余用新写模式。
 4. 定角色模式：按 `references/_shared/profiles/roles.md` 第一节的顺序确定，本 skill 中的差异见“角色适配”。

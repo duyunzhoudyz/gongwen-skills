@@ -4,6 +4,7 @@
   "status": "beta",
   "shared": [
     {"src": "guardrails.md"},
+    {"src": "scripts/secret_check.py", "dest": "scripts/secret_check.py"},
     {"src": "style/output-format.md"},
     {"src": "style/ai-tone.md"},
     {"src": "style/defensive.md"},
