@@ -304,23 +304,28 @@ def decide_layout(cli_layout: Optional[str], meta: dict, parsed: Parsed, report:
 
 def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
           installed: Optional[set] = None, params: Optional[dict] = None, unit_fonts=None,
-          overprint: Optional[bool] = None, keep_text: bool = False, placeholders: Optional[bool] = None):
-    """生成文档，返回 (Document, report)。
+          overprint: Optional[bool] = None, keep_text: bool = False, placeholders: Optional[bool] = None,
+          auto_fix_text: bool = False):
+    “””生成文档，返回 (Document, report)。
 
     排版不改内容、不补内容：原稿和版式信息里没有的要素一律不写进文档（不补版记、不插【待补】、不按附件页生成附件说明），
-    只在 report["missing"] 列出，由用户决定。placeholders=True（版式信息“留占位”为“是”）时才为缺的要素写【待补】占位，
-    用于用户明确要求“缺的要素帮我留出位置”。
+    只在 report[“missing”] 列出，由用户决定。placeholders=True（版式信息”留占位”为”是”）时才为缺的要素写【待补】占位，
+    用于用户明确要求”缺的要素帮我留出位置”。
 
-    keep_text：不改任何文字（用户要求“内容别动”“一个字都别改”时用）：不补主送机关冒号、不给附注加括号、不去段首空格、
-    不转换日期写法；这类问题只列入 report["text_issues"]。保存前核对输入的每一行文字都在文档中，不一致抛出 BuildError。
+    keep_text：不改任何文字（用户要求”内容别动””一个字都别改”时用）：不补主送机关冒号、不给附注加括号、不去段首空格、
+    不转换日期写法；这类问题只列入 report[“text_issues”]。保存前核对输入的每一行文字都在文档中，不一致抛出 BuildError。
 
-    overprint：预印红头纸套打（只红头版式），不输出红色版头，按预印纸留白；None 时看版式信息“套打”。
+    auto_fix_text：自动修正格式性文字问题（补主送机关全角冒号、给附注加括号、转换日期写法 2026-10-16→2026年10月16日）。
+    默认关闭（False）：只在 report[“text_issues”] 中报告，不改动文字，保持逐字保真。
+    keep_text 优先于 auto_fix_text。
+
+    overprint：预印红头纸套打（只红头版式），不输出红色版头，按预印纸留白；None 时看版式信息”套打”。
 
     字体严格模式：文档中一律写入标准字体名；installed（已安装字体名集合，空集合表示无法检测）只用于核对，
     缺字体时在 report 中给出字体核对结果（font_status、missing_fonts、font_notice 等），不替代、不降级。
-    unit_fonts：按单位规定指定标准字体（“仿宋=方正仿宋_GBK”字符串或 {角色: 字体名}），与版式信息中的 unit_fonts 合并，
+    unit_fonts：按单位规定指定标准字体（”仿宋=方正仿宋_GBK”字符串或 {角色: 字体名}），与版式信息中的 unit_fonts 合并，
     同一角色以本参数（命令行）为准；指定后该角色写入单位字体名，严格模式不变。
-    """
+    “””
     import gw_docx as D
     from gw_format import keep_signoff_together, layout_signature_block
 
@@ -410,14 +415,16 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
         return ""
 
     # 日期写法：版式信息中的 2026-10-16 写法转为“2026年10月16日”
+    # 默认只报告不改（保持逐字保真），--auto-fix-text 时自动转换；--keep-text 时同样不改
     for key in ("成文日期", "印发日期"):
         if key in meta and isinstance(fields.get(key), str):
             new, changed = normalize_date(str(fields[key]))
-            if changed and keep_text:
-                report["text_issues"].append(f"{key}“{fields[key]}”写法不规范，应为“{new}”（7.3.5.4），按 --keep-text 未改")
-            elif changed:
-                fields[key] = new
-                report["notes"].append(f"{key}已按 GB/T 9704-2012 写成“{new}”")
+            if changed:
+                if auto_fix_text and not keep_text:
+                    fields[key] = new
+                    report["notes"].append(f"{key}已按 GB/T 9704-2012 写成“{new}”")
+                else:
+                    report["text_issues"].append(f"{key}“{fields[key]}”写法不规范，应为“{new}”（7.3.5.4），按默认不改文字未改；如需自动转换请加 --auto-fix-text")
 
     b = Builder(ctx, lay, keep_text)
     if lay == "简报":
@@ -614,12 +621,15 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
             body_items = body_items[1:]
         src_rec = next((it for it in parsed.items if it.role == "recipient"), None)
         if keep_text:
-            if src_rec is not None and "主送机关" not in meta:
+            if src_rec is not None and “主送机关” not in meta:
                 rec = src_rec.text  # 保持原文的冒号写法
-            if not rec.endswith(("：", ":")):
-                report["text_issues"].append(f"主送机关“{rec}”末尾没有全角冒号（7.3.2），按 --keep-text 未补")
-        elif not rec.endswith(("：", ":")):
-            rec += "："
+            if not rec.endswith((“：”, “:”)):
+                report[“text_issues”].append(f”主送机关”{rec}”末尾没有全角冒号（7.3.2），按 --keep-text 未补”)
+        elif not rec.endswith((“：”, “:”)):
+            if auto_fix_text:
+                rec += “：”
+            else:
+                report[“text_issues”].append(f”主送机关”{rec}”末尾没有全角冒号（7.3.2），按默认不改文字未补；如需自动补充请加 --auto-fix-text”)
         b.para("recipient", rec, raw=main_lines[src_rec.src] if keep_text and src_rec is not None and "主送机关" not in meta
                and 0 <= src_rec.src < len(main_lines) else None)  # keep_text：行首空格保留，用负缩进抵消成顶格
 
@@ -742,11 +752,13 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
     note = fields.get("附注")
     if note:
         note = str(note)
-        if not (note.startswith(("（", "(")) and note.endswith(("）", ")"))):
+        if not (note.startswith((“（”, “(“)) and note.endswith((“）”, “)”))):
             if keep_text:
-                report["text_issues"].append(f"附注“{note}”没有加圆括号（7.3.6），按 --keep-text 未加")
-            elif "附注" in meta:
-                note = f"（{note}）"
+                report[“text_issues”].append(f”附注”{note}”没有加圆括号（7.3.6），按 --keep-text 未加”)
+            elif auto_fix_text and “附注” in meta:
+                note = f”（{note}）”
+            elif “附注” in meta:
+                report[“text_issues”].append(f”附注”{note}”没有加圆括号（7.3.6），按默认不改文字未加；如需自动加括号请加 --auto-fix-text”)
         note_p = b.para("note", note)
         if signoff_last is not None:
             signoff_last = note_p
@@ -1150,7 +1162,7 @@ def render_text(report: dict) -> str:
         out.append("   本机检测：" + status)
     sections = [("缺失要素（原稿没有，未写入文档，由用户决定）", report.get("missing", [])),
                 ("待补事项", report.get("placeholders", [])),
-                ("文字类问题（按 --keep-text 未改动，需人工处理）", report.get("text_issues", [])), ("提示", report.get("warnings", []) + report.get("notes", []))]
+                ("文字类问题（需人工处理或加 --auto-fix-text 自动修正，--keep-text 时只列不改）", report.get("text_issues", [])), ("提示", report.get("warnings", []) + report.get("notes", []))]
     for head, items in sections:
         if items:
             out.append(f"{next(nums)}、{head}")
@@ -1161,7 +1173,7 @@ def render_text(report: dict) -> str:
         if tc["keep_text"] and tc["ok"]:
             out.append(f"文字核对：输入全文与文档全文已双向、按顺序规范化比对，逐字一致（{tc['chars']} 字，无多字、少字、乱序、重复）")
         elif tc["ok"]:
-            out.append("文字核对：未加 --keep-text，只做了允许的格式性处理；与输入逐字比对未发现差异（不代表保证逐字一致，内容别动请加 --keep-text）")
+            out.append("文字核对：默认模式（不改文字），与输入逐字比对未发现差异（如需自动修正格式性文字问题，可加 --auto-fix-text；内容别动请加 --keep-text）")
         else:
             out.append("文字核对：与输入有差异（含允许的格式性处理，如补冒号、加括号、日期写法），不得声称逐字一致：" + "；".join(tc["problems"][:6]))
     chk = report.get("check")
@@ -1194,6 +1206,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--keep-text", action="store_true",
                         help="内容别动：不补主送机关冒号、不给附注加括号、不去段首空格、不改任何文字，只排版；"
                              "文字类问题只在报告中列出；保存前核对文字与输入一致，不一致则中止")
+    parser.add_argument("--auto-fix-text", action="store_true",
+                        help="自动修正格式性文字问题：补主送机关全角冒号、给附注加圆括号、转换日期写法（2026-10-16→2026年10月16日）；"
+                             "默认不开启，只在报告中提示，保持逐字保真；--keep-text 优先")
     parser.add_argument("--placeholders", action="store_true",
                         help="缺的要素写【待补】占位（只在用户明确要求“缺的要素帮我留出位置”时用）；默认不写，只在报告“缺失要素”中列出")
     parser.add_argument("--no-check", action="store_true", help="生成后不自动回读检查")
@@ -1233,6 +1248,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     try:
         doc, report = build(lines, meta, layout=args.layout, unit_fonts=args.unit_fonts,
                             overprint=True if args.overprint else None, keep_text=args.keep_text,
+                            auto_fix_text=args.auto_fix_text,
                             placeholders=True if args.placeholders else None)
     except BuildError as exc:
         print(f"错误：{exc}")
