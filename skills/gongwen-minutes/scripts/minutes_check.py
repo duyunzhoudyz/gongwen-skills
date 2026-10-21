@@ -763,7 +763,7 @@ def check_body(body: Sequence[Tuple[int, str]], items: Sequence[Item]) -> List[I
         issues.append(Issue(
             "MIN-007", "P2", body[0][0], title,
             "没有出席人员名单",
-            "正文后空一行写“出席：”，名单只用用户提供的；没有的写“出席：【待补：出席人员名单】”（GB/T 9704-2012 10.3）"))
+            "开头导语后写“出席：”（或按用户要求放文末），名单只用用户提供的；没有的写“出席：【待补：出席人员名单】”（GB/T 9704-2012 10.3）"))
     return issues
 
 

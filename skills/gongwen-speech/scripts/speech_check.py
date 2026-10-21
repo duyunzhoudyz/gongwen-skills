@@ -334,7 +334,7 @@ def check(speech: Speech, minutes: Optional[float], rate: float, style: str,
             issues.append(make_issue(
                 "ORAL-002", "P2", "口语化", number, clip(text),
                 f"本段连用 {numbers} 个数字，超过 {max_numbers} 个，听众记不住",
-                "留最能说明问题的一两个，其余删去或写进书面材料；讲的稿可取整",
+                "留最能说明问题的一两个，其余删去或写进书面材料；数据不取整",
                 "工具约定（references/oral-style.md 第二部分第3条）",
             ))
         is_salutation = speech.salutation is not None and index == 0
