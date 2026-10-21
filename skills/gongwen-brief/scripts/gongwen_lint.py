@@ -5,13 +5,17 @@
 接口见 docs/开发规范.md 第 8 节，其他 skill 只依赖命令行接口和 JSON 输出格式：
 
     python scripts/gongwen_lint.py <文件> [--doc-type 文书类型] [--checks 类别,类别] [--json] [--strict]
-                                   [--banned 禁用词.md] [--allow 规则ID,规则ID]
+                                   [--banned 禁用词.md] [--allow 规则ID,规则ID] [--evidence-allow 词,词]
 
 - 只依赖标准库；读取 .docx 时需要 python-docx。
 - 规则数据：同目录下的 lint_rules.json（正则规则 + 函数规则登记）和 style_patterns.json（AI 味、防御性词表）。
 - 遇到单独成行的【起草说明】即停止读取（兼容“## 【起草说明】”“**【起草说明】**”，与 fact_diff.py、gongwen-format 一致）。
 - --banned：读取本单位禁用词表（.gongwen/禁用词.md），“禁用”命中报 P1（BAN-001），“慎用”命中报 P2（BAN-002）。
 - --allow：本单位制度明文规定的写法（如企业用方括号的发文字号），列出的规则命中时降为 P2，不计入 --strict。
+- --evidence-allow：评价词白名单。EVD 类检查（评价词与证据强度匹配）对其中的词不再报告；固定短语白名单在 lint_rules.json 的 evidence.whitelist。
+- 要素完整性（ELM-001～007，归 format 类）：按文种查标题、主送、结语、落款、成文日期、附件说明与正文引用、纪要出席列席；
+  【待补：…】占位视为作者已注意到，报 P2。评价证据（EVD-001～003，归 style 类）：强评价（显著、大幅……）同句或相邻句无数字、对比报 P1，
+  中评价无任何事实报 P2；只查回顾性文书（总结、报告、通报等），计划、方案、讲话稿不查。
 - 退出码：0 正常；--strict 且存在 P0 时为 1；输入错误为 2。
 """
 from __future__ import annotations
@@ -130,6 +134,8 @@ MARKER_RE = re.compile(r"【(?:待补|待核实)[：:][^】\n]*】")
 ZHUSONG_MARKER_RE = re.compile(r"【(?:待补|待核实)[^】]*】")  # 主送行里的标记：冒号、括号写法不限
 TODO_MARK_RE = re.compile(r"【待补：[^】\n]*】")
 VERIFY_MARK_RE = re.compile(r"【待核实：[^】\n]*】")
+# 要素完整性、评价证据检查用：任何写法的【待补…】【待核实…】占位
+ELM_MARKER_RE = re.compile(r"【(?:待补|待核实)[^】\n]*】")
 JINJI_RE = re.compile(r"^\s*(?:特急|加急|特提|平急)\s*$")
 BIAOZHI_RE = re.compile(r"^\s*\S{2,40}(?:文件|命令|令)\s*$")
 WENHAO_RE = re.compile(
@@ -853,6 +859,8 @@ class Linter:
         self.proc_meta: Dict[str, Dict[str, Any]] = {}
         self.patterns: List[StylePattern] = []
         self.whitelist: List[Tuple[str, Pattern[str]]] = []
+        self.evidence: Dict[str, Any] = {}          # 评价词分级表（lint_rules.json 的 evidence 段）
+        self.evidence_allow: Set[str] = set()      # 本次检查的评价词白名单（--evidence-allow）
         self._load_rules(rules_path or DEFAULT_RULES)
         self._load_patterns(patterns_path or DEFAULT_PATTERNS)
 
@@ -906,6 +914,26 @@ class Linter:
         for item in data.get("procedural", []):
             if isinstance(item, dict) and item.get("id"):
                 self.proc_meta[item["id"]] = item
+        self._load_evidence(data.get("evidence"))
+
+    def _load_evidence(self, cfg: Any) -> None:
+        """评价词分级表：strong、medium 为正则词条，weak 为限定词（出现在评价词前 4 字内则不查），
+        whitelist 为不算评价的固定短语，doc_types 为适用文书类型（空表示全部）。"""
+        if not isinstance(cfg, dict):
+            return
+        try:
+            def alt(key: str) -> Pattern[str]:
+                words = [w for w in cfg.get(key, []) if isinstance(w, str) and w]
+                words.sort(key=len, reverse=True)
+                return re.compile("|".join(words) if words else r"(?!x)x")
+            self.evidence = {
+                "strong": alt("strong"), "medium": alt("medium"), "weak": alt("weak"),
+                "whitelist": [re.compile(w) for w in cfg.get("whitelist", []) if isinstance(w, str) and w],
+                "doc_types": tuple(cfg.get("doc_types") or ()),
+            }
+        except re.error as exc:
+            self.warnings.append(f"评价词表无效，评价证据检查已跳过：{exc}")
+            self.evidence = {}
 
     def _load_patterns(self, path: Path) -> None:
         data = self._load_json(path, "文风词表")
@@ -954,9 +982,10 @@ class Linter:
         return {
             "punct": (self._check_quotes, self._check_colon_nesting),
             "number": (self._check_date_styles, self._check_quantity_points, self._check_table_totals),
-            "format": (self._check_date_padding, self._check_signoff_date, self._check_zhusong),
+            "format": (self._check_date_padding, self._check_signoff_date, self._check_zhusong, self._check_elements),
             "structure": (self._check_title, self._check_heading_sequence, self._check_count_summary,
                           self._check_qingshi, self._check_baogao, self._check_han, self._check_shangxing),
+            "style": (self._check_evidence,),
             "privacy": (self._check_privacy,),
             "length": (self._check_length,),
         }
@@ -1761,6 +1790,432 @@ class Linter:
                 return [issue] if issue else []
         return []
 
+    # -- 要素完整性（函数） ---------------------------------------------------
+    ELM_TITLE_TYPES = STATUTORY_TYPES | REPORT_TYPES
+    ELM_REASON_TYPES = {"通知", "通报", "请示", "报告", "整改报告", "自查报告", "自评报告", "批复", "函", "意见", "决定", "议案", "通告"}
+    ELM_ZHUSONG_TYPES = {"通知", "请示", "报告", "整改报告", "自查报告", "自评报告", "批复", "函", "议案"}
+    ELM_SIGN_TYPES = {"通知", "通报", "请示", "报告", "整改报告", "自查报告", "自评报告", "批复", "函", "议案",
+                      "意见", "决定", "公告", "通告"}
+    ELM_TITLE_KIND_RE = re.compile(r"(?:决议|决定|命令|令|公报|公告|通告|意见|通知|通报|报告|请示|批复|议案|函|纪要)$")
+    ELM_ORG_ONLY_RE = re.compile(
+        r"^[^，。；：、]{2,16}?(?:局|厅|委员会|办公室|办公厅|政府|党委|党组|学校|医院|公司|集团|大学|学院|中心|街道|"
+        r"办事处|协会|研究院|研究所|团委|党支部|支部)$")
+    ELM_CLOSING_RES = {
+        "报告": re.compile(r"特此(?:报告|汇报|呈报)|专此(?:报告|汇报)|以上(?:报告|情况|汇报)|请(?:予)?(?:审阅|审议|阅示|阅)"),
+        "函": re.compile(r"特此(?:函告|函复|复函|函达)|专此(?:函告|函复|函达)|盼复|请(?:予)?(?:函复|复函|研究函复)|"
+                         r"(?<![一-鿿])此复|请予(?:以)?(?:支持|协助|配合|办理|研究|同意|批准|审批)|为盼|为荷|是荷|敬请|烦请|恳请|"
+                         r"谢谢|感谢"),
+        "批复": re.compile(r"此复|特此(?:批复|函复)|请(?:遵照|按照|认真)(?:执行|落实|办理)|遵照执行"),
+        "公告": re.compile(r"特此公告|现予公告|予以公告|特此通告"),
+        "通告": re.compile(r"特此通告|特此公告|现予通告"),
+    }
+    ELM_CLOSING_ALIAS = {"整改报告": "报告", "自查报告": "报告", "自评报告": "报告"}
+    ELM_CLOSING_HINT = {
+        "报告": "结尾写“特此报告。”", "函": "结尾写“特此函告。”“请予支持。”或复函的“特此函复。”",
+        "批复": "结尾写“此复。”或“特此批复。”", "公告": "结尾写“特此公告。”", "通告": "结尾写“特此通告。”",
+    }
+    ELM_DATE_TAIL_RE = re.compile(
+        r"(?:(?:19|20)\d{2}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日|[〇○零一二三四五六七八九OＯ]{4}\s*年\s*[一二三四五六七八九十]{1,3}\s*月\s*"
+        r"[一二三四五六七八九十]{1,3}\s*日|(?:19|20)\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2})\s*$")
+    ELM_ORG_EXTRA_RE = re.compile(
+        r"(?:学|园|馆|社|台|庭|行|厂|矿|场|团|盟|联|总会|协会|学会|商会|工会|居委会|村委会|支部|总支|常委会|管委会|公司|银行|法院|检察院)$")
+    ELM_SIGN_STRIP_RE = re.compile(r"[（(]\s*(?:盖章|公章|章|印|单位盖章)\s*[）)]|[\s　]+")
+    ELM_ATTACH_REF_RE = re.compile(r"附件\s*([0-9]{1,2}|[一二三四五六七八九十]{1,2})?(?![说页])")
+
+    @staticmethod
+    def _elm_clean_title(text: str) -> str:
+        return re.sub(r"^[#*_\s　]+|[*_\s　]+$", "", text).rstrip(PUNCT_TAIL)
+
+    @staticmethod
+    def _elm_marker(doc: Document, keywords: str) -> Optional[Tuple[Para, "re.Match[str]"]]:
+        """全文中是否有与该要素相关的【待补：…】标记（视为作者已注意到，降为 P2 提示）。"""
+        pat = re.compile(keywords)
+        for para in doc.paras:
+            for m in ELM_MARKER_RE.finditer(para.text):
+                if pat.search(m.group(0)):
+                    return para, m
+        return None
+
+    @staticmethod
+    def _elm_zhusong_like(text: str) -> bool:
+        stripped = text.strip().rstrip("：:").strip()
+        return (0 < len(stripped) <= 60 and "。" not in stripped
+                and not re.search(r"如下|以下|通知|报告|情况|事项|^现将|^为|^根据|^按照|^经|^兹|^特", stripped))
+
+    def _elm_find_signoff(self, doc: Document) -> Tuple[Optional[int], Optional[int]]:
+        """返回（落款单位所在段落序号，成文日期所在段落序号）；找不到为 None。"""
+        paras = doc.paras
+        end = doc.banji_start if doc.banji_start is not None else len(paras)
+        skip = set(doc.head) | set(doc.title)
+        date_k: Optional[int] = doc.signoff_date
+        if date_k is None:
+            for k in range(end - 1, max(-1, end - 12), -1):
+                if k in skip:
+                    continue
+                text = paras[k].text.strip()
+                if len(text) <= 60 and self.ELM_DATE_TAIL_RE.search(text) and not HEADING_START_RE.match(text):
+                    date_k = k
+                    break
+
+        def org_like(text: str, loose: bool = False) -> bool:
+            cleaned = self.ELM_SIGN_STRIP_RE.sub("", text)
+            if not cleaned or len(cleaned) > 40 or re.search(r"[。；：:！？，,]", cleaned):
+                return False
+            if HEADING_START_RE.match(cleaned) or ATTACH_DESC_RE.match(cleaned) or "附件" in cleaned:
+                return False
+            if (ORG_SUFFIX_RE.search(cleaned) or self.ELM_ORG_EXTRA_RE.search(cleaned)
+                    or ELM_MARKER_RE.search(cleaned)):
+                return True
+            # 紧挨成文日期上一行的短行（无标点、不是附注）：多半是署名，机关名称写法特殊时也认
+            return loose and 3 <= len(cleaned) <= 30 and not cleaned.startswith(("（", "(", "联系", "电话", "注"))
+
+        if date_k is not None:
+            line = paras[date_k].text.strip()
+            rest = self.ELM_DATE_TAIL_RE.sub("", line).strip()
+            if rest and org_like(rest):
+                return date_k, date_k
+            for n, k in enumerate((date_k - 1, date_k - 2)):
+                if k >= 0 and k not in skip and org_like(paras[k].text.strip(), loose=(n == 0)):
+                    return k, date_k
+            return None, date_k
+        for k in range(end - 1, max(-1, end - 8), -1):
+            if k not in skip and org_like(paras[k].text.strip()):
+                return k, None
+        return None, None
+
+    def _check_elements(self, doc: Document, doc_type: str) -> List[Issue]:
+        """ELM-001～ELM-007 按文种检查必备要素：标题、主送、结语、落款、成文日期、附件说明、纪要出席列席。
+        【待补：…】占位视为作者已注意到，报 P2 提示；正文不足 120 字的片段不检查。"""
+        if not doc.paras or doc_type not in DOC_TYPES:
+            return []
+        if doc.body_char_count() < 120:
+            return []
+        issues: List[Issue] = []
+
+        def emit(rid: str, para: Optional[Para], start: int, end: int, **kw: Any) -> None:
+            if not self._proc_applies(rid, doc_type):
+                return
+            issue = self._proc_issue(rid, para, start, end, **kw)
+            if issue:
+                issues.append(issue)
+
+        anchor = doc.paras[doc.title[0]] if doc.title else doc.paras[0]
+        body = doc.body_indices()
+        # 标题不是“关于……的报告”形式的“报告”（如“××分析报告”“××评估报告”）多为内部材料，不按公文报告查主送、结语、落款和日期
+        informal_report = (doc_type == "报告" and bool(doc.title)
+                           and not re.search(r"关于.*报告$|的报告$", self._elm_clean_title(doc.title_text)))
+
+        def marker_or(rid: str, keywords: str, message: str, suggestion: str, para: Optional[Para] = None,
+                      start: int = 0, end: int = 0, excerpt: str = "") -> None:
+            found = self._elm_marker(doc, keywords)
+            if found:
+                mpara, m = found
+                emit(rid, mpara, m.start(), m.end(), level="P2",
+                     message=message + "（已用【待补】标注，定稿前补齐）", suggestion="按【待补】提示补齐后删去标记")
+            else:
+                emit(rid, para, start, end, message=message, suggestion=suggestion, excerpt=excerpt)
+
+        # ELM-001 标题：发文机关、事由、文种
+        if doc_type in self.ELM_TITLE_TYPES:
+            if not doc.title:
+                marker_or("ELM-001", "标题|事由|文种|发文机关", f"{doc_type}缺少标题",
+                          "标题由发文机关名称、事由和文种组成，如“关于……的" + doc_type + "”",
+                          anchor, 0, len(anchor.text), clip(anchor.text, 40))
+            else:
+                title = self._elm_clean_title(doc.title_text)
+                tpara = doc.paras[doc.title[0]]
+                if ELM_MARKER_RE.search(title):
+                    m = ELM_MARKER_RE.search(tpara.text)
+                    emit("ELM-001", tpara, m.start() if m else 0, m.end() if m else len(tpara.text), level="P2",
+                         message="标题含【待补】，定稿前补齐", suggestion="按【待补】提示补齐标题要素后删去标记")
+                else:
+                    km = self.ELM_TITLE_KIND_RE.search(title)
+                    if not km:
+                        emit("ELM-001", tpara, 0, len(tpara.text), excerpt=clip(title, 60),
+                             message=f"标题没有文种（{doc_type}应以“{doc_type}”结尾）",
+                             suggestion="标题补全文种，如“关于……的" + doc_type + "”")
+                    elif doc_type in self.ELM_REASON_TYPES:
+                        rest = re.sub(r"的$", "", title[:km.start()])
+                        reason = ""
+                        if "关于" in rest:
+                            reason = rest.split("关于", 1)[1]
+                        elif not self.ELM_ORG_ONLY_RE.match(rest):
+                            reason = rest
+                        if len(reason.strip()) < 2:
+                            emit("ELM-001", tpara, 0, len(tpara.text), excerpt=clip(title, 60),
+                                 message="标题缺少事由（只有发文机关加文种，或“关于”后没有内容）",
+                                 suggestion="补写事由，如“关于……的" + doc_type + "”")
+
+        # ELM-002 主送机关
+        if doc_type in self.ELM_ZHUSONG_TYPES and not (doc_type == "通知" and doc.public_facing) and not informal_report:
+            has, para_z = False, None
+            if doc.zhusong is not None and self._elm_zhusong_like(doc.paras[doc.zhusong].text):
+                has, para_z = True, doc.paras[doc.zhusong]
+            elif any(re.match(r"^\s*主送\s*[：:]", p.text) for p in doc.paras):
+                has = True
+            else:
+                start_k = (doc.title[-1] + 1) if doc.title else 0
+                for p in doc.paras[start_k:start_k + 4]:
+                    if p.index in doc.head:
+                        continue
+                    if p.text.strip().endswith(("：", ":")) and self._elm_zhusong_like(p.text):
+                        has, para_z = True, p
+                        break
+            if has and para_z is not None and not ZHUSONG_MARKER_RE.sub("", para_z.text).strip().rstrip("：:").strip():
+                emit("ELM-002", para_z, 0, len(para_z.text), level="P2", excerpt=clip(para_z.text.strip(), 40),
+                     message="主送机关为【待补】，定稿前补齐", suggestion="按【待补】提示补齐主送机关")
+            elif not has:
+                marker_or("ELM-002", "主送|受文|报送机关|机关", f"{doc_type}缺少主送机关",
+                          "标题下空一行顶格写主送机关，后标全角冒号", anchor, 0, len(anchor.text), clip(anchor.text, 40))
+
+        # ELM-003 规范结语（请示的结语由 STR-003 检查）
+        closing_type = self.ELM_CLOSING_ALIAS.get(doc_type, doc_type)
+        closing_re = self.ELM_CLOSING_RES.get(closing_type)
+        if closing_re is not None and body and not informal_report:
+            if not any(closing_re.search(doc.paras[k].text) for k in body):
+                last = None
+                for k in reversed(body):
+                    text = doc.paras[k].text
+                    if (not DATE_ONLY_RE.match(text) and not ATTACH_DESC_RE.match(text)
+                            and len(text.strip()) > 12 and re.search(r"[。！？；]", text)):
+                        last = doc.paras[k]
+                        break
+                if last is not None:
+                    emit("ELM-003", last, 0, len(last.text), excerpt=clip(last.text, 40),
+                         message=f"{doc_type}缺少规范结语", suggestion=self.ELM_CLOSING_HINT.get(closing_type, ""))
+
+        # ELM-004 落款、ELM-005 成文日期
+        if doc_type in self.ELM_SIGN_TYPES and body and not informal_report:
+            org_k, date_k = self._elm_find_signoff(doc)
+            tail = None
+            for k in reversed(body):
+                if len(doc.paras[k].text.strip()) > 2:
+                    tail = doc.paras[k]
+                    break
+            tail = tail or doc.paras[body[-1]]
+            if org_k is None:
+                marker_or("ELM-004", "落款|署名|发文机关|单位", f"{doc_type}缺少落款（发文机关署名）",
+                          "正文（或附件说明）之后写发文机关全称或规范化简称，位于成文日期之上",
+                          tail, 0, len(tail.text), clip(tail.text, 40))
+            if date_k is None:
+                marker_or("ELM-005", "日期|成文", f"{doc_type}缺少成文日期",
+                          "落款之下写成文日期，如“2026年10月16日”（阿拉伯数字，年月日标全）",
+                          tail, 0, len(tail.text), clip(tail.text, 40))
+            elif ELM_MARKER_RE.search(doc.paras[date_k].text) and not self.ELM_DATE_TAIL_RE.search(doc.paras[date_k].text):
+                m = ELM_MARKER_RE.search(doc.paras[date_k].text)
+                emit("ELM-005", doc.paras[date_k], m.start(), m.end(), level="P2",
+                     message="成文日期为【待补】，定稿前补齐", suggestion="按【待补】提示补齐")
+
+        # ELM-006 附件说明与正文引用一致
+        self._elm_attachments(doc, doc_type, emit, marker_or)
+
+        # ELM-007 纪要的出席、列席人员
+        if doc_type == "纪要":
+            text = "\n".join(doc.paras[k].text for k in body)
+            if not re.search(r"出席|与会人员|参会人员|参加人员|到会", text):
+                marker_or("ELM-007", "出席|与会|参会", "纪要未列出席人员",
+                          "会议概况或文末列出出席人员（单位、姓名、职务），有请假的写明请假人员",
+                          anchor, 0, len(anchor.text), clip(anchor.text, 40))
+            elif not re.search(r"列席|请假|缺席", text) and not ELM_MARKER_RE.search(text):
+                emit("ELM-007", anchor, 0, len(anchor.text), level="P2", excerpt=clip(anchor.text, 40),
+                     message="纪要未见列席或请假人员（没有列席人员的，宜注明“无”）",
+                     suggestion="出席人员之后写列席、请假人员；确无的可注明“无”")
+        return issues
+
+    def _elm_attachments(self, doc: Document, doc_type: str, emit: Callable[..., None],
+                         marker_or: Callable[..., None]) -> None:
+        if doc_type in ("讲话稿", "党课讲稿", "研讨发言", "心得体会", "会议记录", "简报", "其他"):
+            return
+        paras = doc.paras
+        desc_k = doc.attach_desc
+        listed = 0
+        list_idx: Set[int] = set()
+        if desc_k is not None:
+            list_idx.add(desc_k)
+            head_text = ATTACH_DESC_RE.sub("", paras[desc_k].text, count=1).strip()
+            if re.match(r"(\d{1,2})\s*[.．、]", head_text):
+                listed = 1
+                k = desc_k + 1
+                while k < len(paras):
+                    m2 = re.match(r"^\s*(\d{1,2})\s*[.．、]", paras[k].text)
+                    if not m2 or int(m2.group(1)) != listed + 1:
+                        break
+                    listed += 1
+                    list_idx.add(k)
+                    k += 1
+            else:
+                listed = 1 if head_text else 0
+        page_k = next((p.index for p in paras if ATTACH_PAGE_RE.match(p.text) and p.index not in doc.head
+                       and (desc_k is None or p.index > desc_k)), None)
+        refs: List[Tuple[Para, int, int, Optional[int]]] = []
+        for k in doc.body_indices():
+            if k in list_idx or (page_k is not None and k >= page_k) or paras[k].in_table:
+                continue
+            if ATTACH_DESC_RE.match(paras[k].text) or ATTACH_PAGE_RE.match(paras[k].text):
+                continue
+            for m in self.ELM_ATTACH_REF_RE.finditer(paras[k].text):
+                num_txt = m.group(1)
+                number: Optional[int] = None
+                if num_txt:
+                    number = int(num_txt) if num_txt.isdigit() else cn_to_int(num_txt)
+                refs.append((paras[k], m.start(), m.end(), number))
+        if refs and desc_k is None and page_k is None:
+            para, s, e, _ = refs[0]
+            marker_or("ELM-006", "附件", "正文提到附件，但没有附件说明",
+                      "正文下空一行写“附件：附件名称”，多个附件标顺序号；或删去“见附件”",
+                      para, s, e, para.text[max(0, s - 4):e + 4])
+            return
+        if desc_k is not None and listed >= 1:
+            for para, s, e, number in refs:
+                if number is not None and number > listed:
+                    emit("ELM-006", para, s, e, message=f"正文引用“附件{number}”，附件说明只列了 {listed} 个附件",
+                         suggestion="核对附件序号，补写附件说明或改正文引用")
+                    break
+            if listed >= 2 and refs:
+                cited = {n for _, _, _, n in refs if n is not None}
+                if cited:
+                    missing = [n for n in range(1, listed + 1) if n not in cited]
+                    if missing:
+                        para = paras[desc_k]
+                        emit("ELM-006", para, 0, len(para.text), level="P2", excerpt=clip(para.text.strip(), 40),
+                             message="附件" + "、".join(str(n) for n in missing) + "在正文中未被引用",
+                             suggestion="正文中说明各附件的用途（如“详见附件2”），或核对附件说明")
+
+    # -- 评价词与证据强度匹配（函数） -----------------------------------------
+    EVD_DATE_RE = re.compile(
+        r"(?:19|20)?\d{2}\s*年(?:\s*\d{1,2}\s*月(?:\s*\d{1,2}\s*[日号])?)?|\d{1,2}\s*月(?:\s*\d{1,2}\s*[日号])?|\d{1,2}\s*[日号]"
+        r"|[〔\[（(]\s*(?:19|20)\d{2}\s*[〕\]）)]\s*\d*\s*号?")
+    EVD_NUM_RE = re.compile(
+        r"(?<![\d.])\d[\d,]*(?:\.\d+)?\s*(?:%|％|‰|个百分点|百分点|倍|万|亿|千|百|元|人次|人|次|件|个|户|家|项|起|天|小时|分钟|"
+        r"平方米|平方公里|公里|吨|例|场|批|台|套|所|名|条|篇|期|届|位|岁|分|级|类|辆|张|份|宗|处|间|座|亩|公顷|斤|米|克|毫米|度|"
+        r"课时|门|本|册|周|个月|周年|年)"
+        r"|[一二三四五六七八九十百千]+(?:余|多)?(?:个|次|项|家|批|件|人|场|期|倍|成|条|所|类|名|户|起|台|套)")
+    EVD_ANYNUM_RE = re.compile(r"\d|[一二三四五六七八九十百千万]+(?:余|多)?(?:个|次|项|家|批|件|人|场|期|倍|成|条|所|类|名|户|起)")
+    EVD_COMPARE_RE = re.compile(
+        r"同比|环比|较(?:上年|去年|上月|上季|年初|同期|上期|往年|以往|前)|比(?:上年|去年|上月|上季|年初|同期|上期|往年|以往)|"
+        r"较(?!大|高|好|快|多|强|低|小|为|明显|显著|有)[^，。；]{0,8}(?:增长|增加|提高|提升|下降|减少|降低|上升|增幅|降幅)|"
+        r"对比|相比|相较|高于|低于|超过|超出|翻了?一番|翻番|"
+        r"增幅|降幅|增速|位居|位列|排名|第[一二三四五六七八九十\d]+名|名列前茅|居[全省市县区校院]{1,3}第|"
+        r"(?:提高|提升|增长|增加|下降|减少|降低|缩短|压缩)了|(?:从|由).{1,20}(?:提高|提升|增至|降至|下降|上升|增加|减少|缩短|压缩)|"
+        r"降至|增至|升至|提高到|提升到|下降到|减少到|缩短到|压缩到")
+    EVD_CASE_RE = re.compile(r"例如|比如|譬如|以[^，。；]{1,20}为例|案例|个案|典型|如[“《「]")
+    EVD_SENT_RE = re.compile(r"[^。！？；]*[。！？；]+[”’）)]*|[^。！？；]+$")
+    EVD_DIRECTIVE_STRICT = re.compile(
+        r"力争|争取|确保|务必|务求|力求|必须|计划|拟|目标|预期|预计|须|应当|应该|需要|要求|力促|以期|争创|确保")
+    EVD_DIRECTIVE_LOOSE = re.compile(
+        r"切实|着力|努力|坚决|(?<![主重需概纲首摘必不想紧纲])要(?![求素点领害闻案])|将|为了|旨在|进一步|继续|加快|大力|全力|尽快|尽早")
+
+    EVD_DIRECTIVE_PREV = re.compile(r"切实|着力|坚决|各[^，。；]{1,8}要|要(?=[^求素点领害闻案])|必须|将")
+
+    def _evd_units(self, doc: Document) -> List[Tuple[Para, int, int, str, bool]]:
+        """正文按句切分，返回 [(段落, 句首, 句尾, 句子, 是否层次标题或以冒号结尾)]。引号内的句末标点不切。"""
+        units: List[Tuple[Para, int, int, str, bool]] = []
+        for k in doc.body_indices():
+            para = doc.paras[k]
+            if para.in_table or ATTACH_DESC_RE.match(para.text) or ATTACH_PAGE_RE.match(para.text):
+                continue
+            text = para.text
+            starts: List[Tuple[int, int]] = []
+            depth, begin = 0, 0
+            for pos, ch in enumerate(text):
+                if ch in "“‘「『":
+                    depth += 1
+                elif ch in "”’」』" and depth:
+                    depth -= 1
+                elif ch in "。！？；" and depth == 0:
+                    end = pos + 1
+                    while end < len(text) and text[end] in "”’）)":
+                        end += 1
+                    starts.append((begin, end))
+                    begin = end
+            if begin < len(text):
+                starts.append((begin, len(text)))
+            single = len(starts) == 1
+            for s, e in starts:
+                piece = text[s:e]
+                if not piece.strip():
+                    continue
+                heading = (single and len(piece.strip()) <= 40 and not re.search(r"[。！？；]$", piece.strip())) \
+                    or piece.rstrip().endswith(("：", ":"))
+                units.append((para, s, e, piece, heading))
+        return units
+
+    def _check_evidence(self, doc: Document, doc_type: str) -> List[Issue]:
+        """EVD-001～EVD-003 评价词与证据强度匹配：强评价（显著、大幅、全面完成……）同句或相邻句须有数字或对比，
+        中评价（明显、有效降低……）须有事实支撑；弱评价（一定、初步）不查。"""
+        cfg = self.evidence
+        if not cfg or not doc.paras or not (self._proc_applies("EVD-001", doc_type) or self._proc_applies("EVD-002", doc_type)):
+            return []
+        if cfg.get("doc_types") and doc_type not in cfg["doc_types"]:
+            return []
+        units = self._evd_units(doc)
+        issues: List[Issue] = []
+        allow = self.evidence_allow
+        for idx, (para, s, e, piece, heading) in enumerate(units):
+            hit = None
+            for tier in ("strong", "medium"):
+                for m in cfg[tier].finditer(piece):
+                    if self._evd_hit_ok(piece, m, cfg, allow):
+                        hit = (tier, m)
+                        break
+                if hit:
+                    break
+            if not hit:
+                continue
+            tier, m = hit
+            hi = idx + (5 if heading else 3)
+            window = units[max(0, idx - 1):hi]
+            wtext = "".join(w[3] for w in window)
+            if ELM_MARKER_RE.search(wtext):
+                continue  # 【待补：数据】等占位：作者已注意到
+            plain = self.EVD_DATE_RE.sub(" ", wtext)
+            has_num = bool(self.EVD_NUM_RE.search(plain))
+            has_cmp = bool(self.EVD_COMPARE_RE.search(wtext))
+            has_case = bool(self.EVD_CASE_RE.search(wtext))
+            start, end = s + m.start(), s + m.end()
+            if tier == "strong":
+                if has_num or has_cmp:
+                    continue
+                if has_case:
+                    issue = self._proc_issue(
+                        "EVD-003", para, start, end,
+                        context=clip(piece.strip(), 60))
+                else:
+                    issue = self._proc_issue("EVD-001", para, start, end, context=clip(piece.strip(), 60))
+            else:
+                if has_num or has_cmp or has_case or self.EVD_ANYNUM_RE.search(wtext):
+                    continue
+                issue = self._proc_issue("EVD-002", para, start, end, context=clip(piece.strip(), 60))
+            if issue:
+                issues.append(issue)
+        return issues
+
+    def _evd_hit_ok(self, piece: str, m: "re.Match[str]", cfg: Dict[str, Any], allow: Set[str]) -> bool:
+        """命中是否算一次“评价”：排除白名单短语、用户白名单、引号内、弱化限定、要求和目标语境。"""
+        term = m.group(0)
+        if any(a and (a in term or term in a) for a in allow):
+            return False
+        for wl in cfg["whitelist"]:
+            for w in wl.finditer(piece):
+                if w.start() < m.end() and m.start() < w.end():
+                    return False
+        before = piece[:m.start()]
+        if before.count("“") + before.count("‘") + before.count("「") > before.count("”") + before.count("’") + before.count("」"):
+            return False  # 引述他人的评价，不是本文的断言
+        if cfg["weak"].search(before[-6:]):
+            return False  # “一定程度上明显”“初步见效”：已作限定
+        clause_start = max(before.rfind(c) for c in "，、；：") + 1
+        clause = piece[clause_start:m.start()]
+        prev_clause = ""
+        if clause_start > 0:
+            earlier = piece[:clause_start - 1]
+            prev_clause = earlier[max(earlier.rfind(c) for c in "，、；：") + 1:]
+        if self.EVD_DIRECTIVE_STRICT.search(clause) or self.EVD_DIRECTIVE_STRICT.search(prev_clause):
+            return False
+        if self.EVD_DIRECTIVE_LOOSE.search(clause) or self.EVD_DIRECTIVE_PREV.search(prev_clause):
+            return False
+        return True
+
     # -- 隐私与保密（函数） ---------------------------------------------------
     ID18_RE = re.compile(
         r"(?<![0-9A-Za-z])([1-9]\d{5})((?:18|19|20)\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])(\d{3})([\dXx])(?![0-9A-Za-z])"
@@ -2162,6 +2617,14 @@ def parse_allow(value: Optional[Any]) -> List[str]:
     return [str(v).strip().upper() for v in items if str(v).strip()]
 
 
+def parse_words(value: Optional[Any]) -> List[str]:
+    """解析 --evidence-allow：逗号、顿号或空格分隔的评价词。"""
+    if not value:
+        return []
+    items = value if isinstance(value, (list, tuple, set)) else re.split(r"[,，、\s]+", str(value))
+    return [str(v).strip() for v in items if str(v).strip()]
+
+
 def _apply_allow(issues: List[Issue], allow: Sequence[str], linter: Linter, notes: List[str]) -> List[Issue]:
     """--allow：本单位制度明文规定的写法，命中时降为 P2 并注明，不计入 --strict。"""
     known = ({r.id for r in linter.rules} | set(linter.proc_meta) | {p.id for p in linter.patterns})
@@ -2186,9 +2649,22 @@ def _apply_allow(issues: List[Issue], allow: Sequence[str], linter: Linter, note
 def lint_document(doc: Document, doc_type: Optional[str] = None, checks: Optional[str] = None,
                   linter: Optional[Linter] = None, notes: Optional[List[str]] = None,
                   banned: Optional[Sequence[BannedTerm]] = None,
-                  allow: Optional[Sequence[str]] = None) -> Dict[str, Any]:
-    """banned 为 None 表示没有指定禁用词表；allow 为降级规则 ID 清单（见 --allow）。"""
+                  allow: Optional[Sequence[str]] = None,
+                  evidence_allow: Optional[Any] = None) -> Dict[str, Any]:
+    """banned 为 None 表示没有指定禁用词表；allow 为降级规则 ID 清单（见 --allow）；
+    evidence_allow 为评价词白名单（见 --evidence-allow，EVD 类规则不对其中的词报告）。"""
     linter = linter or Linter()
+    previous_allow = linter.evidence_allow
+    linter.evidence_allow = set(parse_words(evidence_allow))
+    try:
+        return _lint_document(doc, doc_type, checks, linter, notes, banned, allow)
+    finally:
+        linter.evidence_allow = previous_allow
+
+
+def _lint_document(doc: Document, doc_type: Optional[str], checks: Optional[str], linter: Linter,
+                   notes: Optional[List[str]], banned: Optional[Sequence[BannedTerm]],
+                   allow: Optional[Sequence[str]]) -> Dict[str, Any]:
     check_list = parse_checks(checks)
     dtype, source = resolve_doc_type(doc, doc_type)
     all_notes = list(notes or [])
@@ -2246,16 +2722,18 @@ def lint_document(doc: Document, doc_type: Optional[str] = None, checks: Optiona
 
 def lint_text(text: str, doc_type: Optional[str] = None, checks: Optional[str] = None,
               file_name: str = "<text>", linter: Optional[Linter] = None,
-              banned: Optional[Sequence[BannedTerm]] = None, allow: Optional[Sequence[str]] = None) -> Dict[str, Any]:
+              banned: Optional[Sequence[BannedTerm]] = None, allow: Optional[Sequence[str]] = None,
+              evidence_allow: Optional[Any] = None) -> Dict[str, Any]:
     """检查一段文本（供其他脚本和测试调用）。"""
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     lines = [(i, line, False) for i, line in enumerate(text.split("\n"), start=1)]
-    return lint_document(Document(file_name, lines), doc_type, checks, linter, banned=banned, allow=allow)
+    return lint_document(Document(file_name, lines), doc_type, checks, linter, banned=banned, allow=allow,
+                         evidence_allow=evidence_allow)
 
 
 def lint_file(path: Path, doc_type: Optional[str] = None, checks: Optional[str] = None,
               linter: Optional[Linter] = None, banned: Optional[Sequence[BannedTerm]] = None,
-              allow: Optional[Sequence[str]] = None) -> Dict[str, Any]:
+              allow: Optional[Sequence[str]] = None, evidence_allow: Optional[Any] = None) -> Dict[str, Any]:
     real = long_path(path)  # Windows 下超过 260 字符的路径
     if not real.is_file():
         raise InputError(f"文件不存在：{path}")
@@ -2263,7 +2741,7 @@ def lint_file(path: Path, doc_type: Optional[str] = None, checks: Optional[str] 
     unit = "段" if path.suffix.lower() == ".docx" else "行"
     doc = Document(path.name, lines, unit)
     doc.docx_tables = list(getattr(lines, "tables", []))
-    return lint_document(doc, doc_type, checks, linter, notes, banned, allow)
+    return lint_document(doc, doc_type, checks, linter, notes, banned, allow, evidence_allow)
 
 
 def render_text(result: Dict[str, Any]) -> str:
@@ -2326,6 +2804,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--allow", default=None, metavar="规则ID,规则ID",
                         help="本单位制度明文规定的写法（如企业发文字号用方括号时写 FMT-001），"
                              "列出的规则命中时降为 P2 并注明“按本单位制度保留”，不计入 --strict")
+    parser.add_argument("--evidence-allow", default=None, metavar="词,词",
+                        help="评价词白名单（EVD 类检查）：列出的评价词（如“显著”“大幅”）不再要求同句或相邻句有数字、对比证据；"
+                             "固定短语白名单在 lint_rules.json 的 evidence.whitelist")
     parser.add_argument("-h", "--help", action="help", help="显示帮助并退出")
     return parser
 
@@ -2340,7 +2821,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parser.parse_args(argv)
     try:
         banned = load_banned(Path(args.banned)) if args.banned else None
-        result = lint_file(Path(args.file), args.doc_type, args.checks, banned=banned, allow=parse_allow(args.allow))
+        result = lint_file(Path(args.file), args.doc_type, args.checks, banned=banned, allow=parse_allow(args.allow),
+                           evidence_allow=args.evidence_allow)
     except InputError as exc:
         print(f"错误：{exc}", file=sys.stderr)
         return 2
