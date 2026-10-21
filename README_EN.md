@@ -57,6 +57,23 @@ A simulated AI draft of a district education bureau's winter campus-safety notic
 
 Changes included: "suggest that schools set up..." became "schools shall set up..."; the document number, dates and number ranges were corrected to the national standards; a threat to have parents "detained by the police" was removed because the education bureau has no such authority; every figure in the text stayed unchanged, confirmed by a fact-diff script.
 
+### Compared with similar projects
+
+We ran this project and 8 similar Chinese official-document skills on GitHub on the same tasks: same model (claude-sonnet-5-5), same user messages and materials, blind-graded by two LLM judges (Claude and DeepSeek). The table below comes from two **held-out task sets** (no skill was changed based on them): 54 tasks, 552 runs, all materials fictional.
+
+| Dimension | This project | Best of the others |
+|---|---|---|
+| Facts kept when removing AI tone | **682/682 kept, 0 fabrications** | 98.4%; judges flagged fabrication 15 times |
+| Formatting: GB/T 9704 layout audit | **96.6** | 93.2 |
+| Formatting: missing fonts | **standard font names in all 32 runs, no substitution** | one project substituted fonts in all 32 runs, 12 without telling the user |
+| Writing: runs with fabrication (Claude judge) | **11/40** | 16/40 |
+| Stopping on classified materials | **only project to stop** when the mark is on the first page; all missed a header-only mark (fixed here and re-tested) | none |
+| Writing quality (mean rank, 1 = best) | 3.20, 2nd (Claude judge) | 3.15 |
+| Formatting quality | 2.72, 3rd | 2.12 |
+| AI-tone removal quality | 1.97, 2nd (DeepSeek); 2.19, 3rd (Claude) | 1.69 / 1.78 |
+
+On the things that must not go wrong (no fabrication, facts kept, confidentiality, layout compliance, honest font handling) this project leads every other project tested; on overall document quality it is in the top tier, 0.1 to 0.6 ranks behind the best, and we keep improving. Projects, commits, per-track results, the iteration history and limitations are in the [competitive benchmark report](evals/results/compete-report.md) (in Chinese); scripts and tasks are in [evals/compete](evals/compete/).
+
 ### Benchmark
 
 Before v0.1, the first 7 skills were evaluated with a real model: the same model (claude-opus-5-5), the same user messages and materials, one group with the skill loaded and one without, graded blind. 104 test cases, 621 checks, all materials fictional.
@@ -220,7 +237,7 @@ More examples are in the [Chinese README](README.md#直接这样说) and in each
 All skills follow these, ahead of any specific workflow ([shared/guardrails.md](shared/guardrails.md), in Chinese):
 
 1. **Confidentiality first**: stop and warn on classification marks, "internal" labels or personal data.
-2. **Facts only from the user**: missing facts are marked 【待补】, doubtful ones 【待核实】; relative dates are not converted into guessed calendar dates.
+2. **Facts only from the user**: facts only you can supply are marked 【待补】; doubtful items are listed in the drafting notes after the text; "next Wednesday" is resolved from today's date and noted, "last year" is kept as written, and the issue date is left for the signing day.
 3. **Clean body, notes outside**: no disclaimers or AI self-talk in the document; items to verify go into drafting notes after it.
 4. **Cut by default**: get to the point, respect official length limits, hit a requested length without padding.
 5. **Traceable, machine-checkable rules**: every format, punctuation and number rule cites its clause; scripts check what scripts can.
@@ -240,7 +257,7 @@ Regulations on the Handling of Official Documents of Party and Government Organs
 
 **Can I paste my organization's materials into it?** Not if they are classified or marked "internal" or "work secret". Never enter such material into an internet-connected AI tool; use an intranet model instead, and anonymize personal data first. The skills stop and warn when they see a classification mark, but that is only a last reminder. The responsibility stays with the user.
 
-**Will it make up data?** The rules say to use only what you provide, mark gaps as 【待补】 and doubtful items as 【待核实】. In the v0.1 benchmark, 34 cases deliberately withheld facts: with the skills there were 0 runs with fabrication, without them 15. Output varies between runs, so check every number, name and document number before use.
+**Will it make up data?** The rules say to use only what you provide, mark facts only you can supply as 【待补】 and list doubtful items in the drafting notes. In the v0.1 benchmark, 34 cases deliberately withheld facts: with the skills there were 0 runs with fabrication, without them 15. Output varies between runs, so check every number, name and document number before use.
 
 **Can it make a draft undetectable as AI-written?** No, and it does not claim to. Removing AI tone improves style, such as paragraph-opening commentary, buzzwords and too many dashes, so the text reads better.
 
