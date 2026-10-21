@@ -74,7 +74,7 @@ def percentile(values: Sequence[float], q: float) -> Optional[float]:
 
 
 def summarize(values: Sequence[float], digits: int = 1) -> Dict[str, object]:
-    """样本数、最小、四分位、中位数、均值、P90、最大。样本为空时只给 n=0。"""
+    """样本数、最小、P10、四分位、中位数、均值、P90、最大。样本为空时只给 n=0。"""
     vals = [float(v) for v in values]
     if not vals:
         return {"n": 0}
@@ -85,6 +85,7 @@ def summarize(values: Sequence[float], digits: int = 1) -> Dict[str, object]:
     return OrderedDict([
         ("n", len(vals)),
         ("min", r(min(vals))),
+        ("p10", r(percentile(vals, 10))),
         ("q1", r(percentile(vals, 25))),
         ("median", r(percentile(vals, 50))),
         ("q3", r(percentile(vals, 75))),

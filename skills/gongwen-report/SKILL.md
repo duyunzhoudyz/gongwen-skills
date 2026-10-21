@@ -128,7 +128,8 @@ license: MIT
 1. 台账对账（必做）：按 `references/ledger.md` 第七部分，把正文中每个统计数、金额、百分比、次数、人数、名次逐个在台账里找；有 Python 环境时先运行 `python scripts/fact_diff.py 素材台账.md 正文.txt --ledger` 辅助查找。
 2. 机检：有 Python 环境时运行 `python scripts/gongwen_lint.py 正文.txt --doc-type 总结`。`--doc-type` 按实际填：总结、计划、工作要点、汇报材料、调研报告、经验材料、述职报告、实施方案（大会工作报告填总结）。P0 必改，P1 逐条判断，P2 酌情处理；公文白名单写法（`references/_shared/style/ai-tone.md` 第二部分）和【待补】【待核实】标记照常保留。ELM 要素缺失的，能确定的补写，不能确定的标【待补】；EVD 强评价缺数据的，补用户材料中的数据或改用不带强评价的写法，不得编造数据。
 3. 没有 Python、脚本报错或输出“未执行检查”的，按 `references/checklist.md` 逐项人工检查，在起草说明写“未运行机检，已按人工清单检查”。
-4. 最后过一遍本文“自检清单”。
+4. 篇幅、层次、开头结语可对照 `references/_shared/style/baseline.md` 中该文种的典型参数（参照，不是硬规则；用户指定篇幅时以用户为准）；机检加 `--baseline` 会对偏离基线的篇幅、一级标题数、“一是”组数、顿号密度给 P2 提示，只作参照。
+5. 最后过一遍本文“自检清单”。
 
 ### 第六步　交付
 

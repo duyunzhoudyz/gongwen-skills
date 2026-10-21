@@ -5,7 +5,7 @@
 接口见 docs/开发规范.md 第 8 节，其他 skill 只依赖命令行接口和 JSON 输出格式：
 
     python scripts/gongwen_lint.py <文件> [--doc-type 文书类型] [--checks 类别,类别] [--json] [--strict]
-                                   [--banned 禁用词.md] [--allow 规则ID,规则ID] [--evidence-allow 词,词]
+                                   [--banned 禁用词.md] [--allow 规则ID,规则ID] [--evidence-allow 词,词] [--baseline [baseline.json]]
 
 - 只依赖标准库；读取 .docx 时需要 python-docx。
 - 规则数据：同目录下的 lint_rules.json（正则规则 + 函数规则登记）和 style_patterns.json（AI 味、防御性词表）。
@@ -13,6 +13,8 @@
 - --banned：读取本单位禁用词表（.gongwen/禁用词.md），“禁用”命中报 P1（BAN-001），“慎用”命中报 P2（BAN-002）。
 - --allow：本单位制度明文规定的写法（如企业用方括号的发文字号），列出的规则命中时降为 P2，不计入 --strict。
 - --evidence-allow：评价词白名单。EVD 类检查（评价词与证据强度匹配）对其中的词不再报告；固定短语白名单在 lint_rules.json 的 evidence.whitelist。
+- --baseline：对已识别文种，把篇幅、一级标题数、“一是”组数、顿号密度与公开公文语料基线（references/_shared/style/baseline.json，
+  仓库内为 shared/style/baseline.json）比较，偏离 P10～P90 区间的报 P2 提示（BSL-001～004），只提示不判错；找不到基线文件时跳过并提示。
 - 要素完整性（ELM-001～007，归 format 类）：按文种查标题、主送、结语、落款、成文日期、附件说明与正文引用、纪要出席列席；
   【待补：…】占位视为作者已注意到，报 P2。评价证据（EVD-001～003，归 style 类）：强评价（显著、大幅……）同句或相邻句无数字、对比报 P1，
   中评价无任何事实报 P2；只查回顾性文书（总结、报告、通报等），计划、方案、讲话稿不查。
@@ -2646,25 +2648,153 @@ def _apply_allow(issues: List[Issue], allow: Sequence[str], linter: Linter, note
     return issues
 
 
+# ---------------------------------------------------------------------------
+# 基线参照（--baseline）：与公开公文语料基线 shared/style/baseline.md 比较，只提示不判错
+# ---------------------------------------------------------------------------
+BASELINE_CANDIDATES = (
+    ("references", "_shared", "style", "baseline.json"),   # skill 内的同步副本
+    ("style", "baseline.json"),                            # 仓库 shared/scripts/ 旁的 shared/style/
+)
+BASELINE_YISHI_RE = re.compile(r"(?:^|(?<=[，。；：！？、）」”\s]))一是")
+# 机检文书类型 → 基线文种；基线中“工作总结”是政府信息公开年报、“报告”是国务院法定报告，不能代表一般稿件，不比较
+BASELINE_TYPE_MAP = {
+    "通知": "通知", "意见": "意见", "批复": "批复", "函": "函", "通报": "通报",
+    "实施方案": "方案", "贯彻落实方案": "方案", "整改方案": "方案", "讲话稿": "讲话",
+}
+BASELINE_ID_META = (
+    ("BSL-001", "length", "篇幅"),
+    ("BSL-002", "structure", "一级标题数"),
+    ("BSL-003", "style", "“一是”组数"),
+    ("BSL-004", "style", "顿号密度"),
+)
+
+
+@dataclass
+class BaselineRef:
+    """--baseline 读取的结果：data 为 None 表示没有可用基线，note 说明原因或来源。"""
+    data: Optional[Dict[str, Any]]
+    note: str = ""
+
+
+def load_baseline(explicit: Optional[str] = None) -> BaselineRef:
+    """explicit 为 None 或 "auto" 时按脚本相对路径查找；找不到、读不了都不报错，只给提示。"""
+    paths: List[Path] = []
+    if explicit and explicit != "auto":
+        paths.append(Path(explicit))
+    else:
+        paths.extend(SCRIPT_DIR.parent.joinpath(*parts) for parts in BASELINE_CANDIDATES)
+    for path in paths:
+        if not path.is_file():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            return BaselineRef(None, f"基线文件 {path} 读取失败（{exc}），已跳过基线参照。")
+        if not isinstance(data, dict) or not isinstance(data.get("groups"), dict):
+            return BaselineRef(None, f"基线文件 {path} 格式不符，已跳过基线参照。")
+        return BaselineRef(data, f"基线参照来自 {path.name}（语料 {data.get('corpus', {}).get('docs', '?')} 篇）。")
+    return BaselineRef(None, "未找到基线文件（references/_shared/style/baseline.json 或 shared/style/baseline.json），已跳过基线参照。")
+
+
+def _baseline_group(doc: Document, doc_type: str) -> Tuple[Optional[str], str]:
+    """返回 (基线文种, 跳过原因)。"""
+    title = doc.paras[doc.title[0]].text if doc.title else (doc.paras[0].text if doc.paras else "")
+    if doc_type == "通知":
+        return ("通知（印发转发）" if re.search(r"(?:印发|转发|批转)", title) else "通知"), ""
+    if doc_type in REPORT_TYPES and "政府工作报告" in title:
+        return "政府工作报告", ""
+    if doc_type in BASELINE_TYPE_MAP:
+        return BASELINE_TYPE_MAP[doc_type], ""
+    if doc_type == "总结":
+        return None, "基线里的工作总结是政府信息公开年报，格式化程度高，不能代表一般总结，未比较。"
+    if doc_type in REPORT_TYPES:
+        return None, "基线里的报告是国务院法定报告（3 个机关），不能代表一般工作报告，未比较。"
+    return None, f"基线未覆盖“{doc_type}”，未比较。"
+
+
+def baseline_hints(doc: Document, doc_type: str, ref: BaselineRef) -> Tuple[List[Issue], List[str], Optional[Dict[str, Any]]]:
+    """篇幅、一级标题数、“一是”组数、顿号密度偏离基线 P10～P90 区间时给 P2 提示。"""
+    if ref.data is None:
+        return [], [ref.note] if ref.note else [], None
+    notes = [ref.note] if ref.note else []
+    group_name, why = _baseline_group(doc, doc_type)
+    if group_name is None:
+        return [], notes + [why], None
+    group = ref.data["groups"].get(group_name)
+    if not group:
+        return [], notes + [f"基线里没有“{group_name}”这一组，未比较。"], None
+    texts = [p.text for p in doc.paras]
+    chars = doc.char_count
+    values = {
+        "BSL-001": float(chars),
+        "BSL-002": float(sum(1 for t in texts if (heading_of(t) or (0, 0))[0] == 1)),
+        "BSL-003": float(sum(len(BASELINE_YISHI_RE.findall(t)) for t in texts)),
+        "BSL-004": sum(t.count("、") for t in texts) * 1000.0 / chars if chars else 0.0,
+    }
+    stats = {
+        "BSL-001": group.get("chars") or {},
+        "BSL-002": (group.get("headings") or {}).get("h1_per_doc") or {},
+        "BSL-003": (group.get("yishi") or {}).get("sets_per_doc") or {},
+        "BSL-004": group.get("dunhao_per_1000") or {},
+    }
+    units = {"BSL-001": "字", "BSL-002": "个", "BSL-003": "组", "BSL-004": "个/千字"}
+    # 太短的稿件，“一是”组数和顿号密度没有比较意义
+    skip = {"BSL-003", "BSL-004"} if chars < 300 else set()
+    low_sample = bool(group.get("low_sample") or group.get("low_orgs"))
+    issues: List[Issue] = []
+    summary: Dict[str, Any] = {}
+    n = group.get("n", "?")
+    for rid, check, label in BASELINE_ID_META:
+        st = stats[rid]
+        if rid in skip or not st.get("n") or "p90" not in st:
+            continue
+        low, high, val = st.get("p10"), st["p90"], values[rid]
+        fmt = (lambda x: f"{x:.1f}") if rid == "BSL-004" else (lambda x: f"{x:g}")
+        summary[label] = {"value": round(val, 1), "p10": low, "median": st.get("median"), "p90": high}
+        side = ""
+        if val > high:
+            side = "高于"
+        elif low is not None and val < low:
+            side = "低于"
+        if not side:
+            continue
+        bound = high if side == "高于" else low
+        edge = "P90" if side == "高于" else "P10"
+        issues.append(Issue(
+            id=rid, level="P2", check=check, category="基线参照", gate="文风关", line=0,
+            excerpt=f"{label} {fmt(val)}{units[rid]}",
+            message=(f"{label} {fmt(val)}{units[rid]}，{side}同文种（{group_name}，{n} 篇）{edge} {fmt(bound)}{units[rid]}"
+                     f"（中位数 {fmt(st.get('median', 0))}，P10～P90 为 {fmt(low if low is not None else 0)}～{fmt(high)}）"),
+            suggestion="仅作参照：篇幅、层次以上级要求、既有模板和事项复杂程度为准，用户指定的篇幅以用户为准，有理由就不改",
+            basis="公开公文语料基线 references/_shared/style/baseline.md（真实公文的分布，不是规定）"
+                  + ("；该文种样本偏少，只作方向参考" if low_sample else ""),
+        ))
+    info = {"group": group_name, "n": n, "metrics": summary}
+    if not issues:
+        notes.append(f"基线参照：篇幅、一级标题数、“一是”组数、顿号密度均在同文种（{group_name}）P10～P90 内。")
+    return issues, notes, info
+
+
 def lint_document(doc: Document, doc_type: Optional[str] = None, checks: Optional[str] = None,
                   linter: Optional[Linter] = None, notes: Optional[List[str]] = None,
                   banned: Optional[Sequence[BannedTerm]] = None,
                   allow: Optional[Sequence[str]] = None,
-                  evidence_allow: Optional[Any] = None) -> Dict[str, Any]:
+                  evidence_allow: Optional[Any] = None,
+                  baseline: Optional[BaselineRef] = None) -> Dict[str, Any]:
     """banned 为 None 表示没有指定禁用词表；allow 为降级规则 ID 清单（见 --allow）；
     evidence_allow 为评价词白名单（见 --evidence-allow，EVD 类规则不对其中的词报告）。"""
     linter = linter or Linter()
     previous_allow = linter.evidence_allow
     linter.evidence_allow = set(parse_words(evidence_allow))
     try:
-        return _lint_document(doc, doc_type, checks, linter, notes, banned, allow)
+        return _lint_document(doc, doc_type, checks, linter, notes, banned, allow, baseline)
     finally:
         linter.evidence_allow = previous_allow
 
 
 def _lint_document(doc: Document, doc_type: Optional[str], checks: Optional[str], linter: Linter,
                    notes: Optional[List[str]], banned: Optional[Sequence[BannedTerm]],
-                   allow: Optional[Sequence[str]]) -> Dict[str, Any]:
+                   allow: Optional[Sequence[str]], baseline: Optional[BaselineRef] = None) -> Dict[str, Any]:
     check_list = parse_checks(checks)
     dtype, source = resolve_doc_type(doc, doc_type)
     all_notes = list(notes or [])
@@ -2683,6 +2813,12 @@ def _lint_document(doc: Document, doc_type: Optional[str], checks: Optional[str]
             if skipped:
                 msg += f"，其中 {skipped} 条的适用范围不含“{dtype}”，未比对"
             all_notes.append(msg + "。")
+    baseline_info: Optional[Dict[str, Any]] = None
+    if baseline is not None:
+        bsl_issues, bsl_notes, baseline_info = baseline_hints(doc, dtype, baseline)
+        if bsl_issues:
+            issues = sorted(issues + bsl_issues, key=lambda x: (LEVEL_RANK.get(x.level, 9), x.line, x.start, x.id))
+        all_notes.extend(bsl_notes)
     if allow:
         issues = _apply_allow(issues, parse_allow(allow), linter, all_notes)
     summary: Dict[str, Any] = {lv: sum(1 for i in issues if i.level == lv) for lv in LEVELS}
@@ -2706,7 +2842,7 @@ def _lint_document(doc: Document, doc_type: Optional[str], checks: Optional[str]
     if "length" in check_list:
         all_notes.append(f"篇幅口径：标题之后、【起草说明】之前的正文，不含空白和版记，约 {body_chars} 字。")
     all_notes.extend(linter.warnings)
-    return {
+    result: Dict[str, Any] = {
         "file": doc.file,
         "doc_type": dtype,
         "doc_type_source": source,
@@ -2718,22 +2854,26 @@ def _lint_document(doc: Document, doc_type: Optional[str], checks: Optional[str]
         "notes": all_notes,
         "engine_version": VERSION,
     }
+    if baseline_info is not None:
+        result["baseline"] = baseline_info
+    return result
 
 
 def lint_text(text: str, doc_type: Optional[str] = None, checks: Optional[str] = None,
               file_name: str = "<text>", linter: Optional[Linter] = None,
               banned: Optional[Sequence[BannedTerm]] = None, allow: Optional[Sequence[str]] = None,
-              evidence_allow: Optional[Any] = None) -> Dict[str, Any]:
+              evidence_allow: Optional[Any] = None, baseline: Optional[BaselineRef] = None) -> Dict[str, Any]:
     """检查一段文本（供其他脚本和测试调用）。"""
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     lines = [(i, line, False) for i, line in enumerate(text.split("\n"), start=1)]
     return lint_document(Document(file_name, lines), doc_type, checks, linter, banned=banned, allow=allow,
-                         evidence_allow=evidence_allow)
+                         evidence_allow=evidence_allow, baseline=baseline)
 
 
 def lint_file(path: Path, doc_type: Optional[str] = None, checks: Optional[str] = None,
               linter: Optional[Linter] = None, banned: Optional[Sequence[BannedTerm]] = None,
-              allow: Optional[Sequence[str]] = None, evidence_allow: Optional[Any] = None) -> Dict[str, Any]:
+              allow: Optional[Sequence[str]] = None, evidence_allow: Optional[Any] = None,
+              baseline: Optional[BaselineRef] = None) -> Dict[str, Any]:
     real = long_path(path)  # Windows 下超过 260 字符的路径
     if not real.is_file():
         raise InputError(f"文件不存在：{path}")
@@ -2741,7 +2881,7 @@ def lint_file(path: Path, doc_type: Optional[str] = None, checks: Optional[str] 
     unit = "段" if path.suffix.lower() == ".docx" else "行"
     doc = Document(path.name, lines, unit)
     doc.docx_tables = list(getattr(lines, "tables", []))
-    return lint_document(doc, doc_type, checks, linter, notes, banned, allow, evidence_allow)
+    return lint_document(doc, doc_type, checks, linter, notes, banned, allow, evidence_allow, baseline)
 
 
 def render_text(result: Dict[str, Any]) -> str:
@@ -2807,6 +2947,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--evidence-allow", default=None, metavar="词,词",
                         help="评价词白名单（EVD 类检查）：列出的评价词（如“显著”“大幅”）不再要求同句或相邻句有数字、对比证据；"
                              "固定短语白名单在 lint_rules.json 的 evidence.whitelist")
+    parser.add_argument("--baseline", nargs="?", const="auto", default=None, metavar="baseline.json",
+                        help="与公开公文语料基线比较篇幅、一级标题数、“一是”组数、顿号密度，偏离 P10～P90 的报 P2 提示（BSL-001～004），"
+                             "只提示不判错；不带路径时按脚本相对路径查找，找不到则跳过并提示")
     parser.add_argument("-h", "--help", action="help", help="显示帮助并退出")
     return parser
 
@@ -2821,8 +2964,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parser.parse_args(argv)
     try:
         banned = load_banned(Path(args.banned)) if args.banned else None
+        baseline = load_baseline(args.baseline) if args.baseline is not None else None
         result = lint_file(Path(args.file), args.doc_type, args.checks, banned=banned, allow=parse_allow(args.allow),
-                           evidence_allow=args.evidence_allow)
+                           evidence_allow=args.evidence_allow, baseline=baseline)
     except InputError as exc:
         print(f"错误：{exc}", file=sys.stderr)
         return 2

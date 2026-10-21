@@ -8,6 +8,7 @@
     {"src": "style/ai-tone.md"},
     {"src": "style/defensive.md"},
     {"src": "style/baseline.md"},
+    {"src": "style/baseline.json"},
     {"src": "rules/jianfu.md"},
     {"src": "rules/doc-types.md"},
     {"src": "rules/tiaoli.md"},
