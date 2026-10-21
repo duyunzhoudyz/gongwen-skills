@@ -19,6 +19,7 @@
 评测目录必须放在仓库之外，并建议用短路径（竞品的 node_modules 层级较深，Windows 路径长度有限制）。
 """
 import argparse
+import json
 import os
 import re
 import shutil
@@ -384,7 +385,12 @@ def main():
         rm_tree(out / "runs")
         (out / "runs").mkdir()
 
-    tpl = {"common": (COMPETE / "templates" / "run-common.md").read_text(encoding="utf-8"),
+    # 评测日期：题目目录下 _meta.json 的 date（每套题按设计时的日期），没有时用默认值
+    eval_date = EVAL_DATE
+    meta_file = Path(args.tasks_dir) / "_meta.json"
+    if meta_file.is_file():
+        eval_date = json.loads(meta_file.read_text(encoding="utf-8")).get("date", EVAL_DATE)
+    tpl = {"common": (COMPETE / "templates" / "run-common.md").read_text(encoding="utf-8").replace("{eval_date}", eval_date),
            "suite": (COMPETE / "templates" / "run-ours.md").read_text(encoding="utf-8"),
            "single": (COMPETE / "templates" / "run-single.md").read_text(encoding="utf-8"),
            "none": (COMPETE / "templates" / "run-none.md").read_text(encoding="utf-8")}
@@ -470,7 +476,7 @@ def main():
     write_json(out / "run_batches.json", batches)
     ours = recs.get("ours", {})
     write_json(out / "meta.json", {
-        "tag": args.tag, "date": EVAL_DATE, "reps": args.reps, "tracks": tracks,
+        "tag": args.tag, "date": eval_date, "reps": args.reps, "tracks": tracks,
         "tasks": [t["id"] for t in tasks], "tasks_dir": str(Path(args.tasks_dir).resolve()),
         "ours_src": str(ours_src), "ours_commit": ours.get("commit", ""), "ours_dirty": ours.get("dirty", []),
         "contenders": {cid: {"commit": r.get("commit", ""), "dir": r.get("dir", ""), "ready": r.get("ready", True)}
