@@ -304,6 +304,10 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
             if re.search(r"签发人\s*:", text):
                 col.add("DOCX-054", "P1", "标点", "“签发人”后应用全角冒号", line=line, excerpt=text,
                         suggestion="签发人：", basis="GB/T 9704-2012 7.2.6")
+            if role == "signer" and layout in ("红头", "纪要"):
+                col.add("DOCX-162", "P1", "段落", "签发人另起了一行，应与发文字号同一行（居右空一字，上行文发文字号居左空一字）",
+                        line=line, excerpt=text, suggestion="抽取全文后用 build_docx.py 重排版头（见 SKILL.md 第四步）",
+                        basis="GB/T 9704-2012 7.2.5、7.2.6")
             if role == "docno" and doc_type in UPWARD_TYPES and layout == "红头":
                 off = D.leading_offset_chars(p, doc)
                 centered = D.para_align(p, doc) in ("center", "right") and not p.text.startswith("\t")
@@ -314,10 +318,18 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
                             line=line, excerpt=text, suggestion="发文字号设为左对齐、左缩进 1 字符，签发人居右空一字排在同一行；"
                             "运行 fix_docx.py 可补足左缩进", basis="GB/T 9704-2012 7.2.5、7.2.6")
         elif role == "issuer":
+            if layout in ("红头", "纪要", "命令") and D.para_align(p, doc) != "center":
+                col.add("DOCX-161", "P1", "段落", "发文机关标志应居中", line=line, excerpt=text,
+                        suggestion="标志居中编排；整个版头有问题的，抽取全文后用 build_docx.py 重排",
+                        basis="GB/T 9704-2012 7.2.4")
             if not D.para_is_red(p, doc):
                 col.add("DOCX-055", "P1", "格式要素", "发文机关标志应为红色", line=line, excerpt=text,
                         suggestion="字体颜色设为红色", basis="GB/T 9704-2012 7.2.4")
 
+    if layout in ("红头", "纪要") and not overprint:
+        _check_header_rule(col, doc, paras, parsed)
+    if layout in ("红头", "白头", "纪要"):
+        _check_banji(col, doc, paras, parsed)
     if layout == "简报":
         _check_brief_frame(col, doc, paras, parsed)
     if layout == "命令":
@@ -450,6 +462,60 @@ def _bottom_rule_color(p) -> Optional[str]:
     if bottom is None or bottom.get(qn("w:val")) in (None, "nil", "none"):
         return None
     return (bottom.get(qn("w:color")) or "auto").upper()
+
+
+def _check_header_rule(col: Collector, doc, paras, parsed) -> None:
+    """红头、纪要：发文字号下应有红色分隔线（7.2.7）；前 15 段和联合行文版头之外找不到红色横线的报 DOCX-160。"""
+    import gw_docx as D
+    has_head = parsed.find("issuer") or parsed.find("docno") or any(
+        D.table_mark(t._tbl) == D.JOINT_HEAD_MARK for t in doc.tables)
+    if not has_head:
+        return
+    for p in paras[:15]:
+        color = _bottom_rule_color(p)
+        if (color and D.is_red(color)) or (_has_top_rule(p) and D.is_red(_top_rule_color(p))):
+            return
+    first = (parsed.find("issuer") or parsed.find("docno"))
+    col.add("DOCX-160", "P1", "格式要素", "版头缺红色分隔线（发文字号下 4 mm 处应有与版心等宽的红色实线）",
+            line=first[0].src + 1 if first else None, excerpt=first[0].text if first else "版头",
+            suggestion="抽取全文后用 build_docx.py 重排版头（见 SKILL.md 第四步）", basis="GB/T 9704-2012 7.2.7")
+
+
+def _top_rule_color(p) -> str:
+    from docx.oxml.ns import qn
+    top = p._p.pPr.find(qn("w:pBdr")).find(qn("w:top"))
+    return (top.get(qn("w:color")) or "auto").upper()
+
+
+def _check_banji(col: Collector, doc, paras, parsed) -> None:
+    """版记（7.4）：抄送、印发行用版记表格，首末粗线、行间细线，位于最后一页版心底部；普通段落、无线或不在页底的报 DOCX-163。"""
+    import gw_docx as D
+    from docx.oxml.ns import qn
+    reasons: List[str] = []
+    first = None
+    for p in doc.paragraphs:  # 含附件页之后的段落
+        t = p.text.strip()
+        if re.match(r"^抄\s*送\s*[：:]", t) or (t.endswith("印发") and re.search(r"\d{4}\s*年", t)):
+            first = first or type("X", (), {"src": paras.index(p) if p in paras else -1, "text": t})
+            if not (_has_top_rule(p) or _bottom_rule_color(p)):
+                reasons.append("抄送、印发行是没有分隔线的普通段落")
+                break
+    for tbl in doc.tables:
+        el = tbl._tbl
+        if not D.is_banji_table(el):
+            continue
+        tblpr = el.find(qn("w:tblPr"))
+        bd = tblpr.find(qn("w:tblBorders")) if tblpr is not None else None
+        edge = [bd.find(qn("w:" + s)) if bd is not None else None for s in ("top", "bottom")]
+        if any(e is None or e.get(qn("w:val")) in (None, "nil", "none") for e in edge):
+            reasons.append("版记表格缺首末分隔线")
+        if tblpr is None or tblpr.find(qn("w:tblpPr")) is None:
+            reasons.append("版记表格没有固定在最后一页版心底部")
+    if reasons:
+        col.add("DOCX-163", "P1", "格式要素", "版记不合要求：" + "；".join(dict.fromkeys(reasons)) +
+                "（版记应有首末粗线、行间细线，位于最后一页版心底部）", line=first.src + 1 if first and first.src >= 0 else None,
+                excerpt=first.text if first else "版记", suggestion="抽取全文后用 build_docx.py 重排（见 SKILL.md 第四步）",
+                basis="GB/T 9704-2012 7.4.1")
 
 
 def _has_top_rule(p) -> bool:
