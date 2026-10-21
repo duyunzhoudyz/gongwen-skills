@@ -153,7 +153,7 @@ license: MIT
    - 有 Python 时运行 `python scripts/fact_diff.py 原稿.txt 正文.txt --json`（合并多稿时第一份写底稿，其余各稿用 `--ref 原稿-乙.txt` 追加，几稿加几个）。“改稿新增”每一项都必须是新增的【待补】【待核实】或脱敏替换，否则恢复原稿写法。“原稿有而改稿没有”只允许第一步第 4 条的四种删除情形，逐项确认删的不是成效数据、责任、时限、需上级支持的事项（调语气删去的上行请求除外），并写进修改说明“删去的数据”；其他的一律恢复。
    - 用了用户补充材料的，另运行 `python scripts/fact_diff.py 原稿.txt 正文.txt --ref 材料.txt --ledger`（几份材料加几个 `--ref`），输出的每一项同样只能是新增标记或脱敏替换。
    - fact_diff 不比对人名、单位名、分工、时限和义务强度，对照第一步清单人工核一遍。
-2. 改动范围：运行 `python scripts/polish_stat.py compare 原稿.txt 正文.txt`。每处改动都能对应到本次任务（按批注改稿时对应到某条批注），对应不上的恢复原文；“新增”段落和“多出的文字”只能是措辞调整、新增标记或脱敏替换，带新数字、荣誉、评价、排名的删去或改为【待补】。
+2. 改动范围：运行 `python scripts/polish_stat.py compare 原稿.txt 正文.txt`。每处改动都能对应到本次任务（按批注改稿时对应到某条批注），对应不上的恢复原文；“新增”段落和“多出的文字”只能是措辞调整、新增标记或脱敏替换，带新数字、荣誉、评价、排名的删去或改为【待补】。另运行 `python scripts/change_guard.py 原稿.txt 正文.txt --json`（用户要求结构不动的加 `--keep-structure`；合并多稿时只对第一份底稿运行）：CHG-001（P0 事实变化）逐条恢复或在修改说明写明理由；CHG-004（结构变化）在结构不动时必须恢复；CHG-003（无规则依据的改动）按需列入说明供用户核对。
 3. 篇幅：上限口径运行 `python scripts/polish_stat.py count 正文.txt --target <目标> --max`，确认没有超过上限；其余去掉 `--max`，确认在±10% 以内（判断下限时脚本已扣除【待补】）。超出或不足的，继续改，或已按压缩第 5 条、扩写第 3 条在回复第一段说明。
 4. 机检：`python scripts/gongwen_lint.py 正文.txt --doc-type <文书类型> --json`。本次改动带进来的问题必须改掉；原稿就有、又不在本次任务内的（如发文字号格式），列入“转交事项”，建议用 gongwen-review。命中公文白名单的保留（`references/_shared/style/ai-tone.md` 第二部分）。疑似误报的（如一级标题“四、四季度安排”被报序号乱序），不改原标题，在说明中写明位置和判断。
 5. 没有 Python 或脚本出错的，按 `references/checklist.md` 逐项人工核对（读不到时按本节和自检清单）：字数逐段估算（标题和【起草说明】之后不算），写“约N字（估算）”，上限口径按上限的九成五控制；数字、日期、文号、书名号和引号内的内容、状态词、义务强度词逐项对照原稿和材料。在说明中写“未运行机检和事实比对，已人工逐段核对”。
@@ -192,7 +192,7 @@ license: MIT
 - [ ] 用户只给星期几或“下周”“月底”的，正文保留原话或标【待补：具体日期】，没有推算日期。
 - [ ] 正文无 Markdown、无免责声明、无“以下是”之类的引导语。
 
-有 Python 环境时运行：`python scripts/gongwen_lint.py 正文.txt --doc-type <文书类型>`，以及第三步的 fact_diff、compare、count。无法运行时按第三步第 5 条人工核对。
+有 Python 环境时运行：`python scripts/gongwen_lint.py 正文.txt --doc-type <文书类型>`，以及第三步的 fact_diff、change_guard、compare、count。无法运行时按第三步第 5 条人工核对。
 
 ## 角色适配
 
@@ -230,4 +230,4 @@ license: MIT
 | `references/_shared/rules/` 下的 jianfu.md、doc-types.md、gbt15835.md、data-expression.md | 定压缩目标、查 JF-16；核对文种和惯用语；数字写法、百分点 |
 | `references/_shared/profiles/roles.md`、`references/_shared/profiles/units/` | 定角色模式和单位类型 |
 | `scripts/polish_stat.py` | count、compare、trace、comments、body |
-| `scripts/fact_diff.py`、`scripts/gongwen_lint.py` | 第三步复核 |
+| `scripts/fact_diff.py`、`scripts/change_guard.py`、`scripts/gongwen_lint.py` | 第三步复核 |

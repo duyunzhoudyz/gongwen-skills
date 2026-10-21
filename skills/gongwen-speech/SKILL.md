@@ -146,7 +146,7 @@ license: MIT
 ### 第六步　自检与交付
 
 1. 对账：正文中每个数、每个事例、每句引语、每个时限和责任单位都能在要点清单中找到，找不到的改为【待补】或【待核实】。有 Python 环境时运行 `python scripts/fact_diff.py 素材台账.md 正文.txt --ledger`，逐条处理“正文中有、台账中没有”的项；讲的稿取整的数在起草说明写明原数。
-2. 机检：`python scripts/gongwen_lint.py 正文.txt --doc-type 讲话稿`（主持词、致辞、发言同样传“讲话稿”）。P0 必改，P1 逐条判断，命中白名单和讲话稿放宽规则的保留；【待补】【待核实】每处报 P2，照常保留并汇总。
+2. 机检：`python scripts/gongwen_lint.py 正文.txt --doc-type 讲话稿`（主持词、致辞、发言同样传“讲话稿”）。P0 必改，P1 逐条判断，命中白名单和讲话稿放宽规则的保留；【待补】【待核实】每处报 P2，照常保留并汇总。ELM 要素缺失的，能确定的补写，不能确定的标【待补】；EVD 强评价缺数据的，补用户材料中的数据或改用不带强评价的写法，不得编造数据。
 3. 用户给了工作报告、前面的讲话或往年讲话稿的，可运行 `python scripts/overlap_check.py 正文.txt 工作报告.txt` 查重复段落，重合多的改写为本篇的要求，或删去。
 4. 没有 Python 或脚本报错的，按 `references/checklist.md` 人工检查，起草说明写“未运行机检，已按人工清单检查”。
 5. 交付（`references/_shared/style/output-format.md`）：

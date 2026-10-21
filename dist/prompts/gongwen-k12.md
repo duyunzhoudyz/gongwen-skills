@@ -1,6 +1,6 @@
 > **中小学行业包（gongwen-k12）**（提示词版）
 >
-> 版本：1.0.0　成熟度：Beta（测试版）　全文约 28100 字符
+> 版本：1.0.0　成熟度：Beta（测试版）　全文约 28168 字符
 >
 > 使用方法：
 > 1. 复制全文，粘贴到对话开头；
@@ -138,7 +138,7 @@
 ### 第五步　自检
 
 1. 有 Python 环境时运行：
-   - `python scripts/gongwen_lint.py 正文.txt --doc-type <类型> --json`，类型见路由表；
+   - `python scripts/gongwen_lint.py 正文.txt --doc-type <类型> --json`，类型见路由表。ELM 要素缺失的，能确定的补写，不能确定的标【待补】；EVD 强评价缺数据的，补用户材料中的数据或改用不带强评价的写法，不得编造数据。
    - 评语：`python scripts/k12_check.py comments 评语.txt --facts <脱敏事实表> [--stage 高中]`；
    - 家长信、家长会讲话：`python scripts/k12_check.py parents 正文.txt [--stage 高中]`；
    - 总结、督导自评：`python scripts/fact_diff.py 素材台账.md 正文.txt --ledger`，列出的“正文中有、台账中没有”的数字逐条处理。

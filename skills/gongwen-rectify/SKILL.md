@@ -92,7 +92,7 @@ license: MIT
 1. 先按反馈原文建台账：问题表现照录原文，措施、责任、时限、状态取自原稿，原稿没有的标【待补】。
 2. 只改问题表述、状态说法和统计句；原稿的措施、责任领导、责任部门、时限、日期保持不变，确需改动的写进修改说明请用户确认。
 3. 修改说明逐条列“问题N：原表述／改后表述／理由（如照录反馈原文、按台账口径）”。
-4. 有 Python 时，改完运行 rectify_check（加 `--feedback`）和 `python scripts/fact_diff.py 原稿.txt 正文.txt`：“原稿有而改稿没有”应为空，“改稿新增”只能是恢复的反馈原文内容。
+4. 有 Python 时，改完运行 rectify_check（加 `--feedback`）和 `python scripts/change_guard.py 原稿.txt 正文.txt --json`（用户要求结构不动的加 `--keep-structure`）：CHG-001（事实变化）只能是恢复的反馈原文内容，其余逐条恢复或在修改说明写明理由；CHG-004（结构变化）在结构不动时必须恢复；CHG-003（无规则依据的改动）按需列入修改说明供用户核对。措施、责任领导、责任部门、时限、日期、义务强度 change_guard 不一定识别，对照原稿人工核一遍。
 
 ### 第二步　拆问题清单
 
@@ -127,7 +127,7 @@ license: MIT
 ### 第五步　对账与自检
 
 1. 对账：有 Python 环境时运行 `python scripts/rectify_check.py 整改台账.md 正文.txt --json`；正文是整改方案的加 `--plan`；有反馈原文的加 `--feedback 反馈意见.txt` 核对问题是否照录；要查超期的加 `--date 2026-11-25`。只给台账时只做台账自检。P0（报告写成已完成而台账未完成、完成数或完成率高于台账、未全部完成却写“全部完成”）必须改报告；P1 逐条处理；P2 人工判断。不靠改台账状态来消除差异。
-2. 机检：运行 `python scripts/gongwen_lint.py 正文.txt --doc-type 整改方案`，进展报告和情况报告用 `整改报告`，自查报告用 `自查报告`。P0 必改，P1 逐条判断；【待补】【待核实】机检报 P2，保留并汇总进起草说明。
+2. 机检：运行 `python scripts/gongwen_lint.py 正文.txt --doc-type 整改方案`，进展报告和情况报告用 `整改报告`，自查报告用 `自查报告`。P0 必改，P1 逐条判断；【待补】【待核实】机检报 P2，保留并汇总进起草说明。ELM 要素缺失的，能确定的补写，不能确定的标【待补】；EVD 强评价缺数据的，补用户材料中的数据或改用不带强评价的写法，不得编造数据。
 3. 不能运行脚本（网页版、无 Python、脚本报错）时，按 `references/checklist.md` 人工对账和检查，并在起草说明写明。
 4. 最后过一遍本文“自检清单”。
 
@@ -190,4 +190,4 @@ license: MIT
 | `references/sources.md`、`references/units.md` | 期限、报送对象和依据条款；读完单位画像后查本类单位的调整 |
 | `references/checklist.md` | 第五步无法运行脚本时 |
 | `references/_shared/guardrails.md`、`references/_shared/profiles/roles.md` | 开工前、与用户要求冲突时；角色模式、无画像降级、首轮交付 |
-| `scripts/rectify_check.py`、`scripts/md2xlsx.py`、`scripts/fact_diff.py`、`scripts/gongwen_lint.py` | 对账（台账 md 或 xlsx，报告 txt、md、docx）；台账转 Excel；改稿后核对数字、日期、引号内容；机检 |
+| `scripts/rectify_check.py`、`scripts/md2xlsx.py`、`scripts/change_guard.py`、`scripts/gongwen_lint.py` | 对账（台账 md 或 xlsx，报告 txt、md、docx）；台账转 Excel；改稿后核对数字、日期、引号内容；机检 |
