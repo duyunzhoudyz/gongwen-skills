@@ -23,8 +23,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import gw_fonts as F  # noqa: E402
 from gw_layout import (ATTACH_MARK_RE, DATE_CN_RE, MARKERS_RE, ROLE_LABELS, SECRET_WORDS_RE, UPWARD_TYPES,  # noqa: E402
-                       doc_kind, draft_note_index, has_brief_header, heading_split, is_heading, is_pipe_residue,
-                       is_table_caption, parse_brief, parse_lines, text_width_chars)
+                       doc_kind, draft_note_index, has_brief_header, heading_levels, heading_split, is_heading, is_pipe_residue,
+                       is_table_caption, looks_like_date, parse_brief, parse_lines, text_width_chars)
 
 CJK_RE = re.compile(r"[一-鿿]")
 # 序号位与 gw_layout.DOCNO_PAT 一致：阿拉伯数字，或尚未编号的“【待补：序号】”
@@ -222,10 +222,8 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
     red_flags = [D.para_is_red(p, doc) for p in paras]
     letter_issuer = None
     sec0 = doc.sections[0]
-    if sec0.different_first_page_header_footer:
-        htxt = _part_text(sec0.first_page_header._element).strip()
-        if htxt:
-            letter_issuer = sec0.first_page_header
+    if D.letter_head_text(sec0):
+        letter_issuer = sec0.first_page_header
     # 简报：开头有简报名称加期号行或编印行的，报头、报尾要素不当作发文机关标志、正文来查
     brief = layout == "简报" or (layout is None and letter_issuer is None and has_brief_header(texts, red_flags))
     anchors = [a for a, _ in tables]
@@ -267,15 +265,18 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
                     col.add("DOCX-033", "P1", "格式要素", f"层次序数写法不规范：{msg}", line=line, excerpt=text,
                             suggestion=hint, basis="GB/T 9704-2012 7.3.3；GB/T 15834-2011 附录 B.3")
                     break
+            else:
+                if it.nonstd:  # 阿拉伯数字多级序号等：已按嵌套层级套用标题字体，序号文字要用户自己改
+                    col.add("DOCX-033", "P1", "格式要素", "层次序数写法不规范：" + it.nonstd, line=line, excerpt=text,
+                            suggestion=ORDINAL_HINT, basis="GB/T 9704-2012 7.3.3；GB/T 15834-2011 附录 B.3")
         elif role == "title":
             _check_title(col, doc, p, line, text, std, unit_roles=frozenset(unit_over))
-        elif role == "recipient":
-            fl = D.para_first_line_chars(p, doc)
-            left = D.para_left_chars(p, doc)
-            if abs(fl) > 0.3 or abs(left) > 0.3 or raw_text[:1] in (" ", "　"):
-                col.add("DOCX-040", "P1", "段落", "主送机关应居左顶格", line=line, excerpt=text,
-                        suggestion="首行缩进和左缩进设为 0", basis="GB/T 9704-2012 7.3.2")
-            if text.rstrip().endswith(":"):
+        elif role in ("recipient", "salutation"):
+            # 行首空格用负左缩进抵消（--keep-text 不删空格）的，视觉上顶格即可
+            if abs(D.leading_offset_chars(p, doc)) > 0.3 or (D.para_align(p, doc) in ("center", "right")):
+                col.add("DOCX-040", "P1", "段落", "主送机关、称呼应居左顶格" if role == "salutation" else "主送机关应居左顶格",
+                        line=line, excerpt=text, suggestion="首行缩进和左缩进设为 0", basis="GB/T 9704-2012 7.3.2")
+            if role == "recipient" and text.rstrip().endswith(":"):
                 col.add("DOCX-041", "P1", "标点", "主送机关后应用全角冒号", line=line, excerpt=text,
                         suggestion=text.rstrip()[:-1] + "：", basis="GB/T 9704-2012 7.3.2")
         elif role == "attachment":
@@ -393,6 +394,18 @@ def check_document(path: Path, layout: Optional[str] = None, params: Optional[di
         col.add("DOCX-081", "P2", "保密", "文档含密级或“内部资料”等标识，只能在涉密或内网环境处理，不得上传联网 AI 工具",
                 excerpt=(parsed.find("secret")[0].text if parsed.find("secret") else ""),
                 suggestion="确认处理环境符合保密规定", basis="references/_shared/guardrails.md 第一条")
+
+    # ---- 成文日期、落款重复排了两次（重排时原文同一行又被排出一次）----
+    seen_dates: Dict[str, List[int]] = {}
+    for i, t in enumerate(texts):
+        if looks_like_date(t):
+            seen_dates.setdefault(re.sub(r"[\s\u3000]", "", t), []).append(i)
+    for idxs in seen_dates.values():
+        if len(idxs) > 1:
+            col.add("DOCX-092", "P1", "结构", f"同一行日期重复排了 {len(idxs)} 次，疑似重排时文字重复", line=idxs[-1] + 1,
+                    excerpt=texts[idxs[-1]].strip(),
+                    suggestion="核对原稿是否只有一行，删去多余的一行；用 build_docx.py --keep-text 重排时文字核对会指出多出的行",
+                    basis="排版不改内容（references/layouts.md 第九部分）")
 
     # ---- 页码 ----
     _check_page_numbers(col, doc, layout)
@@ -834,6 +847,7 @@ def _check_attachment_pages(col: Collector, doc, parsed, att_paras, att_texts, o
                 why.append("未居中")
             col.add("DOCX-132", "P1", "格式要素", "附件标题应居中编排在版心第三行：" + "，".join(why), line=offset + j + 1,
                     excerpt=tp.text.strip(), suggestion="标识在第一行，空一行，标题居中在第三行", basis=basis)
+        att_levels, _ = heading_levels([t.strip() for t in att_texts[j + 1:end]])
         for k in range(j + 1, end):
             text = att_texts[k]
             if not text.strip():
@@ -841,7 +855,7 @@ def _check_attachment_pages(col: Collector, doc, parsed, att_paras, att_texts, o
             q = att_paras[k]
             if D.para_align(q, doc) == "center" and is_table_caption(text.strip()):
                 continue
-            level = is_heading(text.strip())
+            level = att_levels.get(k - j - 1) if att_levels else is_heading(text.strip())
             _check_body_para(col, doc, q, level or "body", heading_split(text.strip()) if level else -1, offset + k + 1,
                              text, std, line_pt, body_pt, lines_req, grid_pitch, unit_roles=frozenset(unit_over))
     # 附件说明与附件对应
@@ -1075,8 +1089,26 @@ def _check_text(col: Collector, text: str, line: Optional[int], *, in_signoff: b
                 suggestion="补齐信息并删除标记", basis="references/_shared/guardrails.md 第二条")
 
 
+def _check_headers(col: Collector, doc, layout: str) -> None:
+    """页眉里有内容（含旧页码）：公文不用页眉，页码放页脚（7.5）。信函首页页眉是发文机关标志和红色双线，不算。"""
+    import gw_docx as D
+    for idx, section in enumerate(doc.sections, start=1):
+        for name, part, is_first in (("页眉", section.header, False), ("双页页眉", section.even_page_header, False),
+                                     ("首页页眉", section.first_page_header, True)):
+            if part.is_linked_to_previous or (is_first and layout == "信函" and D.letter_head_text(section)):
+                continue
+            if is_first and not section.different_first_page_header_footer:
+                continue  # 未启用“首页不同”，首页页眉不显示
+            summary = D.part_summary(part._element)
+            if summary:
+                col.add("DOCX-075", "P1", "页码", f"{name}中有内容（页码或杂项）：公文一般不用页眉，页码应放在页脚",
+                        excerpt=summary[:40], suggestion="运行 fix_docx.py 清除页眉并按标准重设页脚页码",
+                        basis="GB/T 9704-2012 7.5")
+
+
 def _check_page_numbers(col: Collector, doc, layout: str) -> None:
     from docx.oxml.ns import qn
+    _check_headers(col, doc, layout)
     section = doc.sections[0]
     settings = doc.settings.element
     even_odd = settings.find(qn("w:evenAndOddHeaders")) is not None and \

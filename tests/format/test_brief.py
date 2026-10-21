@@ -135,7 +135,13 @@ class BriefMissingTest(unittest.TestCase):
     def test_missing_issue_no_leaves_placeholder(self):
         meta = read_meta("简报-版式信息.json")
         del meta["期号"], meta["总期号"]
+        # 默认不写占位：期号行留空，只在缺失要素里列出
         doc, report = build_docx.build(gw_layout.read_body_text(FILES / "简报-正文.txt")[0], meta, installed=NO_FONTS)
+        self.assertEqual(doc.paragraphs[1].text, "")
+        self.assertEqual(report["placeholders"], [])
+        self.assertTrue(any("期号" in m for m in report["missing"]), report["missing"])
+        doc, report = build_docx.build(gw_layout.read_body_text(FILES / "简报-正文.txt")[0], meta, installed=NO_FONTS,
+                                       placeholders=True)
         path = OUT / "样稿-简报-缺期号.docx"
         doc.save(str(path))
         self.assertEqual(Document(str(path)).paragraphs[1].text, "【待补：期号】")
@@ -149,7 +155,12 @@ class BriefMissingTest(unittest.TestCase):
     def test_nothing_given_all_masthead_placeholders_and_no_footer(self):
         """只给正文、指定简报版式：报头四项都写【待补】，不编造；没有报送范围和印数就不排报尾。"""
         text = "某街道建立网格员“每日一巡”制度\n\n网格员每天巡查一遍，发现问题当场登记。"
-        path, report = build_text(text, "样稿-简报-只有正文.docx", layout="简报")
+        _, plain = build_text(text, "样稿-简报-只有正文-默认.docx", layout="简报")
+        self.assertEqual(plain["placeholders"], [])  # 默认不写占位，只列缺失要素
+        self.assertEqual(len(plain["missing"]), 4)
+        doc, report = build_docx.build(text.split("\n"), {}, layout="简报", installed=NO_FONTS, placeholders=True)
+        path = OUT / "样稿-简报-只有正文.docx"
+        doc.save(str(path))
         doc = Document(str(path))
         self.assertEqual([p.text for p in doc.paragraphs[:3]],
                          ["【待补：简报名称】", "【待补：期号】", "【待补：编印单位】\t【待补：印发日期】"])

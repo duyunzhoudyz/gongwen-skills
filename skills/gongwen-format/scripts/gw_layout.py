@@ -72,6 +72,7 @@ BANJI_MAIN_RE = re.compile(r"^主\s*送\s*[：:]")
 ATTACH_RE = re.compile(r"^附\s*件\s*[：:]")
 ATTACH_CONT_RE = re.compile(r"^\d{1,2}\s*[.．]\s*\S")
 NOTE_RE = re.compile(r"^[（(].+[）)]$")
+CONTACT_RE = re.compile(r"^联系(?:人|电话|方式)\s*[：:]")  # 没加括号的联系人行，同附注（成文日期下一行）
 ATTENDANCE_RE = re.compile(r"^(出\s*席|请\s*假|列\s*席|缺\s*席)\s*[：:]")
 SUBTITLE_RE = re.compile(r"^(——|—|－－|--)")
 TITLE_NOTE_RE = re.compile(r"^[（(]\s*\d{4}年\d{1,2}月\d{1,2}日\s*[）)]$")
@@ -94,7 +95,7 @@ ROLE_LABELS = {
     "copy_no": "份号", "secret": "密级和保密期限", "urgency": "紧急程度",
     "issuer": "发文机关标志", "docno": "发文字号", "signer": "签发人", "lingno": "令号",
     "title": "标题", "subtitle": "副标题", "title_note": "题注",
-    "recipient": "主送机关", "h1": "一级标题", "h2": "二级标题", "h3": "三级标题",
+    "recipient": "主送机关", "salutation": "称呼", "h1": "一级标题", "h2": "二级标题", "h3": "三级标题",
     "h4": "四级标题", "body": "正文", "attendance": "出席列席", "attachment": "附件说明",
     "signature": "发文机关署名", "date": "成文日期", "note": "附注",
     "banji_main": "版记主送", "cc": "抄送", "print": "印发机关和印发日期", "blank": "空行",
@@ -194,6 +195,73 @@ def is_heading(text: str) -> Optional[str]:
     if H3_RE.match(text) or H3_BAD_RE.match(text):
         return "h3"
     return None
+
+
+# 称呼（讲话稿“同志们：”等）：独占一行、以冒号结尾，顶格排，不缩进
+GREETING_RE = re.compile(r"同志|朋友|同学|老师|各位|女士|先生|代表|委员|来宾|嘉宾|领导|职工|干部|战友|师生|家长|乡亲|市民")
+
+
+def is_salutation(text: str) -> bool:
+    t = text.strip()
+    return bool(t) and len(t) <= 30 and t.endswith(("：", ":")) and not any(ch in t for ch in "。；！？") \
+        and bool(GREETING_RE.search(t))
+
+
+# 阿拉伯数字多级序号（1.1、1.1.1）：国标没有这种写法，识别后按嵌套层级套用一至四级标题字体，序号文字不改
+DEC3_RE = re.compile(r"^(\d{1,2})\.(\d{1,2})\.(\d{1,2})(?!\d)(?P<sep>[\s　、．.]?)(?=\S)")
+DEC2_RE = re.compile(r"^(\d{1,2})\.(\d{1,2})(?!\d)(?P<sep>[\s　、．.]?)(?=\S)")
+LEVEL_FONT_NAME = {1: "黑体", 2: "楷体", 3: "仿宋", 4: "仿宋"}
+STD_MARK = {1: "一、", 2: "（一）", 3: "1.", 4: "（1）"}
+STD_KIND = {"h1": "cn1", "h2": "cn2", "h3": "ar1", "h4": "p4"}
+KIND_SAMPLE = {"cn1": "一、", "cn2": "（一）", "ar1": "1.", "p4": "（1）", "ar2": "1.1", "ar3": "1.1.1"}
+
+
+def heading_levels(texts: Sequence[str]) -> Tuple[Dict[int, str], Dict[int, str]]:
+    """文档含“1.1”这类多级阿拉伯数字序号时，按嵌套层级判各行的标题级别。
+
+    返回 (级别, 说明)：级别 {下标: "h1"～"h4"}，说明 {下标: 序号写法不规范的提示}。没有多级阿拉伯数字序号时返回两个空字典，
+    调用方按 is_heading 的标准写法（一、（一）1.（1））识别。层级按首次出现时的嵌套深度定：第一种序号为一级，
+    出现在它之下的新写法依次为二、三、四级；超过四级的按四级。序号文字不改。
+    """
+    kinds: Dict[int, str] = {}
+    last: Dict[str, int] = {}  # 序号前缀 -> 其下已出现的最大序号（“1” -> 2 表示已有 1.1、1.2）
+    for i, raw in enumerate(texts):
+        t = raw.strip()
+        m = DEC3_RE.match(t) or DEC2_RE.match(t)
+        if m:
+            nums = [int(x) for x in m.groups()[:-1]]
+            prefix, n = ".".join(str(x) for x in nums[:-1]), nums[-1]
+            if m.group("sep") or (prefix in last and n == last[prefix] + 1):
+                last[prefix] = n
+                last[prefix + "." + str(n)] = 0
+                kinds[i] = "ar3" if len(nums) == 3 else "ar2"
+                continue
+        level = is_heading(t)
+        if level:
+            kinds[i] = STD_KIND[level]
+            mm = re.match(r"\d{1,2}", t) if level == "h3" else None
+            if mm:
+                last[mm.group(0)] = 0
+    if not any(k in ("ar2", "ar3") for k in kinds.values()):
+        return {}, {}
+    depth: Dict[str, int] = {}
+    stack_kind = None
+    levels: Dict[int, str] = {}
+    notes: Dict[int, str] = {}
+    for i in sorted(kinds):
+        k = kinds[i]
+        if k not in depth:
+            depth[k] = 1 if stack_kind is None else min(4, depth[stack_kind] + 1)
+        stack_kind = k
+        d = depth[k]
+        levels[i] = f"h{d}"
+        std_kind = KIND_SAMPLE[k]
+        if k in ("ar2", "ar3") or STD_MARK[d] != std_kind:
+            marker = re.match(r"^(?:\d{1,2}(?:\.\d{1,2}){0,2}[.．、]?|（[一二三四五六七八九十\d]+）|\([一二三四五六七八九十\d]+\)|[一二三四五六七八九十]+、)",
+                              texts[i].strip())
+            mark = marker.group(0) if marker else std_kind
+            notes[i] = f"序号“{mark}”不是国标层次序数，已按第 {d} 层识别并套用{LEVEL_FONT_NAME[d]}；建议改为“{STD_MARK[d]}”"
+    return levels, notes
 
 
 # ---------------------------------------------------------------------------
@@ -540,6 +608,7 @@ class Item:
     src: int = -1  # 在输入行列表中的下标；来自版式信息时为 -1
     split: int = -1  # 标题与正文同段时标题部分的结束位置
     first: bool = True  # 附件说明的第一行
+    nonstd: str = ""  # 层次标题序号写法不规范时的说明（按嵌套层级识别，序号文字不改）
 
 
 @dataclass
@@ -691,6 +760,11 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
         elif text != TABLE_MARK and len(text) <= 25 and not has_sentence_punct(text) and not is_heading(text)                 and not text.endswith(("：", ":")) and (nxt.endswith(("：", ":")) or TITLE_NOTE_RE.match(nxt)):
             title_items.append(Item("title_note", text, idx))
             pos += 1
+        elif text != TABLE_MARK and len(text) <= 40 and not any(ch in text for ch in "。，；！？") and not is_heading(text) \
+                and not text.endswith(("：", ":")) and _salutation_ahead(lines, pos + 1):
+            # 讲话稿标题下的讲话人、会议名称等行：含顿号、较长，或后面还隔着几行才到“同志们：”
+            title_items.append(Item("title_note", text, idx))
+            pos += 1
         else:
             break
 
@@ -735,7 +809,8 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
 
     # 附注（在成文日期下一行）
     note_item: Optional[Item] = None
-    if end - 1 > pos and NOTE_RE.match(lines[end - 1][1]) and looks_like_date(lines[end - 2][1]):
+    if end - 1 > pos and (NOTE_RE.match(lines[end - 1][1]) or CONTACT_RE.match(lines[end - 1][1])) \
+            and looks_like_date(lines[end - 2][1]):
         note_item = Item("note", lines[end - 1][1], lines[end - 1][0])
         res.fields["附注"] = lines[end - 1][1]
         end -= 1
@@ -780,9 +855,10 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
 
     # 5. 主体：层次标题、出席列席、表格和表题、正文
     body: List[Item] = []
+    inferred, inferred_notes = heading_levels([t for _, t in lines[pos:end]])
     for k in range(pos, end):
         idx, text = lines[k]
-        level = is_heading(text)
+        level = inferred.get(k - pos) if inferred else is_heading(text)
         if text == TABLE_MARK:
             body.append(Item("table", text, idx))
         elif k + 1 < end and lines[k + 1][1] == TABLE_MARK and is_table_caption(text):
@@ -790,9 +866,14 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
         elif ATTENDANCE_RE.match(text):
             body.append(Item("attendance", text, idx))
         elif level:
-            body.append(Item(level, text, idx, split=heading_split(text)))
+            body.append(Item(level, text, idx, split=heading_split(text), nonstd=inferred_notes.get(k - pos, "")))
+        elif is_salutation(text):
+            body.append(Item("salutation", text, idx))  # 讲话稿等的称呼：顶格，不缩进
         else:
             body.append(Item("body", text, idx))
+    if inferred_notes:
+        sample = "；".join(list(inferred_notes.values())[:2])
+        res.warnings.append(f"层次标题序号不是国标写法（共 {len(inferred_notes)} 处），已按嵌套层级识别并套用对应标题字体，序号文字未改：{sample}")
 
     res.items = head + title_items + ([recipient] if recipient else []) + body + attach_items \
         + sig_items + ([date_item] if date_item else []) + ([note_item] if note_item else []) + tail
@@ -807,6 +888,17 @@ def parse_lines(raw_lines: Sequence[str], red: Optional[Sequence[bool]] = None,
             res.warnings.append("保密提示：材料含密级或“内部资料”等标识。涉密信息不得输入联网 AI 工具，请在单位内网环境处理")
             break
     return res
+
+
+def _salutation_ahead(lines: Sequence[Tuple[int, str]], start: int) -> bool:
+    """从 start 起的三行内是否有称呼（“同志们：”），且之前的行都是不带句号的短行（讲话人、会议名称等题注）。"""
+    for k in range(start, min(len(lines), start + 3)):
+        text = lines[k][1]
+        if is_salutation(text):
+            return True
+        if text == TABLE_MARK or len(text) > 40 or any(ch in text for ch in "。，；！？"):
+            return False
+    return False
 
 
 def _record_docno(res: Parsed, text: str) -> None:

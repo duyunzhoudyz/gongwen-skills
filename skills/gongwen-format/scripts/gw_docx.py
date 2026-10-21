@@ -429,6 +429,67 @@ def clear_part(part_obj) -> None:
                 p0.remove(child)
 
 
+def part_summary(part_el) -> str:
+    """页眉或页脚里的内容概要：文字，加上页码域（有 PAGE 域时写“页码域”）。没有内容返回空串。"""
+    text = "".join(t.text or "" for t in part_el.iter(qn("w:t"))).strip()
+    instr = "".join(t.text or "" for t in part_el.iter(qn("w:instrText"))).upper()
+    simple = " ".join((f.get(qn("w:instr")) or "") for f in part_el.iter(qn("w:fldSimple"))).upper()
+    has_field = "PAGE" in instr or "PAGE" in simple
+    return (text + ("（含页码域）" if has_field else "")) if (text or has_field) else ""
+
+
+PAGE_ONLY_RE = re.compile(r"^[\s—–0-9-]*第?[\s0-9]*页?(?:[\s]*[共/][\s0-9]*页?)?[\s—–0-9-]*$")
+
+
+def letter_head_text(section) -> str:
+    """信函首页页眉里的发文机关标志文字。只有页码（“— 1 —”“第 1 页”或页码域）的不算：那是原稿把页码放进了首页页眉。"""
+    if not section.different_first_page_header_footer:
+        return ""
+    part = section.first_page_header
+    if part.is_linked_to_previous:
+        return ""
+    text = "".join(t.text or "" for t in part._element.iter(qn("w:t"))).strip()
+    if not text or PAGE_ONLY_RE.match(text):
+        return ""
+    return text
+
+
+def blank_part_text(part_obj) -> None:
+    """清掉页眉、页脚各段落里的文字和域，保留段落及其格式（信函首页页脚的红色双线是段落边框，不能删）。"""
+    for p in part_obj._element.iter(qn("w:p")):
+        for child in list(p):
+            if _local(child.tag) != "pPr":
+                p.remove(child)
+
+
+def clear_headers_footers(doc, *, letter: bool = False) -> List[str]:
+    """清除已有文档页眉、页脚中的页码和杂项（修复时用），返回被清除内容的说明，没有内容时返回空列表。
+
+    公文不用页眉，页码按 7.5 放页脚：各节的页眉、双页页眉、首页页眉一律清空；页脚（单页、双页）清空后由 setup_page_numbers 重设；
+    非信函版式取消“首页不同”并清空首页页眉页脚，免得旧页码留在首页。信函版式保留首页页眉（发文机关标志和红色双线）
+    和首页页脚的红色双线，只清除首页页脚里的页码和文字。只处理本节自己的页眉页脚，沿用上一节的不动。"""
+    removed: List[str] = []
+    for idx, section in enumerate(doc.sections, start=1):
+        label = f"第 {idx} 节" if len(doc.sections) > 1 else ""
+        parts = [("页眉", section.header, "clear"), ("双页页眉", section.even_page_header, "clear"),
+                 ("页脚", section.footer, "clear"), ("双页页脚", section.even_page_footer, "clear"),
+                 ("首页页眉", section.first_page_header, "keep" if letter else "clear"),
+                 ("首页页脚", section.first_page_footer, "blank" if letter else "clear")]
+        for name, part, how in parts:
+            if part.is_linked_to_previous:
+                continue
+            summary = part_summary(part._element)
+            if how == "clear":
+                clear_part(part)
+            elif how == "blank":
+                blank_part_text(part)
+            if summary and how != "keep":
+                removed.append(f"{label}{name}：{summary}")
+        if not letter:
+            section.different_first_page_header_footer = False
+    return removed
+
+
 def add_page_field(paragraph, ctx: Ctx) -> None:
     """写入“— PAGE —”，4 号宋体。"""
     pn = ctx.el("page_number")

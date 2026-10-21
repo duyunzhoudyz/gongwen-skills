@@ -203,9 +203,9 @@
       "basis": {"font": "7.5", "size": "7.5", "dash": "7.5（一字线，U+2014）", "side_chars": "7.5（单页居右空一字，双页居左空一字）"}
     },
     "letter": {
-      "issuer_top_mm": 30, "rule_length_mm": 170, "rule_gap_mm": 4, "bottom_rule_from_page_mm": 20,
+      "issuer_top_mm": 30, "rule_length_mm": 156, "rule_gap_mm": 4, "bottom_rule_from_page_mm": 20,
       "thick_pt": 2.25, "thin_pt": 0.75, "double_gap_pt": 1.5, "blank_lines_before_title": 2,
-      "basis": {"issuer_top_mm": "10.1（上边缘距上页边 30 mm）", "rule_length_mm": "10.1（线长 170 mm）",
+      "basis": {"issuer_top_mm": "10.1（上边缘距上页边 30 mm）", "rule_length_mm": "实践值：与版心等宽 156 mm，双线不超出版心（标准原文 10.1 为 170 mm，会超出版心）",
                 "rule_gap_mm": "10.1（标志下 4 mm）", "bottom_rule_from_page_mm": "10.1（距下页边 20 mm）",
                 "thick_pt": "实践值", "thin_pt": "实践值", "double_gap_pt": "实践值",
                 "blank_lines_before_title": "10.1（与其上最后一个要素相距二行）"}

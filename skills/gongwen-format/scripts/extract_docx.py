@@ -23,6 +23,7 @@ from typing import List, Optional, Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from gw_verify import compare_chars  # noqa: E402
 from gw_layout import (ATTACH_MARK_RE, CC_RE, PRINT_RE, SENT_PUNCT, SIGNER_RE, doc_kind, has_brief_header,  # noqa: E402
                        is_draft_note_line, parse_lines)
 
@@ -76,6 +77,7 @@ def extract(path: Path, layout: Optional[str] = None) -> dict:
     doc = Document(str(path))
     notes: List[str] = []
     warnings: List[str] = []
+    original: List[str] = []  # 原文正文段落、表格单元格文字（【起草说明】之前），抽取后核对用
     # 1. 按文档顺序收集：(类型, 文字, 是否红色)
     seq: list = []  # ("p", text, red) / ("raw", text, False) / ("banji", text, False)
     joint_names: List[str] = []
@@ -90,9 +92,11 @@ def extract(path: Path, layout: Optional[str] = None) -> dict:
                 notes.append("遇到【起草说明】，其后内容未抽取")
                 break
             red = D.para_is_red(para, doc)
+            original.append(raw)
             seq += [("p", t, red) for t in _norm(raw)]
         elif tag == "tbl":
             tbl = Table(block, doc._body)
+            original += [Paragraph(p, doc._body).text for p in block.iter(D.qn("w:p"))]
             mark = D.table_mark(block)
             if mark == D.JOINT_HEAD_MARK:
                 first = block.findall(".//" + D.qn("w:tc"))[0]
@@ -138,9 +142,7 @@ def extract(path: Path, layout: Optional[str] = None) -> dict:
 
     # 3. 识别版式
     sec0 = doc.sections[0]
-    letter_head = ""
-    if sec0.different_first_page_header_footer:
-        letter_head = "".join(t.text or "" for t in sec0.first_page_header._element.iter(D.qn("w:t"))).strip()
+    letter_head = D.letter_head_text(sec0)
     meta: dict = {}
     recognized: List[str] = []
     brief = has_brief_header(texts, reds)
@@ -222,8 +224,37 @@ def extract(path: Path, layout: Optional[str] = None) -> dict:
     for label, title, body in secs:
         lines.append(f"【附件{label}】{title}")
         lines += body
+    # 5. 页眉、页脚里的页码和杂项不带入重排稿（页码由 build 在页脚按标准重设），如实告知
+    hf: List[str] = []
+    for idx, sec in enumerate(doc.sections, start=1):
+        for name, part in (("页眉", sec.header), ("双页页眉", sec.even_page_header), ("页脚", sec.footer),
+                           ("双页页脚", sec.even_page_footer), ("首页页眉", sec.first_page_header),
+                           ("首页页脚", sec.first_page_footer)):
+            if part.is_linked_to_previous or (name == "首页页眉" and lay == "信函" and letter_head):
+                continue
+            summary = D.part_summary(part._element)
+            if summary:
+                hf.append(("" if len(doc.sections) == 1 else f"第 {idx} 节") + f"{name}：{summary}")
+    if hf:
+        notes.append("原页眉、页脚中的内容不带入重排稿（公文不用页眉，页码由 build 在页脚按标准重设）：" + "；".join(hf))
+    # 6. 核对：版式信息加正文（还原成文字）应与原文各字一致，没有多字、少字、重复；不一致的先查明再重排
+    if letter_head and "发文机关标志" in meta and lay == "信函":
+        original.append(letter_head)
+    recon: List[str] = [v for key, val in meta.items() if key != "版式"
+                        for v in (val if isinstance(val, list) else [val])]
+    for ln in lines:
+        if re.match(r"^[|]", ln.strip()):
+            recon += [c.replace("<br>", "").strip() for c in ln.strip().strip("|").split("|")
+                      if not re.fullmatch(r"[\s:-]*", c)]
+        else:
+            recon.append(ln)
+    chk = compare_chars(original, recon, ignore=("签发人：", "签发人:", "抄送：", "抄送:", "印发", "文件", "【", "】", "|", "-",
+                                                 "<br>", "&nbsp;"))
+    if not chk.ok:
+        warnings.append("抽取核对发现版式信息加正文与原文的文字不一致，请先查明再重排（不得声称已逐字核对）：" + chk.summary())
     return {"lines": lines, "meta": meta, "recognized": recognized, "notes": notes, "warnings": warnings,
-            "attachments": len(secs), "layout": lay}
+            "attachments": len(secs), "layout": lay,
+            "text_check": {"ok": chk.ok, "chars": chk.chars, "problems": chk.problems}}
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -269,6 +300,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     for title, items in (("识别结果", res["recognized"]), ("提示", res["notes"]), ("警告", res["warnings"])):
         if items:
             print(title + "：\n" + "\n".join("  - " + x for x in items))
+    tc = res["text_check"]
+    print("抽取核对：版式信息加正文与原文各字一致，没有多字、少字、重复（" + str(tc["chars"]) + " 字）" if tc["ok"]
+          else "抽取核对：不一致，见上面的警告；查明前不要声称已逐字核对")
     print("下一步：python scripts/build_docx.py <正文> --meta <版式信息> --keep-text -o <成稿.docx>（内容别动时加 --keep-text）")
     return 0
 

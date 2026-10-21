@@ -62,8 +62,10 @@ class ParamsTest(unittest.TestCase):
         self.assertEqual(el["issuer"]["top_from_body_mm"], 35)
         self.assertEqual(el["header_rule"]["gap_mm"], 4)
         self.assertEqual((el["letter"]["issuer_top_mm"], el["letter"]["rule_length_mm"],
-                          el["letter"]["bottom_rule_from_page_mm"]), (30, 170, 20))
+                          el["letter"]["bottom_rule_from_page_mm"]), (30, 156, 20))
+        # 信函双线：标准原文线长 170 mm 会超出版心（156 mm），本工具取与版心等宽
         self.assertIn("线长均 170 mm", self.rules)
+        self.assertEqual(el["letter"]["rule_length_mm"], self.params["page"]["body_width_mm"]["value"])
         self.assertEqual((el["h1"]["font"], el["h2"]["font"], el["h3"]["font"], el["h4"]["font"]),
                          ("黑体", "楷体", "仿宋", "仿宋"))
         std = self.params["fonts"]["standard"]
