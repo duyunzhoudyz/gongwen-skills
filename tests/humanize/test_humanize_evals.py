@@ -28,6 +28,8 @@ MUST_CONTAIN = {
     21: ["科学化、精细化、规范化", "极大增强了群众的参与感和认同感"],
     22: ["织密网络，阅读服务提质增效", "共赴书香之约", "扬帆起航"],
     23: ["加大监督检查力度", "总体稳定向好"],
+    24: ["请允许我代表某街道办事处", "再上新台阶", "携手并肩"],
+    25: ["在一定程度上提升了便民服务水平", "基本完成", "心坎上"],
 }
 
 
@@ -74,7 +76,7 @@ class RewriteStrengthEvalTest(unittest.TestCase):
 class RuleTextTest(unittest.TestCase):
     def test_skill_has_strength_section(self):
         text = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
-        for needle in ["### 改写强度", "事实冻结、表达放开", "结构别动", "回复开头直接给改后全文", "不超过 5 条"]:
+        for needle in ["### 改写强度", "事实冻结、表达放开", "结构别动", "回复开头直接给改后全文", "不超过 5 行"]:
             self.assertIn(needle, text)
 
     def test_guide_has_new_categories_and_examples(self):
@@ -85,7 +87,7 @@ class RuleTextTest(unittest.TestCase):
 
     def test_skill_has_round3_rules(self):
         text = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
-        for needle in ["改写优先于删除", "85%～100%", "标题也要改", "不在正文插【待补】", "拉开帷幕", "每条一行"]:
+        for needle in ["改写优先于删除", "85%～100%", "标题也要改", "不在正文插【待补】", "拉开帷幕", "每行一句"]:
             self.assertIn(needle, text)
 
     def test_guide_has_round3_examples(self):
@@ -101,6 +103,35 @@ class RuleTextTest(unittest.TestCase):
         self.assertIn("没有被当作空话删掉", joined23)
         for cid in (5, 8, 9):
             self.assertNotIn("标【待补】", "".join(cases[cid]["expectations"]) + cases[cid]["expected_output"])
+
+    def test_skill_has_round5_rules(self):
+        text = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
+        for needle in ["全文（对话中的和写出的文件）只含正文", "每行一句", "不写规则号、类别名、工具名",
+                       "第一条第1款", "对冲、防御性限定语", "基本完成", "讲话稿按讲话语体改写", "口号短语"]:
+            self.assertIn(needle, text)
+        self.assertNotIn("起草说明.md", text)
+        self.assertNotIn("首次收到稿件时", text)
+
+    def test_round5_guide_and_notes(self):
+        guide = (SKILL_DIR / "references" / "rewrite-guide.md").read_text(encoding="utf-8")
+        for needle in ["8. 口号短语残留。", "9. 对冲限定语。"]:
+            self.assertIn(needle, guide)
+        notes = (SKILL_DIR / "references" / "doc-type-notes.md").read_text(encoding="utf-8")
+        self.assertIn("按口头改写", notes)
+
+    def test_round5_cases(self):
+        cases = {c["id"]: c for c in load_cases()}
+        joined24 = "".join(cases[24]["expectations"])
+        for needle in ["拆成短句", "口头衔接", "个人经历"]:
+            self.assertIn(needle, joined24)
+        joined25 = "".join(cases[25]["expectations"])
+        for needle in ["保留“基本完成”", "口号短语", "一定程度上"]:
+            self.assertIn(needle, joined25)
+        for cid in (17, 18, 19, 20, 22, 23, 24, 25):
+            self.assertIn("全文不带", "".join(cases[cid]["expectations"]), f"用例 {cid} 缺少全文不带起草说明的期望")
+        for cid in (2, 15, 16):
+            text = "".join(cases[cid]["expectations"]) + cases[cid]["expected_output"]
+            self.assertNotIn("每条写明改动类别和规则号", text)
 
     def test_guide_no_longer_over_conservative(self):
         text = (SKILL_DIR / "references" / "rewrite-guide.md").read_text(encoding="utf-8")
