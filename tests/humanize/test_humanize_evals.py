@@ -26,6 +26,8 @@ MUST_CONTAIN = {
     19: ["近年来，随着国家对粮食安全的重视程度不断提高", "令人瞩目的成绩"],
     20: ["高度重视，迅速召开专题会议", "筑牢了食品安全防线"],
     21: ["科学化、精细化、规范化", "极大增强了群众的参与感和认同感"],
+    22: ["织密网络，阅读服务提质增效", "共赴书香之约", "扬帆起航"],
+    23: ["加大监督检查力度", "总体稳定向好"],
 }
 
 
@@ -80,6 +82,25 @@ class RuleTextTest(unittest.TestCase):
         for needle in ["### （十七）空泛总括句与段尾拔高句", "### （十八）抽象名词堆叠与副词密集",
                        "### （十九）空壳排比与机械总分", "## 六、改写力度：误正例"]:
             self.assertIn(needle, text)
+
+    def test_skill_has_round3_rules(self):
+        text = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
+        for needle in ["改写优先于删除", "85%～100%", "标题也要改", "不在正文插【待补】", "拉开帷幕", "每条一行"]:
+            self.assertIn(needle, text)
+
+    def test_guide_has_round3_examples(self):
+        text = (SKILL_DIR / "references" / "rewrite-guide.md").read_text(encoding="utf-8")
+        for needle in ["5. 删除过度。", "6. 标题未改。", "7. 插入待补。"]:
+            self.assertIn(needle, text)
+
+    def test_round3_cases_expectations(self):
+        cases = {c["id"]: c for c in load_cases()}
+        joined22 = "".join(cases[22]["expectations"])
+        self.assertIn("按写实改写", joined22)
+        joined23 = "".join(cases[23]["expectations"])
+        self.assertIn("没有被当作空话删掉", joined23)
+        for cid in (5, 8, 9):
+            self.assertNotIn("标【待补】", "".join(cases[cid]["expectations"]) + cases[cid]["expected_output"])
 
     def test_guide_no_longer_over_conservative(self):
         text = (SKILL_DIR / "references" / "rewrite-guide.md").read_text(encoding="utf-8")
