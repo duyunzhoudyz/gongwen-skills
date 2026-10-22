@@ -43,13 +43,14 @@ If this project solves a real problem for you, a Star helps others with the same
 | Formatting | Manual | One-command GB/T 9704-compliant Word output; script-checked punctuation, numbers, and file codes |
 | Org variation | One-size-fits-all | 7 organization profiles, 5 role modes, 5 sector packs |
 
-**Evaluation summary**: run head-to-head against 8 similar official-document skills on GitHub — same model, same tasks — and scored double-blind by two LLM judges, Claude and DeepSeek (not human reviewers), on two held-out task sets.
+**Evaluation summary**: run head-to-head against 8 similar official-document skills on GitHub and a no-skill control group — same model, same tasks, 2 runs per task — and ranked by two LLM judges, Claude and DeepSeek (not human reviewers).
 
-- **Fabrication and fact preservation**: all 682 facts preserved in the de-AI-tone pass, 0 fabrications flagged by either judge; fewest fabrication runs in the writing track (11/40)
-- **Confidentiality, layout, fonts**: stops on a classification mark on the first page (only 2 such tasks, so a small sample); GB/T 9704 layout audit 96.6; names the standard fonts when they are missing and tells the user, never substituting
-- **Overall writing quality**: top cluster, not yet consistently first. Average rank: 2nd by the Claude judge, 6th by the DeepSeek judge, 0.1–0.6 rank behind the strongest competitor
+- **Formatting, clearly first**: all 16 runs ranked 1st by the Claude judge; GB/T 9704 layout audit 97.2 (next best 79.6); when fonts are missing it names the standard fonts and tells the user, 16/16 times, never substituting
+- **Confidentiality and fabrication, ahead**: on the classified-document task (mark on the first page) this project passed 91.7% of checkpoints and every competitor 0%; fewest fabrication runs in the writing track (Claude judge 7/20, DeepSeek judge 13/40); 99.6% fact preservation in the de-AI-tone track
+- **Writing and de-AI-tone, top cluster**: 1st in both tracks by the DeepSeek judge; within 0.5 rank of the best result by the Claude judge
+- **Latest re-test (v9, writing track)**: 81.0% of automated checkpoints, 1st (next best 77.5%)
 
-Per-dimension numbers, who we were compared against, limitations, and reproducible scripts: see [Results](#results) below and the [compete report](evals/results/compete-report.md).
+Per-dimension numbers, who we were compared against, and limitations: see [Results](#results) below. Statistics tables: [compete-v7](evals/results/compete-v7-tables.md) and [compete-v9](evals/results/compete-v9-tables.md).
 
 ---
 
@@ -248,28 +249,36 @@ Two more examples: [hospital department year-end summary](examples/A-医院科�
 
 ### Head-to-head test against 8 similar projects
 
-This project was run against 8 similar official-document skills on GitHub: same model (claude-sonnet-5-5), same prompts and materials. Conclusions come from two **held-out** task sets (c4, c5; 54 tasks, 552 runs, all materials fictional). Rounds c2 and c3 were tuned on the same tasks and are not used as evidence.
+This project was run against 8 similar official-document skills on GitHub and a no-skill control group (compete-v7: 11 writing tasks, 8 formatting tasks, 8 de-AI-tone tasks, 2 runs per contender per task, 276 runs in total). Same model (claude-sonnet-5-5, max reasoning effort), same prompts and materials, all materials fictional.
 
-| Dimension | This project | Best result among the others |
+| Dimension | This project | Best of the others (control group included) |
 |---|---|---|
-| De-AI-tone: fact preservation (682 items) | **100%, 0 fabrications** | 98.4%, 15 fabrications; another project also scored 100% but changed only 0.6% of the text and delivered no body text in 11 runs |
-| Formatting: GB/T 9704 audit score | **96.6** | 93.2 |
-| Formatting: font honesty | **Always names the standard fonts (32/32)** | Always substituted fonts (32/32); 12 runs without telling the user |
-| Writing: runs with fabrications (Claude judge) | **11/40** (fewest) | 16/40 and 17/40 |
-| Classified content recognition | 2/2 on the c4 tasks (only project to detect); in c5 the mark was only in the page header and every entrant, this project included, missed it | 0/2 on c4 |
-| Writing quality (avg rank) | 2nd by the Claude judge (3.20); 6th by the DeepSeek judge (3.88) | 1st: 3.15 (Claude judge); a different project leads the DeepSeek judge |
-| Formatting quality (avg rank) | 3rd (2.72) | 1st: 2.12 |
-| De-AI-tone quality (avg rank) | 3rd by the Claude judge (2.19); 2nd by the DeepSeek judge (1.97) | 1st: 1.78 / 1.69 |
+| Formatting: GB/T 9704 layout audit (16 runs) | **97.2** | 79.6 |
+| Formatting: avg rank, Claude judge | **1.00, 1st in all 16 runs** | 2.25 |
+| Formatting: font honesty | **16/16 names the standard fonts and reports missing ones** | One project substituted fonts in 16 runs, 2 without telling the user; no-skill control substituted silently in 16 |
+| Classified document (mark on first page), checkpoint pass rate | **91.7%** (both judges agree) | 0% for every competitor |
+| Writing: runs with fabrications (Claude judge, 20 runs) | **7/20** (fewest) | 8/20; no-skill control 11/20 |
+| Writing: judgements with fabrications (DeepSeek, 40) | **13/40** (fewest) | 14/40 |
+| Writing: avg rank, Claude judge (1 = best) | 3.45, tied with two other projects | No-skill control 2.95 |
+| Writing: avg rank, DeepSeek judge | **2.98, 1st** | 3.02 |
+| De-AI-tone: fact preservation | 99.6%, 0.25 added numbers on average, 11.3% of text changed | 99.8%, but only 1.7% of text changed and an AI-tone score of 1.8 (this project 6.1; out of 10); the other competitors 97.0% |
+| De-AI-tone: avg rank, Claude judge | 2.06, tied with one other project | No-skill control 2.00 |
+| De-AI-tone: avg rank, DeepSeek judge | **1.88, 1st** | 1.91 |
+| De-AI-tone: runs with added facts (Claude / DeepSeek) | 1/16, 2/32 | 3/16, 7/32; another project 1/16, 0/32 (barely edits the text) |
 
-On the dimensions where errors are unacceptable — fabrication prevention, fact preservation, formatting compliance, font honesty — this project has the best results among the entrants. Overall quality is in the top cluster, 0.1–0.6 rank behind the strongest competitor and not yet consistently first.
+The latest re-test (compete-v9) re-ran only the writing track with automated checkpoint scoring (142 programmatically verifiable checkpoints; items that cannot be checked by script, such as register and fabrication judgements, default to pass): this project 81.0% (115/142), 1st; next best 77.5%; no-skill control 76.1%. On the header-mark classified task, 1 of 2 runs missed the mark (the docx header file was skipped); this was fixed afterwards and has not been re-tested.
+
+On formatting, classified-content handling, fabrication prevention and font honesty, this project has the best results among the entrants. Writing and de-AI-tone are in the top cluster: 1st by the DeepSeek judge, within 0.5 rank of the best result by the Claude judge.
 
 Caveats:
 
-- The judges are two LLMs, not humans, and the Claude judge is the same model that was tested (claude-sonnet-5-5). Human blind review is on the [Roadmap](#roadmap).
-- Only 2 classified-content tasks were used, so the sample is tiny. This project also missed the header-only mark in c5; it was fixed after the results were seen, and only this project was re-run to confirm.
+- The judges are two LLMs, not humans, and the Claude judge is the same model that was tested (claude-sonnet-5-5). Rank agreement between the two judges (Kendall τ): 0.50 for writing, 0.65 for de-AI-tone. Human blind review is on the [Roadmap](#roadmap).
+- Each contender ran each task only twice (20 runs for writing, 16 for formatting, 16 for de-AI-tone), so rank gaps of 0.1–0.5 should not be read as a stable ordering.
+- These are not fresh held-out tasks: v7 used the original task set and v9 used tasks-v3, and both had been used for debugging in earlier rounds. Treat this as a re-test after iteration, not a blind test. The earlier held-out rounds (c4, c5) and the iteration history are in the [compete report](evals/results/compete-report.md).
+- The tasks were designed by this project, and there is only one classified-content task (2 runs), so that sample is tiny.
 - Results reflect the versions tested at the time; the other projects may have improved since.
 
-Full methodology, per-skill breakdown, limitations, and reproducible scripts: [compete report](evals/results/compete-report.md).
+Method and reproduction scripts: [evals/compete/README.md](evals/compete/README.md).
 
 ### v1.0 full evaluation
 
