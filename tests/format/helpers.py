@@ -77,7 +77,7 @@ def build_sample(layout: str, out_name: str, *, installed=None, meta_update=None
     if meta_update:
         meta.update(meta_update)
     doc, report = build_docx.build(read_lines(text_name), meta, layout=layout,
-                                   installed=NO_FONTS if installed is None else installed)
+                                   installed=NO_FONTS if installed is None else installed, auto_fix_text=True)
     path = OUT / out_name
     if path.exists():
         path.unlink()
@@ -86,7 +86,8 @@ def build_sample(layout: str, out_name: str, *, installed=None, meta_update=None
 
 
 def build_text(text: str, out_name: str, meta=None, layout=None):
-    doc, report = build_docx.build(text.split("\n"), meta or {}, layout=layout, installed=NO_FONTS)
+    doc, report = build_docx.build(text.split("\n"), meta or {}, layout=layout, installed=NO_FONTS,
+                                   auto_fix_text=True)
     path = OUT / out_name
     if path.exists():
         path.unlink()

@@ -207,7 +207,8 @@ class TextCheckTest(unittest.TestCase):
 
     def test_normal_mode_does_not_claim_verified(self):
         """未加 --keep-text 时，报告不声称逐字一致；有差异就列出。"""
-        _, report = build_file("关于某事的通知\n\n各单位:\n\n现通知如下。", "r5-普通模式.docx", {"版式": "白头"})
+        _, report = build_file("关于某事的通知\n\n各单位:\n\n现通知如下。", "r5-普通模式.docx", {"版式": "白头"},
+                               auto_fix_text=True)
         text = build_docx.render_text(dict(report, output="x", layout="白头", summary=[]))
         self.assertNotIn("已双向、按顺序规范化比对", text)
         self.assertIn("不得声称逐字一致", text)  # 补了全角冒号，如实写出有差异
@@ -235,7 +236,7 @@ class TextCheckTest(unittest.TestCase):
     def test_blank_day_date_recognized(self):
         """成文日期日留空（“2026年10月　日”）仍识别为成文日期并排在署名之下，回读检查无 P0、P1。"""
         text = "关于某事的通知\n\n各单位:\n\n现通知如下。\n\n特此通知。\n\n某局\n2026年10月　日"
-        path, report = build_file(text, "r5-日留空.docx", {"版式": "白头"})
+        path, report = build_file(text, "r5-日留空.docx", {"版式": "白头"}, auto_fix_text=True)
         got = texts(Document(str(path)))
         self.assertEqual(got[-2:], ["某局", "2026年10月　日"], got)
         bad = {x for x in ids(check_docx.check_document(path)) if x[1] in ("P0", "P1")}

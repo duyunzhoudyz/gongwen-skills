@@ -264,9 +264,9 @@ def merge_fields(parsed: Parsed, meta: dict, warnings: List[str]) -> Dict[str, o
             old = parsed.fields.get(key)
             new = meta[key]
             if key == "期号" and old and norm_issue(old) != norm_issue(new):
-                warnings.append(f'版式信息中的"期号"与正文识别结果不一致，已采用版式信息：{new}（正文中为：{old}）')
+                warnings.append(f'版式信息中的“期号”与正文识别结果不一致，已采用版式信息：{new}（正文中为：{old}）')
             elif old and key in ("标题", "主送机关", "成文日期", "简报名称", "编印单位") and not _same(str(old), str(new)):
-                warnings.append(f'版式信息中的"{key}"与正文识别结果不一致，已采用版式信息：{new}（正文中为：{old}）')
+                warnings.append(f'版式信息中的“{key}”与正文识别结果不一致，已采用版式信息：{new}（正文中为：{old}）')
             fields[key] = new
     return fields
 
@@ -396,11 +396,11 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
         if it.role != "docno" or not title_src or it.src < title_src[0]:
             continue
         if lay not in ("红头", "信函", "纪要"):
-            report["notes"].append(f'正文标题下的发文字号"{it.text}"已从正文移出\uff1b{lay}版式不排发文字号\uff0c需要时请改用红头或信函版式')
+            report["notes"].append(f'正文标题下的发文字号“{it.text}”已从正文移出\uff1b{lay}版式不排发文字号\uff0c需要时请改用红头或信函版式')
         elif meta.get("发文字号") not in (None, "", []):
-            report["notes"].append(f'正文标题下的文号行"{it.text}"已从正文删除\uff0c版头采用版式信息中的发文字号"{meta["发文字号"]}"')
+            report["notes"].append(f'正文标题下的文号行“{it.text}”已从正文删除\uff0c版头采用版式信息中的发文字号“{meta["发文字号"]}"')
         else:
-            report["notes"].append(f'正文标题下的发文字号"{it.text}"已移到版头发文字号位置\uff0c正文中不再保留')
+            report["notes"].append(f'正文标题下的发文字号“{it.text}”已移到版头发文字号位置\uff0c正文中不再保留')
 
     def need(key: str, label: Optional[str] = None) -> str:
         """取要素\uff1a有就返回\uff1b没有时默认返回空串\u3001不写进文档\uff0c只记入 report["missing"]\uff1b留占位模式才写【待补】\u3002"""
@@ -424,9 +424,9 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
             if changed:
                 if auto_fix_text and not keep_text:
                     fields[key] = new
-                    report["notes"].append(f'{key}已按 GB/T 9704-2012 写成"{new}"')
+                    report["notes"].append(f'{key}已按 GB/T 9704-2012 写成“{new}"')
                 else:
-                    report["text_issues"].append(f'{key}"{fields[key]}"写法不规范\uff0c应为"{new}"\uff087.3.5.4\uff09\uff0c按默认不改文字未改\uff1b如需自动转换请加 --auto-fix-text')
+                    report["text_issues"].append(f'{key}"{fields[key]}”写法不规范\uff0c应为“{new}"\uff087.3.5.4\uff09\uff0c按默认不改文字未改\uff1b如需自动转换请加 --auto-fix-text')
 
     b = Builder(ctx, lay, keep_text)
     if lay == "简报":
@@ -464,7 +464,7 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
             report["notes"].append("联合行文版头\uff1a" + "\u3001".join(issuer_names) + "\uff0c主办机关在前\uff0c\u201c文件\u201d二字置于名称右侧并上下居中"
                                    "\uff08GB/T 9704-2012 7.2.4\uff09\uff1b请确认第一个是主办机关")
         else:
-            report["warnings"].append(f'{lay}版式只用主办机关标志\uff0c已取"{issuer_text}"\uff1b联合行文的多机关版头只支持红头版式')
+            report["warnings"].append(f'{lay}版式只用主办机关标志\uff0c已取“{issuer_text}”\uff1b联合行文的多机关版头只支持红头版式')
     body_items = [it for it in parsed.items if it.role not in HEAD_ROLES + TITLE_ROLES + TAIL_ROLES + ("recipient",)]
     title_lines = [it.text for it in parsed.items if it.role == "title"]
     if meta.get("标题"):
@@ -488,7 +488,7 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
             try:
                 header_mm = float(raw_h) if raw_h not in (None, "") else None
             except (TypeError, ValueError):
-                report["warnings"].append(f'版式信息"套打版头高度"应为毫米数\uff0c"{raw_h}"未采用\uff0c按默认留白')
+                report["warnings"].append(f'版式信息“套打版头高度”应为毫米数\uff0c“{raw_h}”未采用\uff0c按默认留白')
             used_h = b.overprint_block(issuer_text if not issuer_text.startswith("【待补") else "",
                                        issuer_names if joint else None, top_mm, used_lines, header_mm)
             docno_top = (used_h + ctx.el("docno")["blank_lines_before"] * ctx.line_pt) * 25.4 / 72
@@ -559,7 +559,7 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
         if not issuer_text:
             issuer_text = need("发文机关标志", "发文机关标志\uff08发文机关全称加\u201c令\u201d或\u201c命令\u201d\uff09")
         elif not issuer_text.endswith("令"):
-            report["warnings"].append(f'命令\uff08令\uff09格式的发文机关标志应为发文机关全称加"命令"或"令"字\uff0c现为"{issuer_text}"\uff0810.2\uff09')
+            report["warnings"].append(f'命令\uff08令\uff09格式的发文机关标志应为发文机关全称加“命令”或“令”字\uff0c现为“{issuer_text}”\uff0810.2\uff09')
         b.issuer(issuer_text, od["top_from_body_mm"], used_lines)
         b.blank(od["blank_lines_before_number"])
         # 正文文件首行写的"第12号"被当作标题推断时\uff0c改认作令号
@@ -570,7 +570,7 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
             parsed.fields["令号"] = fields["令号"] = title_lines[0].strip()
             parsed.fields.pop("标题", None)
             fields.pop("标题", None)
-            report["warnings"] = [w for w in report["warnings"] if not w.startswith(f'标题"{title_lines[0].strip()}"是按首行推断')]
+            report["warnings"] = [w for w in report["warnings"] if not w.startswith(f'标题“{title_lines[0].strip()}”是按首行推断')]
             report["detected"] = [d for d in report["detected"] if not d.startswith("标题\uff1a首行较短")]
             report["detected"].append("令号\uff1a命令\uff08令\uff09格式中独占一行的\u201c第\u00d7号\u201d")
             title_lines = []
@@ -622,16 +622,20 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
         if body_items and _same(body_items[0].text.rstrip("\uff1a:"), rec.rstrip("\uff1a:")):
             body_items = body_items[1:]
         src_rec = next((it for it in parsed.items if it.role == "recipient"), None)
+        if src_rec is not None and "主送机关" not in meta and src_rec.text.endswith(("：", ":"))                 and src_rec.text.rstrip("：:") == rec.rstrip("：:"):
+            rec = src_rec.text  # 原稿已有冒号：解析时被剥掉，这里原样还原，不能因默认不改文字而丢掉
+            if auto_fix_text and not keep_text and rec.endswith(":"):
+                rec = rec[:-1] + "："  # 只有 --auto-fix-text 才把半角冒号改成全角
         if keep_text:
             if src_rec is not None and "主送机关" not in meta:
                 rec = src_rec.text  # 保持原文的冒号写法
             if not rec.endswith(("\uff1a", ":")):
-                report["text_issues"].append(f'主送机关"{rec}"末尾没有全角冒号\uff087.3.2\uff09\uff0c按 --keep-text 未补')
+                report["text_issues"].append(f'主送机关“{rec}”末尾没有全角冒号\uff087.3.2\uff09\uff0c按 --keep-text 未补')
         elif not rec.endswith(("\uff1a", ":")):
             if auto_fix_text:
                 rec += "\uff1a"
             else:
-                report["text_issues"].append(f'主送机关"{rec}"末尾没有全角冒号\uff087.3.2\uff09\uff0c按默认不改文字未补\uff1b如需自动补充请加 --auto-fix-text')
+                report["text_issues"].append(f'主送机关“{rec}"末尾没有全角冒号\uff087.3.2\uff09\uff0c按默认不改文字未补\uff1b如需自动补充请加 --auto-fix-text')
         b.para("recipient", rec, raw=main_lines[src_rec.src] if keep_text and src_rec is not None and "主送机关" not in meta
                and 0 <= src_rec.src < len(main_lines) else None)  # keep_text\uff1a行首空格保留\uff0c用负缩进抵消成顶格
 
@@ -643,7 +647,7 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
         for it in body_items:
             if it.role == "body" and norm(it.text) in supplied:
                 deduped.append(it.text)
-                report["notes"].append(f'正文中的"{it.text.strip()}"与版式信息中给出的要素是同一内容\uff0c已只排一次\uff08避免文字重复\uff09')
+                report["notes"].append(f'正文中的“{it.text.strip()}”与版式信息中给出的要素是同一内容\uff0c已只排一次\uff08避免文字重复\uff09')
             else:
                 kept_items.append(it)
         body_items = kept_items
@@ -713,7 +717,7 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
             D.set_para(ap, reset_indent=False, keep_next=True)  # 附件说明各行不分页
         for name in names:
             if name and name[-1] in "\u3002\uff1b\uff0c\u3001.;,":
-                report["warnings"].append(f'附件名称"{name}"末尾有标点\uff0c应删去\uff08GB/T 9704-2012 7.3.4\uff09')
+                report["warnings"].append(f'附件名称“{name}”末尾有标点\uff0c应删去\uff08GB/T 9704-2012 7.3.4\uff09')
 
     # ---- 署名\u3001成文日期 ----
     sigs = _as_list(fields.get("发文机关署名"))
@@ -756,11 +760,11 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
         note = str(note)
         if not (note.startswith(("\uff08", "(")) and note.endswith(("\uff09", ")"))):
             if keep_text:
-                report["text_issues"].append(f'附注"{note}"没有加圆括号\uff087.3.6\uff09\uff0c按 --keep-text 未加')
+                report["text_issues"].append(f'附注“{note}”没有加圆括号\uff087.3.6\uff09\uff0c按 --keep-text 未加')
             elif auto_fix_text and "附注" in meta:
                 note = f"\uff08{note}\uff09"
             elif "附注" in meta:
-                report["text_issues"].append(f'附注"{note}"没有加圆括号\uff087.3.6\uff09\uff0c按默认不改文字未加\uff1b如需自动加括号请加 --auto-fix-text')
+                report["text_issues"].append(f'附注“{note}"没有加圆括号\uff087.3.6\uff09\uff0c按默认不改文字未加\uff1b如需自动加括号请加 --auto-fix-text')
         note_p = b.para("note", note)
         if signoff_last is not None:
             signoff_last = note_p
@@ -907,7 +911,7 @@ def _finish_text_check(b: Builder, check_result, doc_texts: Sequence[str], keep_
     """写入报告的\u201c文字核对\u201d\uff1bkeep_text 时不一致就中止\uff0c不保存\u3002"""
     problems = list(check_result.problems)
     if keep_text:
-        problems += [f'少字\uff1a已还原段首空格的行"{r.strip()[:30]}"与文档不一致' for r in b.restored if r not in doc_texts]
+        problems += [f'少字\uff1a已还原段首空格的行“{r.strip()[:30]}”与文档不一致' for r in b.restored if r not in doc_texts]
     report["text_check"] = {"keep_text": keep_text, "ok": not problems, "chars": check_result.chars,
                             "problems": problems}
     if keep_text and problems:
@@ -1020,7 +1024,7 @@ def _build_brief(b: Builder, parsed: Parsed, fields: Dict[str, object], meta: di
                width_pt * float(el["name_fill_ratio"]) / max(1.0, text_width_chars(name))))
     size = int(size * 2) / 2
     if text_width_chars(name) * size > width_pt:
-        report["warnings"].append(f'简报名称"{name}"较长\uff0c一行排不下\uff0c会回行\uff1b请核对名称或缩短')
+        report["warnings"].append(f'简报名称“{name}”较长\uff0c一行排不下\uff0c会回行\uff1b请核对名称或缩短')
     p = b.doc.add_paragraph()
     D.format_run(p.add_run(name), font=ctx.font(el["name_font"]), size=size, color=red)
     D.set_para(p, align="center", line_exact=round(size * float(el["name_line_ratio"]), 1), before_pt=0, after_pt=0,
@@ -1121,7 +1125,7 @@ def _warn_docno_width(docno: str, signers: List[str], ctx, report: dict) -> None
     need = text_width_chars(docno) + text_width_chars("签发人\uff1a" + "　".join(last_row)) + 1
     if need > avail:
         report["warnings"].append(
-            f'发文字号"{docno}"与签发人同一行约需 {need:g} 字\uff0c超过可排的 {avail} 字\uff0c签发人会被挤到下一行\uff1b'
+            f'发文字号“{docno}”与签发人同一行约需 {need:g} 字\uff0c超过可排的 {avail} 字\uff0c签发人会被挤到下一行\uff1b'
             "序号未定的请写成\u201c代字〔年份〕【待补\uff1a序号】号\u201d\uff0c不要用整段长占位\uff08GB/T 9704-2012 7.2.5\u30017.2.6\uff09")
 
 
@@ -1138,7 +1142,7 @@ def _table_style(meta: dict, report: dict) -> Tuple[str, str]:
             else:
                 size = val
         else:
-            report["warnings"].append(f'版式信息"{key}"只能写{_DUN.join(allowed)}\uff0c"{val}"未采用\uff0c按默认处理')
+            report["warnings"].append(f'版式信息“{key}”只能写{_DUN.join(allowed)}\uff0c“{val}”未采用\uff0c按默认处理')
     return font, size
 
 

@@ -522,7 +522,8 @@ class OverprintTest(unittest.TestCase):
     def build_pair(self, **extra):
         formal, _ = build_text(REQUEST, "v11-正式红头.docx", meta=UP_META)
         over_meta = dict(UP_META, **extra)
-        doc, report = build_docx.build(REQUEST.split("\n"), over_meta, installed=NO_FONTS, overprint=True)
+        doc, report = build_docx.build(REQUEST.split("\n"), over_meta, installed=NO_FONTS, overprint=True,
+                                       auto_fix_text=True)
         path = OUT / "v11-套打.docx"
         if path.exists():
             path.unlink()
@@ -593,7 +594,7 @@ class OverprintTest(unittest.TestCase):
         (folder / "meta.json").write_text(json.dumps(UP_META, ensure_ascii=False), encoding="utf-8")
         buf = io.StringIO()
         with redirect_stdout(buf):
-            self.assertEqual(build_docx.main([str(folder / "正文.txt"), "--meta", str(folder / "meta.json"), "--overprint",
+            self.assertEqual(build_docx.main([str(folder / "正文.txt"), "--meta", str(folder / "meta.json"), "--overprint", "--auto-fix-text",
                                               "--json"]), 0)
         rep = json.loads(buf.getvalue())
         self.assertTrue(rep["overprint_on"])
@@ -634,19 +635,28 @@ class BuildKeepTextTest(unittest.TestCase):
     TEXT = ("关于做好冬季消防安全检查的通知\n\n各区应急管理局\n\n　　现就有关事项通知如下。\n\n  一、总体要求\n\n"
             "　　全面排查火灾隐患。\n\n某市应急管理局\n\n2026-10-28\n\n注：此件公开发布")
 
-    def _build(self, text, name, meta=None, keep=True):
-        doc, report = build_docx.build(text.split("\n"), meta or {}, layout="白头", installed=NO_FONTS, keep_text=keep)
+    def _build(self, text, name, meta=None, keep=True, auto_fix=False):
+        doc, report = build_docx.build(text.split("\n"), meta or {}, layout="白头", installed=NO_FONTS, keep_text=keep,
+                                       auto_fix_text=auto_fix)
         path = OUT / name
         if path.exists():
             path.unlink()
         doc.save(str(path))
         return Document(str(path)), report
 
-    def test_default_still_normalizes(self):
-        doc, report = self._build(self.TEXT, "bk-默认.docx", {"主送机关": "各区应急管理局"}, keep=False)
+    def test_auto_fix_text_normalizes(self):
+        doc, report = self._build(self.TEXT, "bk-自动修正.docx", {"主送机关": "各区应急管理局"}, keep=False, auto_fix=True)
         texts = [p.text for p in doc.paragraphs]
         self.assertIn("各区应急管理局：", texts)
         self.assertNotIn("　　现就有关事项通知如下。", texts)
+
+    def test_default_does_not_add_colon(self):
+        """默认（不加 --auto-fix-text）逐字保真：缺的全角冒号不补，只列入文字类问题。"""
+        doc, report = self._build(self.TEXT, "bk-默认.docx", {"主送机关": "各区应急管理局"}, keep=False)
+        texts = [p.text for p in doc.paragraphs]
+        self.assertIn("各区应急管理局", texts)
+        self.assertNotIn("各区应急管理局：", texts)
+        self.assertTrue(any("主送机关" in x and "冒号" in x for x in report["text_issues"]), report["text_issues"])
 
     def test_keep_text_adds_no_character(self):
         doc, report = self._build(self.TEXT, "bk-保留.docx", {"主送机关": "各区应急管理局"})
