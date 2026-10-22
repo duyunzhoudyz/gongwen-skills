@@ -27,6 +27,8 @@ from gw_layout import (BODY_ROLES, BRIEF_META_KEYS, LINGHAO_RE, TABLE_MARK, UPWA
                        heading_levels, heading_split, is_heading, is_table_caption, norm_issue, norm_total, normalize_date,
                        parse_brief, parse_lines, read_body_text, summarize, text_width_chars)
 
+_DUN = "\u3001"  # 顿号；f-string 表达式内不能出现反斜杠（Python < 3.12）
+
 LAYOUTS = {"红头": "红头", "文件": "红头", "文件格式": "红头", "红头文件": "红头",
            "信函": "信函", "信函格式": "信函", "函件": "信函",
            "纪要": "纪要", "纪要格式": "纪要",
@@ -396,7 +398,7 @@ def build(lines: Sequence[str], meta: dict, *, layout: Optional[str] = None,
         if lay not in ("红头", "信函", "纪要"):
             report["notes"].append(f'正文标题下的发文字号"{it.text}"已从正文移出\uff1b{lay}版式不排发文字号\uff0c需要时请改用红头或信函版式')
         elif meta.get("发文字号") not in (None, "", []):
-            report["notes"].append(f'正文标题下的文号行"{it.text}"已从正文删除\uff0c版头采用版式信息中的发文字号"{meta['发文字号']}"')
+            report["notes"].append(f'正文标题下的文号行"{it.text}"已从正文删除\uff0c版头采用版式信息中的发文字号"{meta["发文字号"]}"')
         else:
             report["notes"].append(f'正文标题下的发文字号"{it.text}"已移到版头发文字号位置\uff0c正文中不再保留')
 
@@ -1136,7 +1138,7 @@ def _table_style(meta: dict, report: dict) -> Tuple[str, str]:
             else:
                 size = val
         else:
-            report["warnings"].append(f'版式信息"{key}"只能写{'\u3001'.join(allowed)}\uff0c"{val}"未采用\uff0c按默认处理')
+            report["warnings"].append(f'版式信息"{key}"只能写{_DUN.join(allowed)}\uff0c"{val}"未采用\uff0c按默认处理')
     return font, size
 
 

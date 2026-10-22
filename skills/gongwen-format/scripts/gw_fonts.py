@@ -32,6 +32,8 @@ import sys
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
+_DUN = "\u3001"  # 顿号；f-string 表达式内不能出现反斜杠（Python < 3.12）
+
 FONT_SUFFIXES = {".ttf", ".otf", ".ttc"}
 _CACHE: Optional[Tuple[Set[str], str]] = None
 PARAMS_PATH = Path(__file__).resolve().parent.parent / "assets" / "gbt9704_params.json"
@@ -276,7 +278,7 @@ def parse_unit_fonts(value, params: dict) -> Dict[str, str]:
     out: Dict[str, str] = {}
     for role, font in pairs:
         if role not in roles:
-            raise ValueError(f"单位规定字体中的角色“{role}”无法识别，只能是：{'\u3001'.join(roles)}")
+            raise ValueError(f"单位规定字体中的角色“{role}”无法识别，只能是：{_DUN.join(roles)}")
         if not font:
             raise ValueError(f"单位规定字体中，角色“{role}”的字体名为空")
         if role in out:
@@ -351,11 +353,11 @@ def resolve_fonts(params: dict, installed: Optional[Set[str]], method: str = "")
         install = params["fonts"].get("install_guide", {})
         if status == "missing":
             headline = "字体缺失"
-            summary = f"本机缺少 {len(missing)} 款标准字体：{'\u3001'.join(e['font'] for e in missing)}。"
+            summary = f"本机缺少 {len(missing)} 款标准字体：{_DUN.join(e['font'] for e in missing)}。"
         else:
             headline = "无法检测本机字体\uff0c需人工核对"
             summary = (f"无法检测本机已安装的字体（{method}），不能确认是否装有以下标准字体："
-                       f"{'\u3001'.join(e['font'] for e in entries)}。请在打开文档的电脑上人工核对：字体列表中必须有名称完全一致的这些字体，"
+                       f"{_DUN.join(e['font'] for e in entries)}。请在打开文档的电脑上人工核对：字体列表中必须有名称完全一致的这些字体，"
                        "缺少任何一款\uff0cWord/WPS 都会自动替换显示\u3002")
         notice = {"headline": headline, "summary": summary, "consequence": CONSEQUENCE, "no_substitute": NO_SUBSTITUTE,
                   "install_methods": dict(install.get("install_methods", {})), "statement": install.get("statement", "")}

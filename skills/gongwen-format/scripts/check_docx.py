@@ -26,6 +26,8 @@ from gw_layout import (ATTACH_MARK_RE, DATE_CN_RE, MARKERS_RE, ROLE_LABELS, SECR
                        doc_kind, draft_note_index, has_brief_header, heading_levels, heading_split, is_heading, is_pipe_residue,
                        is_table_caption, looks_like_date, parse_brief, parse_lines, text_width_chars)
 
+_DUN = "\u3001"  # 顿号；f-string 表达式内不能出现反斜杠（Python < 3.12）
+
 CJK_RE = re.compile(r"[一-鿿]")
 # 序号位与 gw_layout.DOCNO_PAT 一致：阿拉伯数字，或尚未编号的“【待补：序号】”
 DOCNO_SEQ = r"(?:\d+|【待补[^】]*】)"
@@ -435,7 +437,7 @@ def _apply_allow(issues: List[dict], allow: Sequence[str], notes: List[str]) -> 
     """--allow 列出的检查项命中时降为 P2\uff0c消息前加\u201c按本单位制度保留\uff1a\u201d\u3002"""
     unknown = [a for a in allow if a not in KNOWN_IDS]
     if unknown:
-        notes.append(f"--allow 中的检查项 {'\u3001'.join(unknown)} 不存在，已忽略。")
+        notes.append(f"--allow 中的检查项 {_DUN.join(unknown)} 不存在，已忽略。")
     wanted = set(allow) & KNOWN_IDS
     changed: List[str] = []
     for item in issues:
@@ -445,7 +447,7 @@ def _apply_allow(issues: List[dict], allow: Sequence[str], notes: List[str]) -> 
                 item["message"] = ALLOW_PREFIX + item["message"]
             changed.append(item["id"])
     if changed:
-        notes.append(f"按 --allow 降为 P2 的问题 {len(changed)} 处（{'\u3001'.join(sorted(set(changed)))}），"
+        notes.append(f"按 --allow 降为 P2 的问题 {len(changed)} 处（{_DUN.join(sorted(set(changed)))}），"
                      "依据本单位制度保留\uff0c不计入 --strict\uff1b交付说明中写明与国标的差异\u3002")
         order = {"P0": 0, "P1": 1, "P2": 2}
         issues.sort(key=lambda x: (order[x["level"]], x["line"] or 0))
@@ -1188,7 +1190,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"错误：找不到 docx 文件 {path}")
         return 2
     if args.layout and args.layout not in LAYOUT_NAMES:
-        print(f"错误：无法识别的版式：{args.layout}。可选：{'\u3001'.join(LAYOUT_NAMES)}")
+        print(f"错误：无法识别的版式：{args.layout}。可选：{_DUN.join(LAYOUT_NAMES)}")
         return 2
     try:
         result = check_document(path, layout=args.layout, allow=args.allow, unit_fonts=unit_fonts,

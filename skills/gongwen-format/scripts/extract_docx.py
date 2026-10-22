@@ -27,6 +27,9 @@ from gw_verify import compare_chars  # noqa: E402
 from gw_layout import (ATTACH_MARK_RE, CC_RE, PRINT_RE, SENT_PUNCT, SIGNER_RE, doc_kind, has_brief_header,  # noqa: E402
                        is_draft_note_line, parse_lines)
 
+_DUN = "\u3001"  # 顿号；f-string 表达式内不能出现反斜杠（Python < 3.12）
+_LAYOUT_UNKNOWN = "未判定\uff08build 按文种决定\uff09"
+
 STRIP_HEAD = ("copy_no", "secret", "urgency", "issuer", "lingno", "docno", "signer")
 STRIP_TAIL = ("cc", "print")
 STRIP_LAYOUTS = ("红头", "信函", "纪要", "命令")
@@ -211,8 +214,8 @@ def extract(path: Path, layout: Optional[str] = None) -> dict:
     for k, label in (("标题", "标题"), ("主送机关", "主送机关"), ("发文机关署名", "落款署名"), ("成文日期", "成文日期"),
                      ("附注", "附注"), ("附件", "附件说明")):
         if f.get(k):
-            recognized.append(f"{label}：{f[k] if not isinstance(f[k], list) else '\u3001'.join(f[k])}（留在正文，由 build 识别）")
-    recognized += [f"{k}：{'\u3001'.join(v) if isinstance(v, list) else v}（移入版式信息）" for k, v in meta.items() if k != "版式"]
+            recognized.append(f"{label}：{f[k] if not isinstance(f[k], list) else _DUN.join(f[k])}（留在正文，由 build 识别）")
+    recognized += [f"{k}：{_DUN.join(v) if isinstance(v, list) else v}（移入版式信息）" for k, v in meta.items() if k != "版式"]
     if secs:
         recognized.append("附件页\uff1a" + "\uff1b".join(f"附件{s[0]} {s[1] or '【无标题】'}" for s in secs))
     warnings += [w for w in parsed.warnings if "空格缩进" not in w]
@@ -296,7 +299,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.json:
         print(json.dumps({k: v for k, v in res.items() if k != "lines"}, ensure_ascii=False, indent=2))
         return 0
-    print(f"已抽取：{len(res['lines'])} 行 -> {out}\n版式信息 -> {meta_out}\n版式：{res['layout'] or '未判定\uff08build 按文种决定\uff09'}")
+    print(f"已抽取：{len(res['lines'])} 行 -> {out}\n版式信息 -> {meta_out}\n版式：{res['layout'] or _LAYOUT_UNKNOWN}")
     for title, items in (("识别结果", res["recognized"]), ("提示", res["notes"]), ("警告", res["warnings"])):
         if items:
             print(title + "\uff1a\n" + "\n".join("  - " + x for x in items))

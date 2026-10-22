@@ -23,6 +23,8 @@ from gw_layout import (ATTACH_MARK_RE, BODY_ROLES, ROLE_LABELS, UPWARD_TYPES, do
                        draft_note_index, has_brief_header, heading_levels, heading_split, is_heading, parse_brief, parse_lines,
                        summarize)
 
+_DUN = "\u3001"  # 顿号；f-string 表达式内不能出现反斜杠（Python < 3.12）
+
 # 两个非空段落之间应保留的空行数（键为前一段角色、后一段角色；None 表示任意）
 GAP_RULES = [
     (("issuer", None), 2), (("docno", None), 2), (("title", None), 1), (("subtitle", None), 1),
@@ -462,7 +464,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"错误：找不到 docx 文件 {src}")
         return 2
     if args.layout and args.layout not in LAYOUT_NAMES:
-        print(f"错误：无法识别的版式：{args.layout}。可选：{'\u3001'.join(LAYOUT_NAMES)}")
+        print(f"错误：无法识别的版式：{args.layout}。可选：{_DUN.join(LAYOUT_NAMES)}")
         return 2
     out = Path(args.output) if args.output else src.with_name(src.stem + "-修复.docx")
     if out.is_dir():  # -o 给的是已有文件夹：在文件夹内按默认名输出
