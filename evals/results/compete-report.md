@@ -28,7 +28,7 @@
 
 | 赛道 | 参赛方 | 星标（2026-10-25） | 许可证 | 评测提交 |
 |---|---|---|---|---|
-| 写作 | 本项目 | — | MIT | 见各轮 meta |
+| 写作 | 本项目 | — | PolyForm Noncommercial 1.0.0 | 见各轮 meta |
 | 写作 | [larashero3-dotcom/lieflat-gongwen](https://github.com/larashero3-dotcom/lieflat-gongwen) | 1575 | PolyForm-Noncommercial | e0a5aba |
 | 写作、去 AI 味 | [Liuxiangjian-ai/official-document-skill](https://github.com/Liuxiangjian-ai/official-document-skill) | 402 | MIT | cbe5f8c |
 | 写作 | [KaguraNanaga/official-document-writing-skill](https://github.com/KaguraNanaga/official-document-writing-skill) | 308 | MIT | e76a6f5 |
