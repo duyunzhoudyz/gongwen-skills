@@ -1,7 +1,7 @@
 ---
 name: gongwen-hospital
 description: 公立医院行业包：起草、改写医院专用文书并审其成稿的行业问题，包括等级评审自评报告、绩效考核（监测）分析、质量分析报告、不良事件根因分析（RCA）和PDCA案例、科室主任述职（DRG、CMI，含现场口头稿）、党委会和院长办公会议题、医德医风和行风材料、院感与安全检查整改；指标只用用户给的并注明口径，患者和当事人脱敏。用户说写评审自评、国考分析、看看国考分析初稿、季度质量分析、做个RCA或PDCA、科主任述职、医院上会议题、九项准则自查、院感检查整改时使用。医院的总结、通知、讲话等通用文书交核心skill，巡察审计整改交gongwen-rectify，全面核稿交gongwen-review。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 公立医院行业包（gongwen-hospital）

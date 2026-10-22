@@ -8,7 +8,7 @@
 
 [简体中文](README.md) | English
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: PolyForm NC](https://img.shields.io/badge/License-PolyForm%20NC%201.0-blue.svg)](LICENSE)
 ![Skills](https://img.shields.io/badge/skills-22-brightgreen)
 ![Version](https://img.shields.io/badge/version-1.0.0-orange)
 [![GitHub stars](https://img.shields.io/github/stars/duyunzhoudyz/gongwen-skills?style=flat&logo=github)](https://github.com/duyunzhoudyz/gongwen-skills/stargazers)
@@ -253,7 +253,7 @@ Regulations on the Handling of Official Documents of Party and Government Organs
 
 ## FAQ
 
-**Is it free? Do I need Claude?** It is free and open source under the MIT license. Skills install into Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, Qwen Code, Kimi Code CLI and similar tools. Without any of these, use the prompt version: copy a file from `dist/prompts/` into a chat on DeepSeek, Doubao, Kimi or a model deployed on your intranet.
+**Is it free? Do I need Claude?** Free for personal and noncommercial use under the [PolyForm Noncommercial 1.0.0](LICENSE) license. For commercial use, contact the author. Skills install into Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, Qwen Code, Kimi Code CLI and similar tools. Without any of these, use the prompt version: copy a file from `dist/prompts/` into a chat on DeepSeek, Doubao, Kimi or a model deployed on your intranet.
 
 **Can I paste my organization's materials into it?** Not if they are classified or marked "internal" or "work secret". Never enter such material into an internet-connected AI tool; use an intranet model instead, and anonymize personal data first. The skills stop and warn when they see a classification mark, but that is only a last reminder. The responsibility stays with the user.
 
@@ -297,4 +297,4 @@ Rule corrections, industry material and test cases are welcome; contributors wil
 
 ## License
 
-[MIT](LICENSE). Rule summaries are paraphrased from public regulations and national standards and do not replace the originals.
+[PolyForm Noncommercial 1.0.0](LICENSE) — free for personal and noncommercial use; contact the author for commercial licensing. Rule summaries are paraphrased from public regulations and national standards and do not replace the originals.

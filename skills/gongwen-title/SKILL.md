@@ -1,7 +1,7 @@
 ---
 name: gongwen-title
 description: 拟定和修改公文标题、材料主副标题，提炼小标题（默认三套方案并推荐一套），从素材搭提纲，检查标题与正文是否对得上。用户说“起个标题”“这个发文标题对不对”“转发文件标题怎么写”“标题太长怎么回行”“帮我提炼小标题”“小标题改得对仗些”“弄成三个坚持那种”“先搭个提纲”“标题和内容对不上”“总结要主副标题”时使用。只出标题和提纲，不写正文：整篇起草交 gongwen-report（总结、汇报等）、gongwen-draft（法定公文）或 gongwen-speech（讲话），装有行业包时本行业专用文书交对应行业包；全文核稿交 gongwen-review。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 标题与提纲（gongwen-title）

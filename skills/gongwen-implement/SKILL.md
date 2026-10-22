@@ -1,7 +1,7 @@
 ---
 name: gongwen-implement
 description: 把上级来文转化为本单位的落实材料：提取上级文件要点，做任务分解表（任务、牵头、配合、时限、成果形式、对应上级条款），起草实施方案、贯彻落实方案，按任务表写贯彻落实情况报告，整理学习传达要点；逐条对标对表查漏项，检测照抄上级原文，倒排时限，提示层层加码。用户说省里发了通知要出实施方案、把文件里的任务拆一拆、对标对表、方案跟上级文件太像、报送贯彻落实情况、传达会议精神时使用。只转发不拆任务交 gongwen-draft，自主制定的方案交 gongwen-report，巡视审计整改交 gongwen-rectify；装有行业包时，本行业专用文书交对应行业包。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 上级文件转化（gongwen-implement）

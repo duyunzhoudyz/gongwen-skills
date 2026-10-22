@@ -1,7 +1,7 @@
 ---
 name: gongwen-format
 description: 按 GB/T 9704-2012 把公文正文排成 Word，有红头、信函、纪要、命令（令）、白头、材料、简报七种版式，支持联合行文版头、附件另面、预印红头纸套打；检查、修复 docx 的页边距、字体、行距、页码；把核稿意见写成 Word 批注；无 Python 时给手动设置清单。用户说“排版”“套红头”“转成 Word”“按国标调格式”“格式乱了帮我改”“页码怎么设”时使用。只管格式不改内容：起草转对应起草 skill，压缩改写转 gongwen-polish，去 AI 味转 gongwen-humanize，去免责对冲转 gongwen-direct，核稿转 gongwen-review。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 国标排版（gongwen-format）

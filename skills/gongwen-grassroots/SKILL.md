@@ -1,7 +1,7 @@
 ---
 name: gongwen-grassroots
 description: 基层行业包：写乡镇（街道）、村（社区）的专用文书，含报上级的政务信息、迎检汇报与自查、居民通知、告知书、倡议书、防汛防火应急通知、工作台账、走访提纲、实事清单、村（居）务公开、一表通和准入清单报告，查面向群众的处罚和强制表述。用户说镇里报篇信息争取采用、县里来检查要准备自查报告和现场汇报、社区迎检自查、居民停水通知、暴雨预警通知各村、村务公开怎么贴时使用。基层总结计划交 gongwen-report，请示和会议通知交 gongwen-draft，讲话交 gongwen-speech，检查后的整改交 gongwen-rectify，新闻稿、县直部门本部门信息交 gongwen-brief。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 基层行业包（gongwen-grassroots）

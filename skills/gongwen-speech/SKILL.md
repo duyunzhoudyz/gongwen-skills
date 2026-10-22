@@ -1,7 +1,7 @@
 ---
 name: gongwen-speech
 description: 起草讲话类材料：领导讲话（动员部署、推进、表彰、座谈、年度工作会、开学毕业典礼）、主持词、欢迎和开幕闭幕致辞、表态发言、交流发言、代表发言。按场合、讲话人、听众和时长（约200字/分钟）定结构字数，避开前后讲话重复，写成口语稿，引语只用用户给的原文。用户说写讲话稿、准备15分钟发言、开学典礼致辞、写主持词、表态发言、经验交流发言时使用。党课交 gongwen-party，大会工作报告和述职交 gongwen-report，发布会发布词交 gongwen-brief，会议通知交 gongwen-draft，已有讲话稿压缩交 gongwen-polish；装有行业包时，本行业专用文书交对应行业包。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 讲话类（gongwen-speech）

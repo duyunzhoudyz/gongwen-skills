@@ -1,7 +1,7 @@
 ---
 name: gongwen-university
 description: 高校行业包，写和查高校专用文书：审核评估自评报告、学科评估材料、申报书形式审查、学院年度总结、辅导员工作写实和谈话提纲、两级发文判断与校内签报、教代会和党代会报告提纲。用户说迎评写自评报告、学科评估案例、国社科活页会不会暴露身份、学院年终总结、辅导员谈话提纲、给校领导打签报、这事学校发还是部门发、教代会报告先拟提纲时使用。高校通用文书交核心 skill，如学校总结、质量报告和大会报告全文交 gongwen-report，通知、函交 gongwen-draft，讲话交 gongwen-speech，党建材料和思想汇报交 gongwen-party，成稿核稿交 gongwen-review。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 行业包·高校（gongwen-university）

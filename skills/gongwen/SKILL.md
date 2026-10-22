@@ -1,7 +1,7 @@
 ---
 name: gongwen
 description: 公文写作总入口：接住说不清的需求，判断单位、角色、文种和行文方向，规划 skill 路线并给一句文种初判；首次使用建 3 问简版画像，提示写作日历，回答“你能做什么”；目标 skill 未安装，或网页版、提示词版用户问“下一步该粘贴哪个提示词”时，给交接卡和安装办法。用于“督查要来准备啥”“最近要写什么”。不起草不改稿：通知请示交 gongwen-draft，总结汇报交 gongwen-report，讲话交 gongwen-speech，纪要交 gongwen-minutes，信息交 gongwen-brief，完整画像交 gongwen-profile；装有行业包时，本行业专用文书交行业包。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 公文写作总入口（gongwen）

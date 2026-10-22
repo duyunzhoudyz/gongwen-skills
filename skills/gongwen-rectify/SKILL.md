@@ -1,7 +1,7 @@
 ---
 name: gongwen-rectify
 description: 起草整改材料：巡视巡察、审计、督查反馈问题的整改方案（问题、任务、责任三清单）、整改台账（可转Excel）、整改进展报告和整改情况报告，以及整改类、专项检查的自查报告；台账是唯一事实源，报告与台账逐条对账，问题照录反馈原文，未完成不写成已完成，成效数字不编造。用户说巡察反馈了问题要写整改方案、建整改台账、审计整改报告、整改进展、专项检查自查报告、报告和台账对不对得上时使用。一般工作总结、迎检汇报交 gongwen-report；乡镇、村（社区）迎检的自查和汇报，装有行业包时交 gongwen-grassroots；民主生活会材料交 gongwen-party；其他行业包专用文书交对应行业包。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 整改材料（gongwen-rectify）

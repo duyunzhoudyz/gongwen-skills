@@ -1,7 +1,7 @@
 ---
 name: gongwen-soe
 description: 国企行业包：写“三重一大”议题材料、董事会议案与决议、总经理办公会纪要、经营分析、改革任务台账、ESG和社会责任报告、党建经营融合经验、合规管理报告，核对前置程序和票数。用户说三重一大上会材料、董事会议案、整理董事会决议、总经理办公会转写稿出纪要和督办表、经营分析、改革台账、编ESG报告时使用。通用文书交核心skill：工作报告和总结交gongwen-report，请示签报交gongwen-draft，讲话交gongwen-speech，党委会纪要交gongwen-minutes，党建材料交gongwen-party，新闻稿交gongwen-brief，整改交gongwen-rectify。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 国有企业行业包（gongwen-soe）

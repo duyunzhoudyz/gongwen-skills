@@ -1,7 +1,7 @@
 ---
 name: gongwen-data
 description: 为公文整理数据、出图表，包括报表体检（空值、合并单元格、合计校验、单位和时段口径冲突），汇总下级报表，计算同比、环比、增速、百分点、占比、拉动、完成率、平均值并附算式，把数据写成能直接进公文的句子，在本机生成黑白灰 Excel 图表，数据不出本机，缺的数标【待补】。用户说合并科室月报、汇总下面报的表、查查合计对不对、算同比环比、百分点怎么写、这组数写成一段话、做个柱状图折线图时使用。整篇总结和分析报告交 gongwen-report，装有行业包时，本行业专用文书交对应行业包；成稿核数字交 gongwen-review，整改台账转 Excel 交 gongwen-rectify。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 数据整理与图表（gongwen-data）

@@ -1,7 +1,7 @@
 ---
 name: gongwen-direct
 description: 去掉公文稿里的防御性写作：删免责声明和套话提醒，清理“可能”“在一定程度上”等对冲语气和平衡腔，把部署性文件里的“建议”“可以考虑”改成分层的要求措辞，点明模糊主体，让请示有倾向性意见、批复明确表态、把报告里夹带的请示事项拿出来，风险提示保留。用户说“去掉仅供参考”“这通知像在跟下级商量，改成要求口气”“说话太软不硬气”“批复模棱两可”“请示没写倾向性意见”“把对冲语气去掉”时使用。AI 句式交 gongwen-humanize；全面核稿和格式、标点、数字交 gongwen-review；压缩、扩写交 gongwen-polish；从零起草交对应起草 skill，行业专用文书交对应行业包。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 去防御性写作（gongwen-direct）

@@ -8,7 +8,7 @@
 
 简体中文 | [English](README_EN.md)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: PolyForm NC](https://img.shields.io/badge/License-PolyForm%20NC%201.0-blue.svg)](LICENSE)
 ![Skills](https://img.shields.io/badge/skills-22-brightgreen)
 ![Version](https://img.shields.io/badge/version-1.0.0-orange)
 [![GitHub stars](https://img.shields.io/github/stars/duyunzhoudyz/gongwen-skills?style=flat&logo=github)](https://github.com/duyunzhoudyz/gongwen-skills/stargazers)
@@ -357,7 +357,7 @@ python tools/install.py --target auto --pack hospital
 
 **1. 这个项目是什么？收费吗？**
 
-gongwen-skills 是给机关、事业单位、国企文字工作者用的公文写作 Skills 集合，v1.0.0 有 22 个 skill。按 MIT 许可开源，免费使用。
+gongwen-skills 是给机关、事业单位、国企文字工作者用的公文写作 Skills 集合，v1.0.0 有 22 个 skill。按 PolyForm Noncommercial 1.0.0 许可开源，个人及非商业用途免费使用。
 
 **2. 没有 Claude，能用吗？**
 
@@ -437,4 +437,4 @@ v0.2 到 v0.4 原计划分三次发布，开发提前完成，与 v0.1 合并为
 
 ## 许可证
 
-[MIT](LICENSE)。规则要点整理自公开的法规和国家标准，不替代原文。
+[PolyForm Noncommercial 1.0.0](LICENSE) — 个人及非商业用途免费，商业用途请联系作者。规则要点整理自公开的法规和国家标准，不替代原文。

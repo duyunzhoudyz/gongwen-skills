@@ -1,7 +1,7 @@
 ---
 name: gongwen-k12
 description: 中小学行业包：起草学期工作计划和总结、督导评估自评报告、班主任工作计划和总结、家长会讲话稿、学生评语和综合素质评价评语、安全教育记录、致家长的一封信、教研活动记录、课后服务方案；学生信息脱敏，不排名，不给家长布置作业，记录不补造。用户说写学期计划总结、督导自评、班主任总结、家长会发言、给全班写期末评语、放假给家长写封信、整理安全班会或教研记录、课后服务方案时使用。学校的请示通知交 gongwen-draft，开学典礼等讲话交 gongwen-speech，述职和教代会报告交 gongwen-report，校园新闻交 gongwen-brief，督导整改交 gongwen-rectify。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 中小学行业包（gongwen-k12）

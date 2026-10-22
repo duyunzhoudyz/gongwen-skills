@@ -1,7 +1,7 @@
 ---
 name: gongwen-review
 description: 按“八关”审核公文和材料，输出分级问题清单和批注用 JSON，含机检、提法风险、保密隐私扫描、本单位禁用词比对；默认只提意见，用户说“直接改”才按 P0、P1 改。用于“帮我核一下稿”“把把关”“送签前过一遍”“看看报告里是不是夹带请示”“查查格式标点”“审一下报来的材料”。大幅改写转 gongwen-polish 或原起草 skill；去 AI 腔转 gongwen-humanize；去免责对冲转 gongwen-direct；排版、写批注转 gongwen-format；信息能不能被采用的评估交 gongwen-brief；装有行业包时，本行业专用文书只查行业问题的交对应行业包。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 核稿审校（gongwen-review）

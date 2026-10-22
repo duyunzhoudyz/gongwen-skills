@@ -1,7 +1,7 @@
 ---
 name: gongwen-humanize
 description: 公文去 AI 味：把 AI 腔重的公文改成熟手写法：事实冻结、表达放开，宏大开头、空泛总括、段尾拔高、名词堆叠、翻案句、破折号、新八股词等命中的句子改到位；保留有实质内容的“一是……二是……”；口号式小标题改写实；可只标注不改或轻度改写。用户说“去 AI 味”“AI 腔太重”“读着像机器写的”“DeepSeek 写的总结改自然点”“降 AI 率”时使用（只做文风改进，不承诺检测结果）。以免责、对冲、态度不明为主的转 gongwen-direct；格式、标点、数字和提法转 gongwen-review；压缩篇幅转 gongwen-polish；起草新稿转对应起草 skill。
-license: MIT
+license: PolyForm-Noncommercial-1.0.0
 ---
 
 # 公文去 AI 味（gongwen-humanize）
