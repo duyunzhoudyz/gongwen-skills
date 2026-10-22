@@ -62,11 +62,18 @@ REQUIRED_SHARED = (
 VALID_STATUS = ("stable", "beta", "draft")
 FONT_SUFFIXES = {".ttf", ".otf", ".ttc", ".woff", ".woff2"}
 MAX_FILE_BYTES = 1024 * 1024
-# 超过 1MB 也不报警告的文件：evals/results/ 下的 *-raw.json（如 v1.0-raw.json、v1.0-round1-raw.json）。
-# 理由：它们是评测的原始逐条结果，evals/bench/aggregate.py --from-raw 靠它复算 README 里的通过率，
-# 删减就无法复算；体量随评测用例数和 skill 数增长（v0.1 约 0.7MB，v1.0 约 2.6MB），属于有意保留。
-# 只放行这一类，其他位置和其他文件名的大文件仍然报警告。放行的文件仍检查 JSON 是否合法。
-LARGE_FILE_EXEMPT_GLOBS = ("evals/results/*-raw.json",)
+# 超过 1MB 也不报警告的文件：
+# 1. evals/results/ 下的 *-raw.json（如 v1.0-raw.json）——评测原始逐条结果，aggregate.py 靠它复算通过率。
+# 2. evals/results/ 各版本子目录下的 results.json（如 compete-v6/results.json）——版本归档结果。
+# 3. .claude/worktrees/ 下任意深度的同类文件——worktree 副本，路径不同但内容同上。
+# 体量随评测用例数和 skill 数增长，属于有意保留。放行的文件仍检查 JSON 是否合法。
+LARGE_FILE_EXEMPT_GLOBS = (
+    "evals/results/*-raw.json",
+    "evals/results/*/*-raw.json",
+    "evals/results/*/results.json",
+    ".claude/worktrees/*/evals/results/*-raw.json",
+    ".claude/worktrees/*/evals/results/*/*-raw.json",
+)
 SKILL_MD_WARN_LINES = 300
 SKILL_MD_MAX_LINES = 500
 DESCRIPTION_WARN_CHARS = 300
@@ -320,8 +327,8 @@ def check_frontmatter(name: str, fields: Dict[str, str], rep: Report) -> None:
     lic = fields.get("license")
     if lic is None or not lic.strip():
         rep.error(name, "frontmatter 缺少 license")
-    elif lic != "MIT":
-        rep.warn(name, f"license 为 \"{lic}\"，规范要求为 MIT")
+    elif lic not in ("MIT", "PolyForm-Noncommercial-1.0.0"):
+        rep.warn(name, f"license 为 \"{lic}\"，规范要求为 MIT 或 PolyForm-Noncommercial-1.0.0")
 
     for key in fields:
         if key not in ALLOWED_FIELDS:
