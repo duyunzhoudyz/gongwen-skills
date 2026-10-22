@@ -31,5 +31,5 @@
 
 ## 四、转成 Excel 与对账
 
-1. 有 Python 和 openpyxl 时运行 `python scripts/md2xlsx.py 督办清单.md 督办清单.xlsx --title "××会议议定事项督办清单"`。输出文件已存在时脚本自动加 -v2，不覆盖。未生成 xlsx 或报错的，交付 Markdown 表格，告诉用户复制到 Excel 中整理。
-2. 对账：`python scripts/minutes_check.py 正文.txt --list 督办清单.md`，逐条核对清单与纪要的事项、责任单位、配合单位和时限；牵头与配合对调、时限挂到同一条中其他单位的任务上，都按不一致报出。不能运行时人工逐行比对，在起草说明写“未运行对账脚本，已人工核对”。
+1. 有 Python 和 openpyxl 时运行 `python scripts/md2xlsx.py 督办清单.md 督办清单.xlsx --title "××会议议定事项督办清单"`。输出文件已存在时脚本自动加 -v2，不覆盖。未生成 xlsx 或报错的，交付 Markdown 表格，告诉用户复制到 Excel。
+2. 对账：`python scripts/minutes_check.py 正文.txt --list 督办清单.md`，逐条核对清单与纪要的事项、责任单位、配合单位和时限；牵头与配合对调、时限挂到同一条中其他单位的任务上，都按不一致报出。不能运行时人工逐行比对，起草说明写“未运行对账脚本，已人工核对”。

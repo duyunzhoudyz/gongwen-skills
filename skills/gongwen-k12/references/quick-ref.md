@@ -1,6 +1,6 @@
 # 九类文书速查
 
-网页版、内网提示词版读不到 `references/templates/` 时，按本表起草。每类列出结构、必须来自用户的事实、最常见的毛病。“红线”指 `references/redlines.md` 的条号。
+网页版、内网提示词版读不到 `references/templates/` 时，按本表起草。每类列结构、必须来自用户的事实、常见毛病。“红线”指 `references/redlines.md` 的条号。
 
 ## 一、学期工作计划和总结（学校、处室、年级组、教研组）
 
@@ -33,7 +33,7 @@
 
 ## 五、学生评语
 
-完整模板随附：按 `references/templates/xuesheng-pingyu.md` 写（脱敏、事实表、写法、正误对照都在模板里）。
+完整模板随附：按 `references/templates/xuesheng-pingyu.md` 写（脱敏、事实表、写法、正误对照都在其中）。
 
 ## 六、安全教育记录
 
