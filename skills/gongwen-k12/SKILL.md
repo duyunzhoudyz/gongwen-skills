@@ -26,7 +26,7 @@ license: MIT
 | 校园新闻稿、公众号推文、简报 | gongwen-brief |
 | 党建材料、对照检查、党课，三会一课和组织生活会记录 | gongwen-party |
 | 成绩统计数据、指标计算、图表（不排名，率按人数重算） | gongwen-data |
-| 整篇教学质量分析报告 | gongwen-report |
+| 整篇教学质量分析报告（按教育行政部门要求单独成文，区别于学期总结中的质量板块） | gongwen-report |
 | 已有稿子压缩、改语气，去 AI 腔，改防御性表述，全面核稿，排版成 Word | gongwen-polish、gongwen-humanize、gongwen-direct、gongwen-review、gongwen-format |
 
 以上是学校的通用文书，由核心 skill 读单位画像处理。能调用其他 skill 的环境直接调用；核心 skill 未安装或在网页环境的，按 `references/_shared/style/output-format.md` 第四部分转交：给交接卡（单位画像写“中小学”并注明学段）、“新开对话粘贴 `dist/prompts/<skill 名>.md` 继续”的说明和安装命令。请用户准备学校素材的，固定加一句：“素材里的学生姓名、成绩、家庭情况请先删去再粘贴。”

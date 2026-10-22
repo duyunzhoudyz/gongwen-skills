@@ -237,3 +237,6 @@ license: MIT
 | `references/_shared/` 下的 guardrails、output-format、ai-tone、defensive、roles、units/gaoxiao | 按正文各步的引用读取 |
 | `references/_shared/rules/doc-types.md`、`references/_shared/rules/tiaoli.md` | 两级公文、签报、行文规则 |
 | `references/_shared/rules/jianfu.md` | 篇幅 |
+| `scripts/proposal_check.py` | 第五步第3条：申报书形式审查机检，有项目名称的加 `--title <名称>` |
+| `scripts/overlap_check.py` | 第五步第4条：有往年稿或上级原文时查照抄和雷同 |
+| `scripts/fact_diff.py`、`scripts/gongwen_lint.py`、`scripts/md2xlsx.py` | 第五步第1、2条：台账对账、通用机检；清单转 Excel |
