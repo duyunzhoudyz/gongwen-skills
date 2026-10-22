@@ -281,11 +281,27 @@ Want to help test? Read the [tester handbook](docs/评测/测试者手册.md) (i
 
 ## Community
 
-- Douyin: (to be added)
-- WeChat: (to be added)
-- Douyin group and WeChat group: (QR codes to be added)
+<div align="center">
+
+<img src="docs/assets/wecom.jpg" width="180" alt="WeCom (Enterprise WeChat)" />
+
+**Scan to add the author on WeCom (Enterprise WeChat) and join the discussion group.**
+
+Commercial licensing and partnership inquiries welcome here too.
+
+</div>
 
 Rule corrections, new scenarios, industry material and bug reports go to [Issues](https://github.com/duyunzhoudyz/gongwen-skills/issues/new/choose); discussion goes to [Discussions](https://github.com/duyunzhoudyz/gongwen-skills/discussions). See [CONTRIBUTING.md](CONTRIBUTING.md) (in Chinese).
+
+## Support the project
+
+If this project saved you real time, a coffee or a Star goes a long way.
+
+<div align="center">
+
+<img src="docs/assets/wechat-pay.jpg" width="180" alt="WeChat Pay" />
+
+</div>
 
 ## Acknowledgements
 

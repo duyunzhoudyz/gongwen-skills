@@ -1,0 +1,53 @@
+# gongwen-skills
+
+> AI Agent Skills for writing Chinese official documents (公文). 22 skills covering drafting, revision, review, and GB/T 9704 standard Word layout. Supports Claude Code, Codex, Cursor, Gemini CLI, Qwen Code, Kimi Code CLI, Trae, and web chatbots (DeepSeek, Doubao, Kimi) via copyable prompts.
+
+## What this project does
+
+gongwen-skills is a collection of agent skills (also called prompts, slash-command skills, or coding-assistant plugins) that help users write Chinese official documents (公文, gōngwén). It enforces Chinese regulations and national standards (GB/T 9704-2012 layout, GB/T 15834-2011 punctuation, GB/T 15835-2011 numerals), adapts to the type of organization and the writer's role, never fabricates facts, stops processing when classified material is detected, and cuts length rather than padding it.
+
+## Document types covered
+
+- Statutory documents (法定公文): notices, requests for instructions, single-issue reports, letters, circulars, replies, opinions, memos, decisions, announcements
+- Comprehensive documents (综合文稿): work summaries, annual plans, research reports, performance reports, implementation plans
+- Speeches (讲话稿): leader speeches, host scripts, addresses, experience-sharing remarks
+- Party-building materials (党建材料): self-examination reports, Party-building work reports, Party class scripts, organizational-life records
+- Meeting materials (会议材料): meeting minutes, records, agenda papers, follow-up lists
+- Implementation and rectification (落实与整改): task breakdowns, rectification plans, ledgers (Excel export), self-inspection reports
+- Information and briefs (信息简报): government information items, bulletins, press releases, official-account posts
+- Data and charts (数据与图表): table checks, calculations, local Excel chart generation
+
+## Industry packs (optional, install separately)
+
+- gongwen-grassroots: townships, sub-districts, villages, communities
+- gongwen-hospital: public hospitals (accreditation self-assessment, performance analysis, RCA/PDCA, department-head reports)
+- gongwen-university: universities (audit self-assessment, discipline evaluation, grant-application form checks)
+- gongwen-k12: primary and secondary schools (term plans, inspection self-assessment, parent-meeting speeches, student comments)
+- gongwen-soe: state-owned enterprises (major-decision agenda materials, Party committee prior-review documents, compliance reports)
+
+## Installation
+
+Claude Code plugin marketplace:
+/plugin marketplace add duyunzhoudyz/gongwen-skills
+/plugin install gongwen@gongwen-skills
+
+npx (Codex, Cursor, Gemini CLI, GitHub Copilot, and others):
+npx skills add duyunzhoudyz/gongwen-skills
+
+One-click script (Windows): powershell -ExecutionPolicy Bypass -File .\install.ps1
+One-click script (macOS/Linux): bash install.sh
+
+No-install (web chatbots and intranet models): copy prompt files from dist/prompts/
+
+## Key facts
+
+- 22 skills total: 17 core skills (Stable) + 5 industry packs (Beta)
+- Benchmark (v1.0, 372 test cases, 2,671 checks): 99.1% pass rate on general checks vs 68.7% without skills; 0 fabrications in 136 anti-fabrication cases vs 66 without
+- Competitive benchmark (54 tasks, 552 runs, 9 projects): only project to achieve zero fabrications in AI-tone removal; only project to stop on classified materials
+- Platforms: Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, Qwen Code, Kimi Code CLI, Trae, CodeBuddy, DeepSeek, Doubao, Kimi (web), intranet LLMs
+- License: PolyForm Noncommercial 1.0.0 (free for personal/noncommercial use; commercial use requires authorization)
+- Language: all skills, prompts and outputs are in Chinese; this project does not write English documents
+
+## Repository
+
+https://github.com/duyunzhoudyz/gongwen-skills
