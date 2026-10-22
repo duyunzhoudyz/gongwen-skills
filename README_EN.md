@@ -22,6 +22,14 @@ If this project solves a real problem for you, a Star helps others with the same
 
 > **Confidentiality notice**: Never input classified information into any internet-connected AI tool. For internal documents, use your organization's on-premises model. The prompt-only edition and offline bundle of this project work on air-gapped deployments. See [使用须知](使用须知.md) for details.
 
+<div align="center">
+
+<img src="docs/assets/hero-before-after.png" width="860" alt="An AI-sounding notice before and after gongwen-skills: 5 must-fix issues to 0, 31 suggestions to 0, then a GB/T 9704 compliant .docx" />
+
+*Fictional district education bureau notice; full walkthrough in [examples/B-AI稿体检](examples/B-AI稿体检/). The final-draft view is an approximate render; actual fonts depend on your machine. Image text is in Chinese.*
+
+</div>
+
 ---
 
 ## What makes this different from plain AI writing

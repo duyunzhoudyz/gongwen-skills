@@ -22,6 +22,14 @@
 
 > **保密提示**：涉密信息严禁输入任何联网 AI 工具。处理内部材料请使用单位内网部署的模型；本项目的提示词版和离线包可以直接在内网使用。详见 [使用须知](使用须知.md)。
 
+<div align="center">
+
+<img src="docs/assets/hero-before-after.png" width="860" alt="AI 腔通知经过 gongwen-skills 处理前后对比：P0 必改 5 处降到 0，P1 建议改 31 处降到 0，生成国标红头 docx" />
+
+*示例为虚构的区教育局通知，完整过程见 [examples/B-AI稿体检](examples/B-AI稿体检/)；成稿截图为近似渲染，实际字体以本机安装为准。*
+
+</div>
+
 ---
 
 ## 和普通 AI 写材料有什么不同

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1600px;height:960px;overflow:hidden}
+body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:#F7F4EE;color:#2B2B2B;position:relative}
+.title{position:absolute;left:0;right:0;top:34px;text-align:center;font-size:40px;font-weight:800}
+.title span{color:#B3282D}
+.col{position:absolute;top:110px;height:690px;border-radius:14px;background:#fff;box-shadow:0 10px 30px rgba(60,30,20,.12);overflow:hidden}
+.tag{position:absolute;top:0;left:0;padding:8px 22px;font-size:22px;font-weight:700;color:#fff;border-bottom-right-radius:12px}
+#a{left:50px;width:520px}
+#a .tag{background:#7a7a7a}
+#a .txt{padding:70px 32px 0;font-size:24px;line-height:1.75;color:#444}
+#a h4{font-size:26px;margin-top:6px;color:#222}
+mark{background:#FFD9D9;color:#a21c22;padding:0 3px;border-radius:3px;font-weight:600}
+.note{font-size:20px;color:#B3282D;font-weight:700;margin-top:18px}
+#b{left:610px;width:290px;background:transparent;box-shadow:none}
+.step{background:#2B2B2B;color:#fff;border-radius:14px;padding:22px 22px;margin-bottom:18px;font-size:22px;line-height:1.5}
+.step small{display:block;color:#E8B84B;font-size:19px;letter-spacing:1px;margin-bottom:2px}
+.arrow{position:absolute;font-size:56px;color:#B3282D;font-weight:900}
+#c{left:960px;width:590px}
+#c .tag{background:#B3282D;z-index:2}
+#c img{display:block;width:100%;margin-top:0}
+.stats{position:absolute;left:60px;right:60px;top:830px;display:flex;gap:20px}
+.stat{flex:1;background:#fff;border-radius:12px;padding:16px 22px;box-shadow:0 6px 18px rgba(60,30,20,.10);font-size:21px;color:#555}
+.stat b{white-space:nowrap;display:block;font-size:32px;color:#B3282D;margin-top:2px}
+.stat b i{font-style:normal;color:#999;font-size:26px}
+</style></head><body>
+<div class="title">一篇 AI 腔通知，经过 <span>gongwen-skills</span> 之后</div>
+
+<div class="col" id="a"><div class="tag">AI 原稿（1092 字）</div>
+<div class="txt">
+<mark>随着冬季的到来</mark>，校园安全形势日趋复杂严峻……<br>
+<h4>一、充分认识冬季校园安全检查的重要意义</h4>
+<mark>毋庸置疑</mark>，校园安全是教育事业发展的底线和生命线。各学校要以此次检查为抓手，<mark>打造全方位、全链条</mark>的管理体系，充分运用信息化手段<mark>赋能</mark>……<br>
+<mark>建议</mark>各学校成立专班……<br>
+发文字号：<mark>[2026]第12号</mark><br>
+<mark>以上内容仅供参考，请结合实际调整。</mark>
+<div class="note">P0 必改 5 处 · P1 建议改 31 处</div>
+</div></div>
+
+<div class="col" id="b">
+<div class="step" style="margin-top:60px"><small>1 · direct</small>去掉免责声明与对冲语气</div>
+<div class="step"><small>2 · humanize</small>去 AI 腔，留“一是二是”</div>
+<div class="step"><small>3 · review</small>机检号码、标点、越权</div>
+<div class="step" style="background:#B3282D"><small style="color:#fff">4 · format</small>一键生成国标 .docx</div>
+</div>
+<div class="arrow" style="left:578px;top:420px">›</div>
+<div class="arrow" style="left:915px;top:420px">›</div>
+
+<div class="col" id="c"><div class="tag">成稿（814 字）</div><img src="sample-b.png" style="margin-top:46px"></div>
+
+<div class="stats">
+  <div class="stat">P0 必改<b>5 <i>→</i> 0</b></div>
+  <div class="stat">P1 建议改<b>31 <i>→</i> 0</b></div>
+  <div class="stat">篇幅<b>1092 <i>→</i> 814 字</b></div>
+  <div class="stat" style="flex:1.5">发文字号<b style="font-size:28px">[2026]第12号 <i>→</i> 〔2026〕12号</b></div>
+</div>
+</body></html>
