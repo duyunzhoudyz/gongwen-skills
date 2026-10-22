@@ -22,14 +22,6 @@
 
 > **保密提示**：涉密信息严禁输入任何联网 AI 工具。处理内部材料请使用单位内网部署的模型；本项目的提示词版和离线包可以直接在内网使用。详见 [使用须知](使用须知.md)。
 
-<div align="center">
-
-<img src="docs/assets/format-sample-notice.png" width="300" alt="gongwen-format 生成的红头通知样稿第 1 页" />
-
-*`gongwen-format` 按 GB/T 9704-2012 生成的红头通知样稿第 1 页（测试样稿经 LibreOffice 渲染，内容虚构；实际字体以本机安装为准）*
-
-</div>
-
 ---
 
 ## 和普通 AI 写材料有什么不同
